@@ -8,7 +8,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noConsoleLog": "warn",
+        "noConsoleLog": "off",
         "noShadowRestrictedNames": "off"
       },
       "a11y": {

@@ -1,10 +1,11 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { env } from 'hono/adapter';
+import { env as honoenv } from 'hono/adapter';
 import { jstack } from 'jstack';
+import type { env } from '@/env.mjs';
 
 interface Env {
-  Bindings: { TURSO_CONNECTION_URL: string; TURSO_AUTH_TOKEN: string };
+  Bindings: typeof env;
 }
 
 export const j = jstack.init<Env>();
@@ -15,7 +16,7 @@ export const j = jstack.init<Env>();
  * @see https://jstack.app/docs/backend/middleware
  */
 const databaseMiddleware = j.middleware(async ({ c, next }) => {
-  const { TURSO_CONNECTION_URL, TURSO_AUTH_TOKEN } = env(c);
+  const { TURSO_CONNECTION_URL, TURSO_AUTH_TOKEN } = honoenv(c);
 
   const client = createClient({
     url: TURSO_CONNECTION_URL,
