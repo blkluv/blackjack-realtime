@@ -1,2 +1,3 @@
-# blackjack-realtime
-Play Blackjack at a Live Table with friends. Built using web3 (payments) , partykit (realtime) , huddle01 (voice chat))
+## JStack
+
+Ship high-performance Next.js apps for extremely cheap
