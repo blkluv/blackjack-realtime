@@ -4,6 +4,7 @@
     "": {
       "name": "blackjack",
       "dependencies": {
+        "@heruka_urgyen/react-playing-cards": "^0.5.0",
         "@libsql/client": "^0.14.0",
         "@radix-ui/react-slot": "^1.1.2",
         "@tailwindcss/postcss": "^4.0.0",
@@ -162,6 +163,8 @@
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.2.5", "", { "dependencies": { "@eslint/core": "^0.10.0", "levn": "^0.4.1" } }, "sha512-lB05FkqEdUg2AA0xEbUz0SnkXT1LcCTa438W4IWTUh4hdOnVbQyOJ81OrDXsJk/LSiJHubgGEFoR5EHq1NsH1A=="],
 
     "@fastify/busboy": ["@fastify/busboy@2.1.1", "", {}, "sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA=="],
+
+    "@heruka_urgyen/react-playing-cards": ["@heruka_urgyen/react-playing-cards@0.5.0", "", { "peerDependencies": { "react": "^16.13.1" } }, "sha512-o/tSxBIIdGJQYCwARHMzddjY0hYdxxYZXiyCVzg8FuQNCrnVl8n1moKjzjkRVK7qMQGR3FCpromg2kpw85pQ+A=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
