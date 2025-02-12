@@ -1,9 +1,9 @@
+import { env } from '@/env.mjs';
 import { useAppKitAccount } from '@reown/appkit-core/react';
 import { useAppKit } from '@reown/appkit/react';
-import React, { useState } from 'react';
-import { useSignMessage } from 'wagmi';
 import usePartySocket from 'partysocket/react';
-import { env } from '@/env.mjs';
+import { useState } from 'react';
+import { useSignMessage } from 'wagmi';
 
 const useGame = () => {
   const [seat, setSeat] = useState('');

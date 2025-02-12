@@ -1,11 +1,11 @@
 'use client';
 
-import { wagmiAdapter, projectId } from '@/lib/config';
-import { createAppKit } from '@reown/appkit/react';
-import { mainnet, arbitrum } from '@reown/appkit/networks';
-import React, { type ReactNode } from 'react';
-import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
 import { Providers } from '@/app/components/providers';
+import { projectId, wagmiAdapter } from '@/lib/config';
+import { arbitrum, mainnet } from '@reown/appkit/networks';
+import { createAppKit } from '@reown/appkit/react';
+import type { ReactNode } from 'react';
+import { type Config, WagmiProvider, cookieToInitialState } from 'wagmi';
 
 if (!projectId) {
   throw new Error('Project ID is not defined');

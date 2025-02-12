@@ -1,11 +1,9 @@
 'use client';
-
-import React from 'react';
 import { Button } from '@/components/ui/button';
-import { nanoid } from 'nanoid';
+import { getRandomCard } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
-import { cn, getRandomCard } from '@/lib/utils';
+import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { useWindowSize } from '../../../hooks/useWindowSize';
 

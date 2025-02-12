@@ -1,8 +1,8 @@
+import type { env } from '@/env.mjs';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { env as honoenv } from 'hono/adapter';
 import { jstack } from 'jstack';
-import type { env } from '@/env.mjs';
 
 interface Env {
   Bindings: typeof env;

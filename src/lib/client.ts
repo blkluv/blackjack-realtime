@@ -1,6 +1,6 @@
+import { env } from '@/env.mjs';
 import type { AppRouter } from '@/server';
 import { createClient } from 'jstack';
-import { env } from '@/env.mjs';
 /**
  * Your type-safe API client
  * @see https://jstack.app/docs/backend/api-client

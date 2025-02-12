@@ -1,21 +1,15 @@
 'use client';
-
-import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { nanoid } from 'nanoid';
+import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
-import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
-import Image from 'next/image';
-import { useWindowSize } from '../../../hooks/useWindowSize';
-import useMounted from '../../../hooks/useMounted';
-import { motion } from 'motion/react';
 import { MicIcon, MicOffIcon } from 'lucide-react';
-import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
-import usePartySocket from 'partysocket/react';
-import { env } from '@/env.mjs';
-import { useSignMessage } from 'wagmi';
+import { motion } from 'motion/react';
+import { nanoid } from 'nanoid';
+import Image from 'next/image';
 import useGame from '../../../hooks/useGame';
+import useMounted from '../../../hooks/useMounted';
+import { useWindowSize } from '../../../hooks/useWindowSize';
 
 const GamePage = () => {
   return (

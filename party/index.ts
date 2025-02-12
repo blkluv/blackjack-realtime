@@ -1,7 +1,5 @@
 import type * as Party from 'partykit/server';
 import { z } from 'zod';
-import { type Address, verifyMessage } from 'viem';
-import { env } from '@/env.mjs';
 /*-------------------------------------------------------------------------
   Create our own Player type
 ---------------------------------------------------------------------------*/
@@ -368,40 +366,10 @@ export default class Server implements Party.Server {
   static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
     try {
       // replace with jwt token and fetch walletaddress from the signature
-      let walletAddress: string | null = new URL(req.url).searchParams.get(
-        'walletAddress',
-      );
-      console.log(walletAddress);
-
-      const token: string | null = new URL(req.url).searchParams.get('token');
-
-      const seat: string | null = new URL(req.url).searchParams.get('seat');
-
-      console.log(seat);
-
-      if (!token) throw new Error('No token provided');
-
-      const result = await verifyMessage({
-        address: walletAddress as Address,
-        message: env.NEXT_PUBLIC_SIGN_MSG,
-        signature: token as Address,
-      });
-
-      // verify token here
-
-      if (!result) throw new Error('Invalid token');
-
-      if (!walletAddress) throw new Error('No wallet address provided');
-
-      walletAddress = walletAddress.toLowerCase();
-
-      // check if wallet address is valid by checking if it starts woth 0x
-      if (!walletAddress.startsWith('0x')) {
-        throw new Error('Invalid wallet address');
-      }
+      const walletAddress =
+        new URL(req.url).searchParams.get('walletAddress') ?? '';
 
       req.headers.set('X-User-WalletAddress', walletAddress);
-
       return req;
     } catch (e: unknown) {
       if (e instanceof Error) {
