@@ -63,6 +63,8 @@ const useGame = () => {
     },
     onMessage: (evt) => {
       const msg = JSON.parse(evt.data as string);
+      // TODO: need to add validation here , either common type across client and server or zod
+
       switch (msg.type) {
         case 'sync':
           setOthers({ ...msg.cursors });
@@ -98,9 +100,9 @@ const useGame = () => {
       setIsAuthenticated(false);
     },
     query: {
+      walletAddress,
       seat,
       token,
-      walletAddress,
     },
   });
 

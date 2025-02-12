@@ -1,5 +1,6 @@
 {
   "name": "blackjack-party",
   "main": "party/index.ts",
-  "domain": "blackjack-party.arcy.in"
+  "domain": "blackjack-party.arcy.in",
+  "compatibilityDate": "2025-02-12"
 }

@@ -2,8 +2,10 @@ import type * as Party from 'partykit/server';
 import { BlackjackRoom } from './blackjack-room';
 import { CursorRoom } from './cursor-room';
 
+export type Id = `0x${string}` | 'guest';
+
 type ConnectionState = {
-  walletAddress: `0x${string}`;
+  id: Id;
 };
 
 /*-------------------------------------------------------------------------
@@ -12,13 +14,16 @@ type ConnectionState = {
   and in-room messages for our Blackjack game.
 ---------------------------------------------------------------------------*/
 export default class Server implements Party.Server {
-  private roomMap: { [id: string]: BlackjackRoom } = {
-    main: new BlackjackRoom('main'),
-  };
+  private roomMap: { [id: string]: BlackjackRoom };
   private cursorRoom: CursorRoom;
+  readonly room: Party.Room;
 
-  constructor(readonly party: Party.Server) {
+  constructor(room: Party.Room) {
+    this.room = room;
     this.cursorRoom = new CursorRoom('cursors');
+    this.roomMap = {
+      main: new BlackjackRoom('main', this.room),
+    };
   }
 
   static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
@@ -27,11 +32,11 @@ export default class Server implements Party.Server {
       const walletAddress =
         new URL(req.url).searchParams.get('walletAddress')?.toLowerCase() ?? '';
 
-      if (walletAddress === '') {
-        throw new Error('No wallet address provided');
+      if (walletAddress !== '') {
+        req.headers.set('X-User-Id', walletAddress);
+      } else {
+        req.headers.set('X-User-Id', 'guest');
       }
-
-      req.headers.set('X-User-WalletAddress', walletAddress);
       return req;
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -53,24 +58,24 @@ export default class Server implements Party.Server {
         throw new Error('Room not found');
       }
 
-      const walletAddress = request.headers.get('X-User-WalletAddress') as
-        | `0x${string}`
-        | null;
-      if (!walletAddress) {
-        throw new Error('No wallet address provided');
+      let id = request.headers.get('X-User-Id') as Id | null;
+
+      if (!id) {
+        console.log('guest user');
+        id = 'guest';
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
       conn.send(
         JSON.stringify({
           type: 'welcome',
-          message: `Welcome to Blackjack! ${walletAddress}`,
+          message: `Welcome to Blackjack! ${id}`,
         }),
       );
 
-      conn.setState({ walletAddress });
+      conn.setState({ id });
       // Join both rooms
-      await room.onJoin({ connection: conn, walletAddr: walletAddress });
+      await room.onJoin({ connection: conn, id: id });
       await this.cursorRoom.onJoin(conn);
     } catch (err) {
       console.error(`Error joining room: ${err}`);
@@ -97,9 +102,13 @@ export default class Server implements Party.Server {
       if (!room) {
         throw new Error('Room not found');
       }
-      const playerAddr = sender.state?.walletAddress;
+      const playerAddr = sender.state?.id;
       if (!playerAddr) {
         throw new Error('No player address found');
+      }
+
+      if (playerAddr === 'guest') {
+        return;
       }
 
       room

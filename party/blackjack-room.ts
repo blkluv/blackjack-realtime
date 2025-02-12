@@ -1,5 +1,6 @@
 import type * as Party from 'partykit/server';
 import { z } from 'zod';
+import type { Id } from '.';
 
 /*-------------------------------------------------------------------------
   Helper Types and Functions for Blackjack
@@ -15,7 +16,10 @@ import { z } from 'zod';
  */
 type Card = string;
 
-interface PlayerState {
+type PlayerJoinData = {
+  seat: number;
+};
+type PlayerState = {
   connection: Party.Connection;
   walletAddr: `0x${string}`;
   seat: number; // Seat number from 1 to 5.
@@ -24,14 +28,14 @@ interface PlayerState {
   done: boolean;
   hasBusted: boolean;
   isStanding: boolean;
-}
+};
 
-interface Client {
+type Client = {
   connection: Party.Connection;
-  walletAddr: `0x${string}`;
-}
+  id: Id;
+};
 
-interface GameState {
+type GameState = {
   players: { [walletAddr: string]: PlayerState };
   dealerHand: Card[];
   deck: Card[];
@@ -43,7 +47,7 @@ interface GameState {
     | 'playing' // Round in progress.
     | 'dealerTurn' // Dealer drawing cards.
     | 'roundover'; // Results available.
-}
+};
 
 const MessageSchema = z.object({
   type: z.string(),
@@ -119,12 +123,14 @@ function handValue(hand: Card[]): number {
 ---------------------------------------------------------------------------*/
 export class BlackjackRoom {
   readonly id: string;
+  room: Party.Room;
   readonly maxPlayers = 5;
   state: GameState;
   clients: { [connectionId: string]: Client };
 
-  constructor(id: string) {
+  constructor(id: string, room: Party.Room) {
     this.id = id;
+    this.room = room;
     this.clients = {};
     this.state = {
       players: {},
@@ -136,10 +142,8 @@ export class BlackjackRoom {
     };
   }
 
-  broadcast(message: string) {
-    // Placeholder broadcast.
-    // In a real application, this would send the update to all clients
-    // connected to this room.
+  broadcast(message: string, without?: string[]) {
+    this.room.broadcast(message, without);
     console.log(`[Room ${this.id} broadcast]: ${message}`);
   }
 
@@ -147,51 +151,22 @@ export class BlackjackRoom {
     this.clients[client.connection.id] = client;
 
     // check if wallet adddress is already in the game
-    const player = this.state.players[client.walletAddr];
-    if (player) {
-      player.connection.close();
-      //update connection id
-      player.connection = client.connection;
+    if (client.id !== 'guest') {
+      const player = this.state.players[client.id];
+      if (player) {
+        player.connection.close();
+        //update connection id
+        player.connection = client.connection;
+      }
     }
 
-    client.connection.send('welcome viewer');
+    client.connection.send('welcome guest');
   }
 
-  // async onPlayerJoin(player: Player): Promise<void> {
-  //   if (Object.keys(this.state.players).length >= this.maxPlayers) {
-  //     throw new Error('Table is full');
-  //   }
-  //   // Assign the smallest available seat (1 to 5).
-  //   const takenSeats = Object.values(this.state.players).map((p) => p.seat);
-  //   let seat = 1;
-  //   while (takenSeats.includes(seat)) {
-  //     seat++;
-  //   }
-  //   this.state.players[player.id] = {
-  //     id: player.id,
-  //     seat,
-  //     bet: 0,
-  //     hand: [],
-  //     done: false,
-  //     hasBusted: false,
-  //     isStanding: false,
-  //   };
-  //   // Update order by seat.
-  //   this.state.playerOrder = Object.values(this.state.players)
-  //     .sort((a, b) => a.seat - b.seat)
-  //     .map((p) => p.id);
-  //   this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
-  // }
-
-  // async onPlayerLeave(player: Player): Promise<void> {
-  //   delete this.state.players[player.id];
-  //   this.state.playerOrder = Object.values(this.state.players)
-  //     .sort((a, b) => a.seat - b.seat)
-  //     .map((p) => p.id);
-  //   this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
-  // }
-
-  async onMessage(playerAddr: string, unknownData: unknown): Promise<void> {
+  async onMessage(
+    playerAddr: `0x${string}`,
+    unknownData: unknown,
+  ): Promise<void> {
     const data = MessageSchema.parse(unknownData);
 
     switch (data.type) {
@@ -216,7 +191,59 @@ export class BlackjackRoom {
     }
   }
 
-  placeBet(playerAddr: string, bet: number): void {
+  playerJoin(playerAddr: `0x${string}`, data: PlayerJoinData) {
+    if (Object.keys(this.state.players).length >= this.maxPlayers) {
+      throw new Error('Table is full');
+    }
+
+    // check if player is a connected client
+
+    const player = this.clients[playerAddr];
+    if (!player) {
+      throw new Error('Player not found');
+    }
+    //check if player is already in the game
+    if (this.state.players[playerAddr]) {
+      throw new Error('Player is already in the game');
+    }
+
+    const { seat } = data;
+
+    //check if seat is already taken
+    if (Object.values(this.state.players).some((p) => p.seat === seat)) {
+      throw new Error('Seat is already taken');
+    }
+
+    this.state.players[playerAddr] = {
+      connection: player.connection,
+      walletAddr: playerAddr,
+      seat,
+      bet: 0,
+      hand: [],
+      done: false,
+      hasBusted: false,
+      isStanding: false,
+    };
+
+    // Update order by seat.
+    this.state.playerOrder = Object.values(this.state.players)
+      .sort((a, b) => a.seat - b.seat)
+      .map((p) => p.walletAddr);
+
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+  }
+
+  playerLeave(playerAddr: `0x${string}`): void {
+    delete this.state.players[playerAddr];
+
+    this.state.playerOrder = Object.values(this.state.players)
+      .sort((a, b) => a.seat - b.seat)
+      .map((p) => p.walletAddr);
+
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+  }
+
+  placeBet(playerAddr: `0x${string}`, bet: number): void {
     if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
@@ -261,7 +288,7 @@ export class BlackjackRoom {
     this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
-  playerHit(playerAddr: string): void {
+  playerHit(playerAddr: `0x${string}`): void {
     const currentPlayerId =
       this.state.playerOrder[this.state.currentPlayerIndex];
     if (playerAddr !== currentPlayerId) return;
@@ -278,7 +305,7 @@ export class BlackjackRoom {
     this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
-  playerStand(playerAddr: string): void {
+  playerStand(playerAddr: `0x${string}`): void {
     const currentPlayerId =
       this.state.playerOrder[this.state.currentPlayerIndex];
     if (playerAddr !== currentPlayerId) return;
