@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { nanoid } from 'nanoid';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
-import { cn, getRandomCard } from '@/lib/utils';
+import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
 import Image from 'next/image';
 import { useWindowSize } from '../../../hooks/useWindowSize';
 import useMounted from '../../../hooks/useMounted';

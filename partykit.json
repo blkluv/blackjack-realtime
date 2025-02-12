@@ -1,0 +1,5 @@
+{
+  "name": "blackjack-party",
+  "main": "party/index.ts",
+  "domain": "blackjack.huddle01.com"
+}

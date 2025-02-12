@@ -2,8 +2,28 @@
 import { Button } from '@/components/ui/button';
 import { Card } from './components/Card';
 import { nanoid } from 'nanoid';
-
+import usePartySocket from 'partysocket/react';
+import { env } from '@/env.mjs';
 export default function Page() {
+  const ws = usePartySocket({
+    host: env.NEXT_PUBLIC_PARTYKIT_HOST,
+    room: 'blackjack',
+
+    onOpen: () => {
+      console.log('connected to partykit');
+      ws.send('hello from client');
+    },
+    onMessage: (msg) => {
+      console.log('message received', msg);
+    },
+    onClose: (close) => {
+      console.log('disconnected from partykit', close);
+    },
+    onError: (err) => {
+      console.error('error in partykit', err);
+    },
+  });
+
   return (
     <div className="min-h-screen bg-[#0a4d0a] text-[#f0f0f0] p-4">
       <h1 className="text-3xl text-center text-yellow-400 mb-8">
