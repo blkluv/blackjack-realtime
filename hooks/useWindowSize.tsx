@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 type WindowSize = {
   width: number;
@@ -9,21 +9,20 @@ type WindowSize = {
 
 export const useWindowSize = (): WindowSize => {
   const [size, setSize] = useState<WindowSize>({
-    width: typeof window !== "undefined" ? window.innerWidth : 0,
-    height: typeof window !== "undefined" ? window.innerHeight : 0,
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
     q2:
-      typeof window !== "undefined"
+      typeof window !== 'undefined'
         ? Math.sqrt((window.innerHeight ^ 2) + (window.innerWidth ^ 2))
         : 0,
     q:
-      typeof window !== "undefined"
+      typeof window !== 'undefined'
         ? window.innerHeight + window.innerWidth
         : 0,
   });
 
   useEffect(() => {
-    // Guard clause for SSR
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
 
     const handleResize = () => {
       setSize({
@@ -34,10 +33,10 @@ export const useWindowSize = (): WindowSize => {
       });
     };
 
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Initialize on mount
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return size;

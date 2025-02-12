@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Providers } from './components/providers';
 
 import './globals.css';
+import WalletProvider from '@/components/WalletProvider';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'JStack App',
@@ -9,15 +11,17 @@ export const metadata: Metadata = {
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersObj = await headers();
+  const cookies = headersObj.get('cookie');
   return (
     <html lang="en">
       <body className="antialiased">
-        <Providers>{children}</Providers>
+        <WalletProvider cookies={cookies}>{children}</WalletProvider>
       </body>
     </html>
   );

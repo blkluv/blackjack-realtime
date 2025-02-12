@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { nanoid } from "nanoid";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { nanoid } from 'nanoid';
 // @ts-ignore
-import Card from "@heruka_urgyen/react-playing-cards";
-import { cn, getRandomCard } from "@/lib/utils";
-import Image from "next/image";
-import { useWindowSize } from "../../../hooks/useWindowSize";
+import Card from '@heruka_urgyen/react-playing-cards';
+import { cn, getRandomCard } from '@/lib/utils';
+import Image from 'next/image';
+import { useWindowSize } from '../../../hooks/useWindowSize';
 
 const BlackjackTable = () => {
   const { height, width, q, q2 } = useWindowSize();
@@ -58,9 +58,9 @@ const Background = () => {
           width: q / 2.1,
           top: -q / 4.2,
           outlineWidth: q / 20,
-          outlineColor: "#18181b",
+          outlineColor: '#18181b',
         }}
-        className="absolute rounded-full aspect-square outline"
+        className="absolute  rounded-full aspect-square outline"
       />
       <div
         style={{
@@ -162,11 +162,11 @@ const DeckOfCards = ({ cards, q }: { cards: string[]; q: number }) => {
           key={nanoid()}
           className="group"
           style={{
-            position: i > 0 ? "absolute" : "relative",
+            position: i > 0 ? 'absolute' : 'relative',
             left: `${i * (q / 256) + (i > 0 ? Math.random() * 20 : 0)}px`,
             top: `${i * 0 + (i > 0 ? Math.random() * (q / 64) : 0)}px`,
             transform: `rotate(${i > 0 ? Math.random() * (q / 64) : 0}deg)`,
-            transition: "transform 0.3s ease-in-out",
+            transition: 'transform 0.3s ease-in-out',
           }}
         >
           <div className="transform transition-transform duration-300 group-hover:-translate-y-4 group-hover:scale-105">
