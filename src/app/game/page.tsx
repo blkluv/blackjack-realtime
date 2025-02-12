@@ -1,38 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { nanoid } from 'nanoid';
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { nanoid } from "nanoid";
 // @ts-ignore
-import Card from '@heruka_urgyen/react-playing-cards';
-import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
-import Image from 'next/image';
-import { useWindowSize } from '../../../hooks/useWindowSize';
-import useMounted from '../../../hooks/useMounted';
-import { motion } from 'motion/react';
-import { MicIcon, MicOffIcon } from 'lucide-react';
-import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
-import usePartySocket from 'partysocket/react';
-import { env } from '@/env.mjs';
-const GamePage = () => {
-  const ws = usePartySocket({
-    host: env.NEXT_PUBLIC_PARTYKIT_HOST,
-    room: 'blackjack',
-    onOpen: () => {
-      console.log('connected to partykit');
-      ws.send('hello from client');
-    },
-    onMessage: (msg) => {
-      console.log('message received', msg);
-    },
-    onClose: (close) => {
-      console.log('disconnected from partykit', close);
-    },
-    onError: (err) => {
-      console.error('error in partykit', err);
-    },
-  });
+import Card from "@heruka_urgyen/react-playing-cards";
+import { cn, getRandomCard, truncateAddress } from "@/lib/utils";
+import Image from "next/image";
+import { useWindowSize } from "../../../hooks/useWindowSize";
+import useMounted from "../../../hooks/useMounted";
+import { motion } from "motion/react";
+import { MicIcon, MicOffIcon } from "lucide-react";
+import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
+import usePartySocket from "partysocket/react";
+import { env } from "@/env.mjs";
+import { useSignMessage } from "wagmi";
 
+const GamePage = () => {
   return (
     <div className="h-screen relative w-full overflow-hidden flex flex-col items-center">
       <DealerView />
@@ -79,7 +63,7 @@ const Background = () => {
           width: q / 2.3,
           top: -q / 4.6,
           outlineWidth: q / 24,
-          outlineColor: '#18181b',
+          outlineColor: "#18181b",
         }}
         className="absolute rounded-full aspect-square outline border-4 border-zinc-300"
       />
@@ -91,7 +75,7 @@ const Background = () => {
         className="absolute overflow-hidden bg-emerald-950 rounded-full aspect-square border-4 border-zinc-300"
       >
         <Image
-          src={'/green-noise.png'}
+          src={"/green-noise.png"}
           alt=""
           height={1000}
           width={1000}
@@ -103,8 +87,8 @@ const Background = () => {
         style={{
           width: q / 3,
           top: -q / 6,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          left: "50%",
+          transform: "translateX(-50%)",
         }}
         className="absolute flex justify-center items-center overflow-hidden rounded-full aspect-square border border-zinc-300"
       />
@@ -129,11 +113,11 @@ const DeckOfCards = ({
           key={nanoid()}
           className="group"
           style={{
-            position: i > 0 ? 'absolute' : 'relative',
+            position: i > 0 ? "absolute" : "relative",
             left: `${i * (q / 256) + (i > 0 ? Math.random() * 20 : 0)}px`,
             top: `${i * 0 + (i > 0 ? Math.random() * (q / 64) : 0)}px`,
             transform: `rotate(${i > 0 ? Math.random() * (q / 64) : 0}deg)`,
-            transition: 'transform 0.3s ease-in-out',
+            transition: "transform 0.3s ease-in-out",
           }}
         >
           <motion.div
@@ -223,8 +207,51 @@ const PlayerLayout = () => {
 
 const ActionButtons = () => {
   const [isMicOn, setIsMicOn] = useState(false);
-  const { address, caipAddress, isConnected } = useAppKitAccount();
+  const { address, caipAddress, isConnected, status } = useAppKitAccount();
   const { open } = useAppKit();
+  const { signMessageAsync } = useSignMessage({
+    mutation: {
+      onSuccess: (data) => {
+        console.log("signed message", data);
+      },
+      onError: (error) => {
+        console.error("error signing message", error);
+      },
+    },
+  });
+
+  const { readyState, send } = usePartySocket({
+    host: env.NEXT_PUBLIC_PARTYKIT_HOST,
+    room: "blackjack",
+    onOpen: () => {
+      console.log("connected to partykit");
+      send("hello from client");
+    },
+    onMessage: (msg) => {
+      console.log("message received", msg);
+    },
+    onClose: (close) => {
+      console.log("disconnected from partykit", close);
+    },
+    onError: (err) => {
+      console.error("error in partykit", err);
+    },
+    query: async () => ({
+      // get an auth token using your authentication client library
+      walletAddress: address?.toLowerCase(),
+    }),
+  });
+
+  const sign = () => {
+    signMessageAsync({ message: "hello" });
+  };
+
+  //   useEffect(() => {
+  //     if (status === "connected") {
+  //       signMessageAsync({ message: "hello" });
+  //     }
+  //   }, [status]);
+
   return (
     <div className="flex fixed bottom-4 items-center p-4 border border-zinc-200/10 backdrop-blur-sm rounded-xl space-x-4">
       {isConnected && (
@@ -233,10 +260,10 @@ const ActionButtons = () => {
             onClick={() => setIsMicOn(!isMicOn)}
             size="sm"
             className={cn(
-              'bg-yellow-400 text-black cursor-pointer rounded-lg',
+              "bg-yellow-400 text-black cursor-pointer rounded-lg",
               isMicOn
-                ? 'bg-yellow-400 hover:bg-yellow-500'
-                : 'bg-red-400 hover:bg-red-500',
+                ? "bg-yellow-400 hover:bg-yellow-500"
+                : "bg-red-400 hover:bg-red-500"
             )}
           >
             {isMicOn ? <MicIcon size={24} /> : <MicOffIcon size={24} />}
@@ -263,11 +290,11 @@ const ActionButtons = () => {
       )}
 
       <Button
-        size={'sm'}
+        size={"sm"}
         className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
-        onClick={() => open()}
+        onClick={() => (isConnected ? sign() : open())}
       >
-        {isConnected ? truncateAddress(address) : 'Connect Wallet'}
+        {isConnected ? "Sign Message" : "Connect Wallet"}
       </Button>
     </div>
   );
