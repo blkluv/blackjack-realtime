@@ -22,7 +22,8 @@ interface Player {
 type Card = string;
 
 interface PlayerState {
-  id: string;
+  connection: Party.Connection;
+  walletAddr: `0x${string}`;
   seat: number; // Seat number from 1 to 5.
   bet: number;
   hand: Card[];
@@ -31,9 +32,13 @@ interface PlayerState {
   isStanding: boolean;
 }
 
+interface Client {
+  connection: Party.Connection;
+  walletAddr: `0x${string}`;
+}
+
 interface GameState {
-  players: { [id: string]: PlayerState };
-  viewer: { [id: string]: PlayerState };
+  players: { [walletAddr: string]: PlayerState };
   dealerHand: Card[];
   deck: Card[];
   playerOrder: string[]; // player IDs sorted by seat order.
@@ -122,12 +127,13 @@ class BlackjackRoom {
   readonly id: string;
   readonly maxPlayers = 5;
   state: GameState;
+  clients: { [connectionId: string]: Client };
 
   constructor(id: string) {
     this.id = id;
+    this.clients = {};
     this.state = {
       players: {},
-      viewer: {},
       dealerHand: [],
       deck: createDeck(),
       playerOrder: [],
@@ -143,39 +149,53 @@ class BlackjackRoom {
     console.log(`[Room ${this.id} broadcast]: ${message}`);
   }
 
-  async onPlayerJoin(player: Player): Promise<void> {
-    if (Object.keys(this.state.players).length >= this.maxPlayers) {
-      throw new Error('Table is full');
+  async onJoin(client: Client) {
+    this.clients[client.connection.id] = client;
+
+    // check if wallet adddress is already in the game
+    const player = this.state.players[client.walletAddr];
+    if (player) {
+      player.connection.close();
+      //update connection id
+      player.connection = client.connection;
     }
-    // Assign the smallest available seat (1 to 5).
-    const takenSeats = Object.values(this.state.players).map((p) => p.seat);
-    let seat = 1;
-    while (takenSeats.includes(seat)) {
-      seat++;
-    }
-    this.state.players[player.id] = {
-      id: player.id,
-      seat,
-      bet: 0,
-      hand: [],
-      done: false,
-      hasBusted: false,
-      isStanding: false,
-    };
-    // Update order by seat.
-    this.state.playerOrder = Object.values(this.state.players)
-      .sort((a, b) => a.seat - b.seat)
-      .map((p) => p.id);
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+
+    client.connection.send('welcome viewer');
   }
 
-  async onPlayerLeave(player: Player): Promise<void> {
-    delete this.state.players[player.id];
-    this.state.playerOrder = Object.values(this.state.players)
-      .sort((a, b) => a.seat - b.seat)
-      .map((p) => p.id);
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
-  }
+  // async onPlayerJoin(player: Player): Promise<void> {
+  //   if (Object.keys(this.state.players).length >= this.maxPlayers) {
+  //     throw new Error('Table is full');
+  //   }
+  //   // Assign the smallest available seat (1 to 5).
+  //   const takenSeats = Object.values(this.state.players).map((p) => p.seat);
+  //   let seat = 1;
+  //   while (takenSeats.includes(seat)) {
+  //     seat++;
+  //   }
+  //   this.state.players[player.id] = {
+  //     id: player.id,
+  //     seat,
+  //     bet: 0,
+  //     hand: [],
+  //     done: false,
+  //     hasBusted: false,
+  //     isStanding: false,
+  //   };
+  //   // Update order by seat.
+  //   this.state.playerOrder = Object.values(this.state.players)
+  //     .sort((a, b) => a.seat - b.seat)
+  //     .map((p) => p.id);
+  //   this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+  // }
+
+  // async onPlayerLeave(player: Player): Promise<void> {
+  //   delete this.state.players[player.id];
+  //   this.state.playerOrder = Object.values(this.state.players)
+  //     .sort((a, b) => a.seat - b.seat)
+  //     .map((p) => p.id);
+  //   this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+  // }
 
   async onMessage(player: Player, unknownData: unknown): Promise<void> {
     const data = MessageSchema.parse(unknownData);
@@ -343,24 +363,68 @@ export default class Server implements Party.Server {
   // other details). We no longer require a separate room since we use our map.
   constructor(readonly party: Party.Server) {}
 
-  async onConnect(conn: Party.Connection) {
-    // For simplicity, all connections join the "main" room.
-    const room = this.roomMap.main;
-
-    if (!room) {
-      throw new Error('Room not found');
-    }
+  static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
     try {
-      await room.onPlayerJoin({ id: conn.id });
+      // replace with jwt token and fetch walletaddress from the signature
+      let walletAddress: string | null = new URL(req.url).searchParams.get(
+        'walletAddress',
+      );
+      // verify token here
+
+      if (!walletAddress) {
+        throw new Error('No wallet address provided');
+      }
+      walletAddress = walletAddress.toLowerCase();
+
+      // check if wallet address is valid by checking if it starts woth 0x
+      if (!walletAddress.startsWith('0x')) {
+        throw new Error('Invalid wallet address');
+      }
+
+      req.headers.set('X-User-WalletAddress', walletAddress);
+
+      return req;
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        return new Response(`Unauthorized ${e.message} `, { status: 401 });
+      }
+      return new Response('Unauthorized: An unexpected error occurred', {
+        status: 401,
+      });
+    }
+  }
+
+  async onConnect(
+    conn: Party.Connection,
+    { request }: Party.ConnectionContext,
+  ) {
+    try {
+      const room = this.roomMap.main;
+
+      if (!room) {
+        throw new Error('Room not found');
+      }
+      const walletAddress = request.headers.get('X-User-WalletAddress') as
+        | `0x${string}`
+        | null;
+      if (!walletAddress) {
+        throw new Error('No wallet address provided');
+      }
+
+      console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
+      conn.send(
+        JSON.stringify({
+          type: 'welcome',
+          message: `Welcome to Blackjack! ${walletAddress}`,
+        }),
+      );
+
+      await room.onJoin({ connection: conn, walletAddr: walletAddress });
     } catch (err) {
       console.error(`Error joining room: ${err}`);
       conn.send(JSON.stringify({ type: 'error', message: err }));
-      return;
+      conn.close();
     }
-    console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
-    conn.send(
-      JSON.stringify({ type: 'welcome', message: 'Welcome to Blackjack!' }),
-    );
   }
 
   async onMessage(message: string, sender: Party.Connection) {
