@@ -1,6 +1,7 @@
-import type * as Party from "partykit/server";
-import { z } from "zod";
-import { verifyMessage } from "viem";
+import type * as Party from 'partykit/server';
+import { z } from 'zod';
+import { type Address, verifyMessage } from 'viem';
+import { env } from '@/env.mjs';
 /*-------------------------------------------------------------------------
   Create our own Player type
 ---------------------------------------------------------------------------*/
@@ -45,11 +46,11 @@ interface GameState {
   playerOrder: string[]; // player IDs sorted by seat order.
   currentPlayerIndex: number;
   status:
-    | "waiting" // Waiting for players.
-    | "betting" // Players placing bets.
-    | "playing" // Round in progress.
-    | "dealerTurn" // Dealer drawing cards.
-    | "roundover"; // Results available.
+    | 'waiting' // Waiting for players.
+    | 'betting' // Players placing bets.
+    | 'playing' // Round in progress.
+    | 'dealerTurn' // Dealer drawing cards.
+    | 'roundover'; // Results available.
 }
 
 const MessageSchema = z.object({
@@ -62,21 +63,21 @@ const MessageSchema = z.object({
  */
 function createDeck(): Card[] {
   const ranks = [
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "T",
-    "J",
-    "Q",
-    "K",
-    "A",
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    'T',
+    'J',
+    'Q',
+    'K',
+    'A',
   ];
-  const suits = ["c", "d", "h", "s"];
+  const suits = ['c', 'd', 'h', 's'];
   const deck: Card[] = [];
   for (const r of ranks) {
     for (const s of suits) {
@@ -103,10 +104,10 @@ function handValue(hand: Card[]): number {
   let aces = 0;
   for (const card of hand) {
     const r = card.slice(0, 1);
-    if (r === "A") {
+    if (r === 'A') {
       aces++;
       sum += 1;
-    } else if (["K", "Q", "J", "T"].includes(r)) {
+    } else if (['K', 'Q', 'J', 'T'].includes(r)) {
       sum += 10;
     } else {
       sum += Number.parseInt(r, 10);
@@ -139,7 +140,7 @@ class BlackjackRoom {
       deck: createDeck(),
       playerOrder: [],
       currentPlayerIndex: 0,
-      status: "waiting",
+      status: 'waiting',
     };
   }
 
@@ -161,7 +162,7 @@ class BlackjackRoom {
       player.connection = client.connection;
     }
 
-    client.connection.send("welcome viewer");
+    client.connection.send('welcome viewer');
   }
 
   // async onPlayerJoin(player: Player): Promise<void> {
@@ -202,19 +203,19 @@ class BlackjackRoom {
     const data = MessageSchema.parse(unknownData);
 
     switch (data.type) {
-      case "placeBet": {
+      case 'placeBet': {
         this.placeBet(player, data.bet);
         break;
       }
-      case "startRound": {
+      case 'startRound': {
         this.startRound();
         break;
       }
-      case "hit": {
+      case 'hit': {
         this.playerHit(player);
         break;
       }
-      case "stand": {
+      case 'stand': {
         this.playerStand(player);
         break;
       }
@@ -224,13 +225,13 @@ class BlackjackRoom {
   }
 
   placeBet(player: Player, bet: number): void {
-    if (this.state.status !== "waiting" && this.state.status !== "betting") {
+    if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
     const p = this.state.players[player.id];
     if (!p) return;
     p.bet = bet;
-    this.broadcast(JSON.stringify({ type: "stateUpdate", state: this.state }));
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
   startRound(): void {
@@ -253,19 +254,19 @@ class BlackjackRoom {
     for (let i = 0; i < 2; i++) {
       for (const pid of this.state.playerOrder) {
         const player = this.state.players[pid];
-        if (!player) throw new Error("Player not found");
+        if (!player) throw new Error('Player not found');
         const card = this.state.deck.pop();
-        if (!card) throw new Error("Deck is empty");
+        if (!card) throw new Error('Deck is empty');
         player.hand.push(card);
       }
       const card = this.state.deck.pop();
-      if (!card) throw new Error("Deck is empty");
+      if (!card) throw new Error('Deck is empty');
       this.state.dealerHand.push(card);
     }
-    this.state.status = "playing";
+    this.state.status = 'playing';
 
     this.state.currentPlayerIndex = 0;
-    this.broadcast(JSON.stringify({ type: "stateUpdate", state: this.state }));
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
   playerHit(player: Player): void {
@@ -273,16 +274,16 @@ class BlackjackRoom {
       this.state.playerOrder[this.state.currentPlayerIndex];
     if (player.id !== currentPlayerId) return;
     const p = this.state.players[player.id];
-    if (!p) throw new Error("Player not found");
+    if (!p) throw new Error('Player not found');
     const card = this.state.deck.pop();
-    if (!card) throw new Error("Deck is empty");
+    if (!card) throw new Error('Deck is empty');
     p.hand.push(card);
     if (handValue(p.hand) > 21) {
       p.hasBusted = true;
       p.done = true;
       this.advanceTurn();
     }
-    this.broadcast(JSON.stringify({ type: "stateUpdate", state: this.state }));
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
   playerStand(player: Player): void {
@@ -290,40 +291,40 @@ class BlackjackRoom {
       this.state.playerOrder[this.state.currentPlayerIndex];
     if (player.id !== currentPlayerId) return;
     const p = this.state.players[player.id];
-    if (!p) throw new Error("Player not found");
+    if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
     this.advanceTurn();
-    this.broadcast(JSON.stringify({ type: "stateUpdate", state: this.state }));
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 
   advanceTurn(): void {
     while (this.state.currentPlayerIndex < this.state.playerOrder.length - 1) {
       this.state.currentPlayerIndex++;
       const pid = this.state.playerOrder[this.state.currentPlayerIndex];
-      if (!pid) throw new Error("Player ID not found");
+      if (!pid) throw new Error('Player ID not found');
       const player = this.state.players[pid];
-      if (!player) throw new Error("Player not found");
+      if (!player) throw new Error('Player not found');
       if (!player.done) {
         return;
       }
     }
     // All players have been processed; now it's the dealer's turn.
-    this.state.status = "dealerTurn";
+    this.state.status = 'dealerTurn';
     this.dealerPlay();
   }
 
   dealerPlay(): void {
     while (handValue(this.state.dealerHand) < 17) {
       const card = this.state.deck.pop();
-      if (!card) throw new Error("Deck is empty");
+      if (!card) throw new Error('Deck is empty');
       this.state.dealerHand.push(card);
     }
     this.endRound();
   }
 
   endRound(): void {
-    this.state.status = "roundover";
+    this.state.status = 'roundover';
     const dealerScore = handValue(this.state.dealerHand);
     for (const pid of this.state.playerOrder) {
       const p = this.state.players[pid];
@@ -335,17 +336,17 @@ class BlackjackRoom {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
       } else if (dealerScore > 21 || playerScore > dealerScore) {
         console.log(
-          `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`
+          `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
       } else if (playerScore === dealerScore) {
         console.log(`Player ${pid} pushes with ${playerScore}`);
       } else {
         console.log(
-          `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`
+          `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
       }
     }
-    this.broadcast(JSON.stringify({ type: "stateUpdate", state: this.state }));
+    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
 }
 
@@ -357,7 +358,7 @@ class BlackjackRoom {
 export default class Server implements Party.Server {
   // Create a map of rooms. Right now, we only instantiate a "main" room.
   private roomMap: { [id: string]: BlackjackRoom } = {
-    main: new BlackjackRoom("main"),
+    main: new BlackjackRoom('main'),
   };
 
   // We accept a Party instance in the constructor (which may contain env and
@@ -368,30 +369,41 @@ export default class Server implements Party.Server {
     try {
       // replace with jwt token and fetch walletaddress from the signature
       let walletAddress: string | null = new URL(req.url).searchParams.get(
-        "walletAddress"
+        'walletAddress',
       );
-
       console.log(walletAddress);
+
+      const token: string | null = new URL(req.url).searchParams.get('token');
+
+      if (!token) throw new Error('No token provided');
+
+      const result = await verifyMessage({
+        address: walletAddress as Address,
+        message: env.NEXT_PUBLIC_SIGN_MSG,
+        signature: token as Address,
+      });
+
       // verify token here
 
-      if (!walletAddress) {
-        throw new Error("No wallet address provided");
-      }
+      if (!result) throw new Error('Invalid token');
+
+      if (!walletAddress) throw new Error('No wallet address provided');
+
       walletAddress = walletAddress.toLowerCase();
 
       // check if wallet address is valid by checking if it starts woth 0x
-      if (!walletAddress.startsWith("0x")) {
-        throw new Error("Invalid wallet address");
+      if (!walletAddress.startsWith('0x')) {
+        throw new Error('Invalid wallet address');
       }
 
-      req.headers.set("X-User-WalletAddress", walletAddress);
+      req.headers.set('X-User-WalletAddress', walletAddress);
 
       return req;
     } catch (e: unknown) {
       if (e instanceof Error) {
         return new Response(`Unauthorized ${e.message} `, { status: 401 });
       }
-      return new Response("Unauthorized: An unexpected error occurred", {
+      return new Response('Unauthorized: An unexpected error occurred', {
         status: 401,
       });
     }
@@ -399,33 +411,33 @@ export default class Server implements Party.Server {
 
   async onConnect(
     conn: Party.Connection,
-    { request }: Party.ConnectionContext
+    { request }: Party.ConnectionContext,
   ) {
     try {
       const room = this.roomMap.main;
 
       if (!room) {
-        throw new Error("Room not found");
+        throw new Error('Room not found');
       }
-      const walletAddress = request.headers.get("X-User-WalletAddress") as
+      const walletAddress = request.headers.get('X-User-WalletAddress') as
         | `0x${string}`
         | null;
       if (!walletAddress) {
-        throw new Error("No wallet address provided");
+        throw new Error('No wallet address provided');
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
       conn.send(
         JSON.stringify({
-          type: "welcome",
+          type: 'welcome',
           message: `Welcome to Blackjack! ${walletAddress}`,
-        })
+        }),
       );
 
       await room.onJoin({ connection: conn, walletAddr: walletAddress });
     } catch (err) {
       console.error(`Error joining room: ${err}`);
-      conn.send(JSON.stringify({ type: "error", message: err }));
+      conn.send(JSON.stringify({ type: 'error', message: err }));
       conn.close();
     }
   }
@@ -437,14 +449,14 @@ export default class Server implements Party.Server {
       // Here, we assume messages are for the "main" room.
       const room = this.roomMap.main;
       if (!room) {
-        throw new Error("Room not found");
+        throw new Error('Room not found');
       }
       const player: Player = { id: sender.id };
       room
         .onMessage(player, data)
-        .catch((err) => console.error("Error handling message in room:", err));
+        .catch((err) => console.error('Error handling message in room:', err));
     } catch (err) {
-      console.error("Failed to parse message as JSON", err);
+      console.error('Failed to parse message as JSON', err);
     }
   }
 
@@ -452,12 +464,12 @@ export default class Server implements Party.Server {
     // For debugging, a simple HTTP GET shows the room state.
     const room = this.roomMap.main;
     if (!room) {
-      throw new Error("Room not found");
+      throw new Error('Room not found');
     }
-    if (req.method === "GET") {
+    if (req.method === 'GET') {
       return new Response(JSON.stringify(room.state, null, 2));
     }
-    return new Response("Unsupported method", { status: 400 });
+    return new Response('Unsupported method', { status: 400 });
   }
 }
 
