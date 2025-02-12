@@ -15,6 +15,7 @@ import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
 import usePartySocket from 'partysocket/react';
 import { env } from '@/env.mjs';
 import { useSignMessage } from 'wagmi';
+import useGame from '../../../hooks/useGame';
 
 const GamePage = () => {
   return (
@@ -151,6 +152,7 @@ const DeckOfCards = ({
 };
 
 const PlayerLayout = () => {
+  const { joinGame, isAuthenticated } = useGame();
   const { q } = useWindowSize();
   const numPlayers = 5;
   const curveHeight = q / 4.6;
@@ -191,6 +193,8 @@ const PlayerLayout = () => {
               }}
             >
               <Button
+                disabled={isAuthenticated}
+                onClick={() => joinGame(i + 1)}
                 size="sm"
                 className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
               >
@@ -213,62 +217,14 @@ const PlayerLayout = () => {
 };
 
 const ActionButtons = () => {
-  const [seat, setSeat] = useState('');
-  const [isMicOn, setIsMicOn] = useState(false);
-  const [token, setToken] = useState('');
   const {
-    address: walletAddress,
-    caipAddress,
+    isAuthenticated,
+    setIsMicOn,
+    joinGame,
+    isMicOn,
     isConnected,
-    status,
-  } = useAppKitAccount();
-  const { open } = useAppKit();
-  const { signMessageAsync } = useSignMessage({
-    mutation: {
-      onSuccess: (data) => {
-        console.log('signed message', data);
-        setToken(data);
-      },
-      onError: (error) => {
-        console.error('error signing message', error);
-      },
-    },
-  });
-
-  const { send, readyState } = usePartySocket({
-    host: env.NEXT_PUBLIC_PARTYKIT_HOST,
-    room: 'blackjack',
-    onOpen: () => {
-      console.log('connected to partykit');
-      setIsAuthenticated(true);
-      send('hello from client');
-    },
-    onMessage: (msg) => {
-      console.log('message received', msg);
-    },
-    onClose: (close) => {
-      console.log('disconnected from partykit', close);
-    },
-    onError: (err) => {
-      console.error('error in partykit', err);
-    },
-    query: {
-      // get an auth token using your authentication client library
-      //   walletAddress: address?.toLowerCase(),
-      seat,
-      token,
-      walletAddress,
-    },
-  });
-
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    readyState === WebSocket.OPEN,
-  );
-
-  const joinGame = (seat: number) => {
-    setSeat(seat.toString());
-    signMessageAsync({ message: env.NEXT_PUBLIC_SIGN_MSG });
-  };
+    walletAddress,
+  } = useGame();
 
   //   useEffect(() => {
   //     if (status === "connected") {

@@ -375,6 +375,10 @@ export default class Server implements Party.Server {
 
       const token: string | null = new URL(req.url).searchParams.get('token');
 
+      const seat: string | null = new URL(req.url).searchParams.get('seat');
+
+      console.log(seat);
+
       if (!token) throw new Error('No token provided');
 
       const result = await verifyMessage({
