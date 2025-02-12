@@ -12,6 +12,7 @@ export const env = createEnv({
     TURSO_AUTH_TOKEN: z.string().min(1),
     CLOUDFLARE_API_TOKEN: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
+    WRANGLER_URL: z.string().optional(),
   },
 
   /**
