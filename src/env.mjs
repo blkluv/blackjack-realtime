@@ -23,6 +23,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
+    NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
   },
 
   /**
