@@ -1,29 +1,25 @@
-import { posts } from '@/server/db/schema';
-import { desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { j, publicProcedure } from '../jstack';
+import { generateNonce, constructMessage } from '../utils/web3';
 
 export const postRouter = j.router({
-  recent: publicProcedure.query(async ({ c, ctx }) => {
-    const { db } = ctx;
+  generateChallenge: publicProcedure
+    .input(z.object({ walletAddress: z.string().toLowerCase() }))
+    .mutation(async ({ input }) => {
+      const now = Date.now();
+      const issuedAt = new Date(now);
 
-    const [recentPost] = await db
-      .select()
-      .from(posts)
-      .orderBy(desc(posts.createdAt))
-      .limit(1);
+      const expiresAt = new Date(now + 5 * 60 * 1000);
 
-    return c.superjson(recentPost ?? null);
-  }),
+      const nonce = await generateNonce();
 
-  create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, c, input }) => {
-      const { name } = input;
-      const { db } = ctx;
+      const message = constructMessage({
+        walletAddress: input.walletAddress,
+        issuedAt,
+        expiresAt,
+        nonce,
+      });
 
-      const post = await db.insert(posts).values({ name });
-
-      return c.superjson(post);
+      return message;
     }),
 });
