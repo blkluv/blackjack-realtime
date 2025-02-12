@@ -12,8 +12,27 @@ import useMounted from '../../../hooks/useMounted';
 import { motion } from 'motion/react';
 import { MicIcon, MicOffIcon } from 'lucide-react';
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
-
+import usePartySocket from 'partysocket/react';
+import { env } from '@/env.mjs';
 const GamePage = () => {
+  const ws = usePartySocket({
+    host: env.NEXT_PUBLIC_PARTYKIT_HOST,
+    room: 'blackjack',
+    onOpen: () => {
+      console.log('connected to partykit');
+      ws.send('hello from client');
+    },
+    onMessage: (msg) => {
+      console.log('message received', msg);
+    },
+    onClose: (close) => {
+      console.log('disconnected from partykit', close);
+    },
+    onError: (err) => {
+      console.error('error in partykit', err);
+    },
+  });
+
   return (
     <div className="h-screen relative w-full overflow-hidden flex flex-col items-center">
       <DealerView />

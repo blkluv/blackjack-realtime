@@ -33,6 +33,7 @@ interface PlayerState {
 
 interface GameState {
   players: { [id: string]: PlayerState };
+  viewer: { [id: string]: PlayerState };
   dealerHand: Card[];
   deck: Card[];
   playerOrder: string[]; // player IDs sorted by seat order.
@@ -126,6 +127,7 @@ class BlackjackRoom {
     this.id = id;
     this.state = {
       players: {},
+      viewer: {},
       dealerHand: [],
       deck: createDeck(),
       playerOrder: [],
@@ -212,12 +214,12 @@ class BlackjackRoom {
 
   startRound(): void {
     if (Object.keys(this.state.players).length === 0) return;
-    this.state.status = 'betting';
 
     // Replenish deck if needed.
     if (this.state.deck.length < 15) {
       this.state.deck = createDeck();
     }
+
     // Reset players' state.
     for (const player of Object.values(this.state.players)) {
       player.hand = [];
@@ -240,6 +242,7 @@ class BlackjackRoom {
       this.state.dealerHand.push(card);
     }
     this.state.status = 'playing';
+
     this.state.currentPlayerIndex = 0;
     this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
   }
@@ -343,6 +346,7 @@ export default class Server implements Party.Server {
   async onConnect(conn: Party.Connection) {
     // For simplicity, all connections join the "main" room.
     const room = this.roomMap.main;
+
     if (!room) {
       throw new Error('Room not found');
     }
