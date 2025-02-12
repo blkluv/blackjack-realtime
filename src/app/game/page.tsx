@@ -236,10 +236,10 @@ const ActionButtons = () => {
     onError: (err) => {
       console.error("error in partykit", err);
     },
-    query: async () => ({
+    query: {
       // get an auth token using your authentication client library
       walletAddress: address?.toLowerCase(),
-    }),
+    },
   });
 
   const sign = () => {

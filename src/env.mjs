@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
-import { createEnv } from '@t3-oss/env-nextjs';
-import { z } from 'zod';
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
 
 export const env = createEnv({
   /**
@@ -13,7 +13,7 @@ export const env = createEnv({
     CLOUDFLARE_API_TOKEN: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     WRANGLER_URL: z.string().optional(),
-    NODE_ENV: z.enum(['development', 'production']).default('development'),
+    NODE_ENV: z.enum(["development", "production"]).default("development"),
   },
 
   /**
@@ -22,7 +22,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
+    NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default("localhost:1999"),
     NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
   },
 
@@ -38,5 +38,6 @@ export const env = createEnv({
     CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
     // public env vars
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
+    NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
   },
 });

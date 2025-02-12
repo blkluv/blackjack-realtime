@@ -161,7 +161,7 @@ class BlackjackRoom {
       player.connection = client.connection;
     }
 
-    client.connection.send('welcome viewer');
+    client.connection.send("welcome viewer");
   }
 
   // async onPlayerJoin(player: Player): Promise<void> {
@@ -368,28 +368,30 @@ export default class Server implements Party.Server {
     try {
       // replace with jwt token and fetch walletaddress from the signature
       let walletAddress: string | null = new URL(req.url).searchParams.get(
-        'walletAddress',
+        "walletAddress"
       );
+
+      console.log(walletAddress);
       // verify token here
 
       if (!walletAddress) {
-        throw new Error('No wallet address provided');
+        throw new Error("No wallet address provided");
       }
       walletAddress = walletAddress.toLowerCase();
 
       // check if wallet address is valid by checking if it starts woth 0x
-      if (!walletAddress.startsWith('0x')) {
-        throw new Error('Invalid wallet address');
+      if (!walletAddress.startsWith("0x")) {
+        throw new Error("Invalid wallet address");
       }
 
-      req.headers.set('X-User-WalletAddress', walletAddress);
+      req.headers.set("X-User-WalletAddress", walletAddress);
 
       return req;
     } catch (e: unknown) {
       if (e instanceof Error) {
         return new Response(`Unauthorized ${e.message} `, { status: 401 });
       }
-      return new Response('Unauthorized: An unexpected error occurred', {
+      return new Response("Unauthorized: An unexpected error occurred", {
         status: 401,
       });
     }
@@ -397,33 +399,33 @@ export default class Server implements Party.Server {
 
   async onConnect(
     conn: Party.Connection,
-    { request }: Party.ConnectionContext,
+    { request }: Party.ConnectionContext
   ) {
     try {
       const room = this.roomMap.main;
 
       if (!room) {
-        throw new Error('Room not found');
+        throw new Error("Room not found");
       }
-      const walletAddress = request.headers.get('X-User-WalletAddress') as
+      const walletAddress = request.headers.get("X-User-WalletAddress") as
         | `0x${string}`
         | null;
       if (!walletAddress) {
-        throw new Error('No wallet address provided');
+        throw new Error("No wallet address provided");
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
       conn.send(
         JSON.stringify({
-          type: 'welcome',
+          type: "welcome",
           message: `Welcome to Blackjack! ${walletAddress}`,
-        }),
+        })
       );
 
       await room.onJoin({ connection: conn, walletAddr: walletAddress });
     } catch (err) {
       console.error(`Error joining room: ${err}`);
-      conn.send(JSON.stringify({ type: 'error', message: err }));
+      conn.send(JSON.stringify({ type: "error", message: err }));
       conn.close();
     }
   }
