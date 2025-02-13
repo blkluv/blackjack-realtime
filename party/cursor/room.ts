@@ -1,45 +1,11 @@
 import type * as Party from 'partykit/server';
-import { z } from 'zod';
-import type { ConnectionState } from '.';
-
-type Cursor = {
-  id: string;
-  x: number;
-  y: number;
-  pointer: 'mouse' | 'touch';
-  lastUpdate: number;
-  country: string | null;
-};
-
-// all client messages to server
-const CursorUpdateSchema = z.object({
-  type: z.literal('cursor-update'),
-  data: z.object({
-    x: z.number(),
-    y: z.number(),
-    pointer: z.enum(['mouse', 'touch']),
-  }),
-});
-
-const CursorRemoveSchema = z.object({
-  type: z.literal('cursor-remove'),
-  data: z.object({}),
-});
-
-const CursorMessageSchema = z.union([CursorUpdateSchema, CursorRemoveSchema]);
-export type TCursorMessageSchema = z.infer<typeof CursorMessageSchema>;
-
-export type CursorRecord = {
-  'cursor-sync': { cursors: Cursor[] };
-  'cursor-update': { cursor: Cursor };
-  'cursor-remove': { id: string };
-};
-
-export type TCursorServerMessage<T extends keyof CursorRecord> = {
-  room: 'cursor';
-  type: T;
-  data: CursorRecord[T];
-};
+import type { ConnectionState } from '../index';
+import {
+  type Cursor,
+  CursorMessageSchema,
+  type CursorRecord,
+  type TCursorServerMessage,
+} from './cursor.types';
 
 export class CursorRoom {
   readonly id: string;

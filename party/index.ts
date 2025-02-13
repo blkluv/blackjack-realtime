@@ -1,19 +1,21 @@
 import type * as Party from 'partykit/server';
 import { unknown } from 'zod';
 import z from 'zod';
-import { BlackjackRoom } from './blackjack-room';
-import type { BlackjackRecord } from './blackjack.types';
+import type { BlackjackRecord } from './blackjack/blackjack.types';
+import { BlackjackRoom } from './blackjack/room';
 
-import { type CursorRecord, CursorRoom } from './cursor-room';
-export type Id = `0x${string}` | 'guest';
+import type { CursorRecord } from './cursor/cursor.types';
+import { CursorRoom } from './cursor/room';
 
-export const SocketMessageSchema = z.object({
+type Id = `0x${string}` | 'guest';
+
+const SocketMessageSchema = z.object({
   room: z.enum(['blackjack', 'cursor']),
   type: z.string(),
   data: z.object({}),
 });
 
-export type ConnectionState = {
+type ConnectionState = {
   id: Id;
   country: string | null;
 };
@@ -30,7 +32,7 @@ type RoomRecordMap = {
 };
 
 //  TPartyKitServerMessage - Attempt with direct lookup and conditional types
-export type TPartyKitServerMessage<
+type TPartyKitServerMessage<
   TRoom extends keyof RoomRecordMap = keyof RoomRecordMap,
 > = TRoom extends keyof RoomRecordMap
   ? // Conditional type based on TRoom
@@ -46,7 +48,7 @@ export type TPartyKitServerMessage<
   This class implements Party.Server and wires up connections, requests,
   and in-room messages for our Blackjack game.
 ---------------------------------------------------------------------------*/
-export default class Server implements Party.Server {
+class Server implements Party.Server {
   private roomMap: { [id: string]: BlackjackRoom };
   private cursorRoom: CursorRoom;
   readonly room: Party.Room;
@@ -168,3 +170,5 @@ export default class Server implements Party.Server {
 
 // Ensure our server class satisfies Party.Worker.
 Server satisfies Party.Worker;
+
+export type { Id, ConnectionState, TPartyKitServerMessage };

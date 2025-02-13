@@ -5,8 +5,8 @@ import usePartySocket from 'partysocket/react';
 import { useEffect, useState } from 'react';
 import { useSignMessage } from 'wagmi';
 import type { TPartyKitServerMessage } from '../party';
-import type { TBlackjackMessageSchema } from '../party/blackjack.types';
-import type { TCursorMessageSchema } from '../party/cursor-room';
+import type { TBlackjackMessageSchema } from '../party/blackjack/blackjack.types';
+import type { TCursorMessageSchema } from '../party/cursor/cursor.types';
 
 type Position = {
   x: number;

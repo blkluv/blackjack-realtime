@@ -1,6 +1,6 @@
 import type * as Party from 'partykit/server';
 import { z } from 'zod';
-import type { Id } from '.';
+import type { Id } from '../index';
 
 /**
  * Cards are represented as "rank+suit".
