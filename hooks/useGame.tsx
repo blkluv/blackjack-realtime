@@ -123,6 +123,7 @@ const useGame = () => {
     wssend(JSON.stringify({ room: 'cursor', ...message }));
   };
 
+
   const blackjackSend = (message: TBlackjackMessageSchema) => {
     wssend(JSON.stringify({ room: 'blackjack', ...message }));
   };
