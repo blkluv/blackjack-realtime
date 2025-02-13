@@ -38,11 +38,11 @@ type GameState = {
   playerOrder: string[]; // player IDs sorted by seat order.
   currentPlayerIndex: number;
   status:
-  | 'waiting' // Waiting for players.
-  | 'betting' // Players placing bets.
-  | 'playing' // Round in progress.
-  | 'dealerTurn' // Dealer drawing cards.
-  | 'roundover'; // Results available.
+    | 'waiting' // Waiting for players.
+    | 'betting' // Players placing bets.
+    | 'playing' // Round in progress.
+    | 'dealerTurn' // Dealer drawing cards.
+    | 'roundover'; // Results available.
 };
 
 // all client to server messages

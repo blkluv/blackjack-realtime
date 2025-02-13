@@ -2,9 +2,9 @@ import type * as Party from 'partykit/server';
 import { unknown } from 'zod';
 import z from 'zod';
 import { BlackjackRoom } from './blackjack-room';
-import type { BlackjackRecord, } from './blackjack.types';
+import type { BlackjackRecord } from './blackjack.types';
 
-import { type CursorRecord, CursorRoom, } from './cursor-room';
+import { type CursorRecord, CursorRoom } from './cursor-room';
 export type Id = `0x${string}` | 'guest';
 
 export const SocketMessageSchema = z.object({
@@ -13,8 +13,9 @@ export const SocketMessageSchema = z.object({
   data: z.object({}),
 });
 
-type ConnectionState = {
+export type ConnectionState = {
   id: Id;
+  country: string | null;
 };
 
 // Define a mapping from room name to its Record type
@@ -24,14 +25,16 @@ type RoomRecordMap = {
 };
 
 //  TPartyKitServerMessage - Attempt with direct lookup and conditional types
-export type TPartyKitServerMessage<TRoom extends keyof RoomRecordMap = keyof RoomRecordMap> =
-  TRoom extends keyof RoomRecordMap ? // Conditional type based on TRoom
-  { room: TRoom } & { // Intersection to add room property
-    [TType in keyof RoomRecordMap[TRoom]]: // Mapped type over types for the given room
-    { type: TType; data: RoomRecordMap[TRoom][TType] }
-  }[keyof RoomRecordMap[TRoom]] // Index to distribute mapped type as union
+export type TPartyKitServerMessage<
+  TRoom extends keyof RoomRecordMap = keyof RoomRecordMap,
+> = TRoom extends keyof RoomRecordMap
+  ? // Conditional type based on TRoom
+    { room: TRoom } & {
+      // Intersection to add room property
+      [TType in keyof RoomRecordMap[TRoom]]: // Mapped type over types for the given room
+      { type: TType; data: RoomRecordMap[TRoom][TType] };
+    }[keyof RoomRecordMap[TRoom]] // Index to distribute mapped type as union
   : never; // If TRoom is not a valid room, type is never
-
 
 /*-------------------------------------------------------------------------
   Server Class
@@ -84,6 +87,7 @@ export default class Server implements Party.Server {
       }
 
       let id = request.headers.get('X-User-Id') as Id | null;
+      const country = (request.cf?.country ?? null) as string | null;
 
       if (!id) {
         console.log('guest user');
@@ -98,7 +102,7 @@ export default class Server implements Party.Server {
         }),
       );
 
-      conn.setState({ id });
+      conn.setState({ id, country });
       // Join both rooms
       await room.onJoin({ connection: conn, id: id });
       await this.cursorRoom.onJoin(conn);

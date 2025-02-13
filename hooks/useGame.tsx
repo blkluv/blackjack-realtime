@@ -63,21 +63,21 @@ const useGame = () => {
       send('hello from client');
     },
     onMessage: (evt) => {
-      const { room, data, type } = JSON.parse(evt.data as string) as TPartyKitServerMessage
+      const { room, data, type } = JSON.parse(
+        evt.data as string,
+      ) as TPartyKitServerMessage;
       // TODO: need to add validation here , either common type across client and server or zod
       if (room === 'cursor') {
         switch (type) {
           case 'cursor-sync': {
-
             setOthers({ ...data.cursors });
             break;
           }
           case 'cursor-update': {
-
             const other = {
-              x: data.cursor.x
+              x: data.cursor.x,
               y: data.cursor.y,
-              country: ,
+              country: data.cursor.country,
               lastUpdate: data.cursor.lastUpdate,
               pointer: data.cursor.pointer,
             };
@@ -95,8 +95,7 @@ const useGame = () => {
             console.log('message received', msg);
         }
       } else {
-        console.log('blackjack', type, data)
-
+        console.log('blackjack', type, data);
       }
     },
     onClose: (close) => {

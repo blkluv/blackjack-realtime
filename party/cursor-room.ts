@@ -1,13 +1,15 @@
 import type * as Party from 'partykit/server';
 import { z } from 'zod';
+import type { ConnectionState } from '.';
 
-interface Cursor {
+type Cursor = {
   id: string;
   x: number;
   y: number;
   pointer: 'mouse' | 'touch';
   lastUpdate: number;
-}
+  country: string | null;
+};
 
 // all client messages to server
 const CursorUpdateSchema = z.object({
@@ -41,7 +43,7 @@ export type TCursorServerMessage<T extends keyof CursorRecord> = {
 export class CursorRoom {
   readonly id: string;
   private cursors: Map<string, Cursor> = new Map();
-  clients: { [connectionId: string]: Party.Connection };
+  clients: { [connectionId: string]: Party.Connection<ConnectionState> };
 
   constructor(id: string) {
     this.id = id;
@@ -71,9 +73,8 @@ export class CursorRoom {
     connection.send(JSON.stringify(message));
   }
 
-  async onJoin(connection: Party.Connection) {
+  async onJoin(connection: Party.Connection<ConnectionState>) {
     this.clients[connection.id] = connection;
-
     // Send existing cursors to new connection
     const cursorsArray = Array.from(this.cursors.values());
     this.send(connection.id, {
@@ -97,12 +98,18 @@ export class CursorRoom {
     const { type, data } = CursorMessageSchema.parse(unknownData);
 
     if (type === 'cursor-update') {
+      const connection = this.clients[connectionId];
+      if (!connection) {
+        return;
+      }
+      const country = connection.state?.country ?? null;
       const cursor: Cursor = {
         id: connectionId,
         x: data.x,
         y: data.y,
         pointer: data.pointer,
         lastUpdate: Date.now(),
+        country: country,
       };
 
       this.cursors.set(connectionId, cursor);
