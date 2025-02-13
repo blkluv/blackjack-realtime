@@ -34,13 +34,10 @@ export default class Server implements Party.Server {
       const token = urlParams.get('token');
       const walletAddress = urlParams.get('walletAddress')?.toLowerCase();
 
-      // If no wallet address is provided, treat as guest
       if (!walletAddress) {
         req.headers.set('X-User-Id', 'guest');
         return req;
       }
-
-      // If token is provided, verify it
       if (token) {
         try {
           const secretKey = new TextEncoder().encode(env.JWT_SECRET);
@@ -56,11 +53,9 @@ export default class Server implements Party.Server {
           }
         } catch (error) {
           console.warn('Invalid or expired token');
-          // Continue to require new authentication
         }
       }
 
-      // No valid token, return unauthorized
       return new Response('Unauthorized: Valid token required', {
         status: 401,
       });
@@ -70,7 +65,7 @@ export default class Server implements Party.Server {
     }
   }
 
-  // static async onBeforeConnect2(req: Party.Request, lobby: Party.Lobby) {
+  // static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
   //   try {
   //     // replace with jwt token and fetch walletaddress from the signature
   //     const walletAddress =

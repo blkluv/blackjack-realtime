@@ -1,7 +1,7 @@
 'use client';
 
 import { env } from '@/env.mjs';
-import { client } from '@/lib/client';
+import { verifyUserAction } from '@/lib/action';
 import { useAppKitAccount } from '@reown/appkit-core/react';
 import { useAppKit } from '@reown/appkit/react';
 import usePartySocket from 'partysocket/react';
@@ -66,14 +66,16 @@ const useGame = () => {
         message: env.NEXT_PUBLIC_SIGN_MSG,
       });
 
-      const response = await client.post.verifyChallenge.$get({
-        signature,
-        walletAddress,
-      });
+      //   const response = await client.post.verifyChallenge.$get({
+      //     signature,
+      //     walletAddress,
+      //   });
 
-      if (!response.ok) throw new Error('Authentication failed');
+      //   if (!response.ok) throw new Error("Authentication failed");
 
-      const res = await response.json();
+      const res = await verifyUserAction(signature, walletAddress);
+
+      console.log(res);
 
       if ('message' in res) {
         console.error('Authentication response message:', res.message);
