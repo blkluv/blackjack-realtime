@@ -70,7 +70,11 @@ const useGame = () => {
       if (room === 'cursor') {
         switch (type) {
           case 'cursor-sync': {
-            setOthers({ ...data.cursors });
+            const newOthers: OtherCursorsMap = {};
+            for (const cursor of data.cursors) {
+              newOthers[cursor.id] = cursor;
+            }
+            setOthers(newOthers);
             break;
           }
           case 'cursor-update': {
@@ -92,7 +96,7 @@ const useGame = () => {
             });
             break;
           default:
-            console.log('message received', msg);
+            console.log('message received', room, type, data);
         }
       } else {
         console.log('blackjack', type, data);
