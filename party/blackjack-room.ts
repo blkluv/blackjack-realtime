@@ -175,7 +175,7 @@ export class BlackjackRoom {
 
   startRound(): void {
     if (Object.keys(this.state.players).length === 0) return;
-
+    if (this.state.status !== 'betting') return;
     // Replenish deck if needed.
     if (this.state.deck.length < 15) {
       this.state.deck = createDeck();
