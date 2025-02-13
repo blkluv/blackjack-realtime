@@ -9,16 +9,34 @@ interface Cursor {
   lastUpdate: number;
 }
 
-const cursorSchema = z.object({
+// all client messages to server
+const CursorUpdateSchema = z.object({
   type: z.literal('cursor-update'),
-  cursor: z.object({
-    id: z.string(),
+  data: z.object({
     x: z.number(),
     y: z.number(),
     pointer: z.enum(['mouse', 'touch']),
-    lastUpdate: z.number(),
   }),
 });
+
+const CursorRemoveSchema = z.object({
+  type: z.literal('cursor-remove'),
+  data: z.object({}),
+});
+
+const CursorMessageSchema = z.union([CursorUpdateSchema, CursorRemoveSchema]);
+
+export type CursorRecord = {
+  'cursor-sync': { cursors: Cursor[] };
+  'cursor-update': { cursor: Cursor };
+  'cursor-remove': { id: string };
+};
+
+export type TCursorServerMessage<T extends keyof CursorRecord> = {
+  room: 'cursor';
+  type: T;
+  data: CursorRecord[T];
+};
 
 export class CursorRoom {
   readonly id: string;
@@ -30,12 +48,27 @@ export class CursorRoom {
     this.clients = {};
   }
 
-  broadcast(message: string, excludeId?: string) {
+  broadcast<T extends keyof CursorRecord>(
+    message: TCursorServerMessage<T>,
+    excludeId?: string,
+  ) {
     for (const [id, conn] of Object.entries(this.clients)) {
       if (id !== excludeId) {
-        conn.send(message);
+        conn.send(JSON.stringify(message));
       }
     }
+  }
+
+  send<T extends keyof CursorRecord>(
+    id: string,
+    message: TCursorServerMessage<T>,
+  ) {
+    const connection = this.clients[id];
+    if (!connection) {
+      return;
+    }
+
+    connection.send(JSON.stringify(message));
   }
 
   async onJoin(connection: Party.Connection) {
@@ -43,42 +76,42 @@ export class CursorRoom {
 
     // Send existing cursors to new connection
     const cursorsArray = Array.from(this.cursors.values());
-    connection.send(
-      JSON.stringify({
-        type: 'cursor-sync',
-        cursors: cursorsArray,
-      }),
-    );
+    this.send(connection.id, {
+      room: 'cursor',
+      type: 'cursor-sync',
+      data: { cursors: cursorsArray },
+    });
   }
 
   async onLeave(connectionId: string) {
     delete this.clients[connectionId];
     this.cursors.delete(connectionId);
-    this.broadcast(
-      JSON.stringify({
-        type: 'cursor-remove',
-        id: connectionId,
-      }),
-    );
+    this.broadcast({
+      room: 'cursor',
+      type: 'cursor-remove',
+      data: { id: connectionId },
+    });
   }
 
   async handleMessage(connectionId: string, unknownData: unknown) {
-    const data = cursorSchema.parse(unknownData);
+    const { type, data } = CursorMessageSchema.parse(unknownData);
 
-    if (data.type === 'cursor-update') {
+    if (type === 'cursor-update') {
       const cursor: Cursor = {
         id: connectionId,
-        x: data.cursor.x,
-        y: data.cursor.y,
-        pointer: data.cursor.pointer,
+        x: data.x,
+        y: data.y,
+        pointer: data.pointer,
         lastUpdate: Date.now(),
       };
 
       this.cursors.set(connectionId, cursor);
       this.broadcast(
-        JSON.stringify({ type: 'cursor-update', cursor }),
+        { room: 'cursor', type: 'cursor-update', data: { cursor } },
         connectionId,
       );
+    } else if (type === 'cursor-remove') {
+      this.onLeave(connectionId);
     }
   }
 }

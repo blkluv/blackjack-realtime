@@ -4,6 +4,7 @@ import { useAppKit } from '@reown/appkit/react';
 import usePartySocket from 'partysocket/react';
 import { useEffect, useState } from 'react';
 import { useSignMessage } from 'wagmi';
+import type { TPartyKitServerMessage } from '../party';
 
 type Position = {
   x: number;
@@ -62,33 +63,40 @@ const useGame = () => {
       send('hello from client');
     },
     onMessage: (evt) => {
-      const msg = JSON.parse(evt.data as string);
+      const { room, data, type } = JSON.parse(evt.data as string) as TPartyKitServerMessage
       // TODO: need to add validation here , either common type across client and server or zod
+      if (room === 'cursor') {
+        switch (type) {
+          case 'cursor-sync': {
 
-      switch (msg.type) {
-        case 'sync':
-          setOthers({ ...msg.cursors });
-          break;
-        case 'cursor-update': {
-          const other = {
-            x: msg.x,
-            y: msg.y,
-            country: msg.country,
-            lastUpdate: msg.lastUpdate,
-            pointer: msg.pointer,
-          };
-          setOthers((others) => ({ ...others, [msg.id]: other }));
-          break;
+            setOthers({ ...data.cursors });
+            break;
+          }
+          case 'cursor-update': {
+
+            const other = {
+              x: data.cursor.x
+              y: data.cursor.y,
+              country: ,
+              lastUpdate: data.cursor.lastUpdate,
+              pointer: data.cursor.pointer,
+            };
+            setOthers((others) => ({ ...others, [data.cursor.id]: other }));
+            break;
+          }
+          case 'cursor-remove':
+            setOthers((others) => {
+              const newOthers = { ...others };
+              delete newOthers[data.id];
+              return newOthers;
+            });
+            break;
+          default:
+            console.log('message received', msg);
         }
-        case 'cursor-remove':
-          setOthers((others) => {
-            const newOthers = { ...others };
-            delete newOthers[msg.id];
-            return newOthers;
-          });
-          break;
-        default:
-          console.log('message received', msg);
+      } else {
+        console.log('blackjack', type, data)
+
       }
     },
     onClose: (close) => {
@@ -132,7 +140,13 @@ const useGame = () => {
         y: e.clientY / dimensions.height,
         pointer: 'mouse' as const,
       };
-      send(JSON.stringify({ type: 'cursor-update', ...position }));
+      send(
+        JSON.stringify({
+          room: 'cursor',
+          type: 'cursor-update',
+          data: position,
+        }),
+      );
       setSelf(position);
     };
 
@@ -146,13 +160,19 @@ const useGame = () => {
         y: e.touches[0].clientY / dimensions.height,
         pointer: 'touch' as const,
       };
-      send(JSON.stringify({ type: 'cursor-update', ...position }));
+      send(
+        JSON.stringify({
+          room: 'cursor',
+          type: 'cursor-update',
+          data: position,
+        }),
+      );
       setSelf(position);
     };
 
     const onTouchEnd = () => {
       if (readyState !== WebSocket.OPEN) return;
-      send(JSON.stringify({ type: 'cursor-remove' }));
+      send(JSON.stringify({ room: 'cursor', type: 'cursor-remove', data: {} }));
       setSelf(null);
     };
 
@@ -169,7 +189,8 @@ const useGame = () => {
 
   const joinGame = (seat: number) => {
     setSeat(seat.toString());
-    signMessageAsync({ message: env.NEXT_PUBLIC_SIGN_MSG });
+    send('');
+    // signMessageAsync({ message: env.NEXT_PUBLIC_SIGN_MSG });
   };
 
   return {

@@ -1,121 +1,14 @@
 import type * as Party from 'partykit/server';
-import { z } from 'zod';
-import type { Id } from '.';
+import {
+  BlackjackMessageSchema,
+  type BlackjackRecord,
+  type Client,
+  type GameState,
+  type PlayerJoinData,
+  type TBlackjackServerMessage,
+} from './blackjack.types';
 
-/*-------------------------------------------------------------------------
-  Helper Types and Functions for Blackjack
----------------------------------------------------------------------------*/
-
-/**
- * Cards are represented as "rank+suit".
- * In this scheme:
- *   ranks: ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
- *   suits: ["c", "d", "h", "s"]
- *
- * For example "Ac" means Ace of clubs, and "Th" means Ten of hearts.
- */
-type Card = string;
-
-type PlayerJoinData = {
-  seat: number;
-};
-type PlayerState = {
-  connection: Party.Connection;
-  walletAddr: `0x${string}`;
-  seat: number; // Seat number from 1 to 5.
-  bet: number;
-  hand: Card[];
-  done: boolean;
-  hasBusted: boolean;
-  isStanding: boolean;
-};
-
-type Client = {
-  connection: Party.Connection;
-  id: Id;
-};
-
-type GameState = {
-  players: { [walletAddr: string]: PlayerState };
-  dealerHand: Card[];
-  deck: Card[];
-  playerOrder: string[]; // player IDs sorted by seat order.
-  currentPlayerIndex: number;
-  status:
-    | 'waiting' // Waiting for players.
-    | 'betting' // Players placing bets.
-    | 'playing' // Round in progress.
-    | 'dealerTurn' // Dealer drawing cards.
-    | 'roundover'; // Results available.
-};
-
-const MessageSchema = z.object({
-  type: z.string(),
-  bet: z.number(),
-});
-
-/**
- * Create and shuffle a standard 52-card deck using our scheme.
- */
-function createDeck(): Card[] {
-  const ranks = [
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    'T',
-    'J',
-    'Q',
-    'K',
-    'A',
-  ];
-  const suits = ['c', 'd', 'h', 's'];
-  const deck: Card[] = [];
-  for (const r of ranks) {
-    for (const s of suits) {
-      deck.push(`${r}${s}`);
-    }
-  }
-  // Shuffle with Fisher–Yates algorithm.
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    // @ts-ignore: false positive on tuple swap
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-}
-
-/**
- * Compute the best blackjack hand value.
- * Since cards are represented as "rank+suit", we extract the rank
- * using card.slice(0, 1). (This works because all ranks are one character,
- * with "T" meaning 10.)
- */
-function handValue(hand: Card[]): number {
-  let sum = 0;
-  let aces = 0;
-  for (const card of hand) {
-    const r = card.slice(0, 1);
-    if (r === 'A') {
-      aces++;
-      sum += 1;
-    } else if (['K', 'Q', 'J', 'T'].includes(r)) {
-      sum += 10;
-    } else {
-      sum += Number.parseInt(r, 10);
-    }
-  }
-  // Upgrade aces if possible.
-  while (aces > 0 && sum + 10 <= 21) {
-    sum += 10;
-    aces--;
-  }
-  return sum;
-}
+import { createDeck, handValue } from './blackjack.utils';
 
 /*-------------------------------------------------------------------------
   BlackjackRoom Class
@@ -142,9 +35,24 @@ export class BlackjackRoom {
     };
   }
 
-  broadcast(message: string, without?: string[]) {
-    this.room.broadcast(message, without);
+  broadcast<T extends keyof BlackjackRecord>(
+    message: TBlackjackServerMessage<T>,
+    without?: string[],
+  ) {
+    this.room.broadcast(JSON.stringify(message), without);
     console.log(`[Room ${this.id} broadcast]: ${message}`);
+  }
+
+  send<T extends keyof BlackjackRecord>(
+    id: string,
+    message: TBlackjackServerMessage<T>,
+  ) {
+    const client = this.clients[id];
+    if (!client) {
+      return;
+    }
+
+    client.connection.send(JSON.stringify(message));
   }
 
   async onJoin(client: Client) {
@@ -167,9 +75,13 @@ export class BlackjackRoom {
     playerAddr: `0x${string}`,
     unknownData: unknown,
   ): Promise<void> {
-    const data = MessageSchema.parse(unknownData);
+    const { type, data } = BlackjackMessageSchema.parse(unknownData);
 
-    switch (data.type) {
+    switch (type) {
+      case 'playerJoin': {
+        this.playerJoin(playerAddr, { seat: data.seat });
+        break;
+      }
       case 'placeBet': {
         this.placeBet(playerAddr, data.bet);
         break;
@@ -187,7 +99,7 @@ export class BlackjackRoom {
         break;
       }
       default:
-        console.warn(`Unknown message type: ${data.type}`);
+        console.warn(`Unknown message type: ${type}`);
     }
   }
 
@@ -229,8 +141,11 @@ export class BlackjackRoom {
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.walletAddr);
-
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   playerLeave(playerAddr: `0x${string}`): void {
@@ -239,8 +154,11 @@ export class BlackjackRoom {
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.walletAddr);
-
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   placeBet(playerAddr: `0x${string}`, bet: number): void {
@@ -250,7 +168,11 @@ export class BlackjackRoom {
     const p = this.state.players[playerAddr];
     if (!p) return;
     p.bet = bet;
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   startRound(): void {
@@ -285,7 +207,11 @@ export class BlackjackRoom {
     this.state.status = 'playing';
 
     this.state.currentPlayerIndex = 0;
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   playerHit(playerAddr: `0x${string}`): void {
@@ -302,7 +228,11 @@ export class BlackjackRoom {
       p.done = true;
       this.advanceTurn();
     }
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   playerStand(playerAddr: `0x${string}`): void {
@@ -314,7 +244,11 @@ export class BlackjackRoom {
     p.isStanding = true;
     p.done = true;
     this.advanceTurn();
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 
   advanceTurn(): void {
@@ -365,6 +299,10 @@ export class BlackjackRoom {
         );
       }
     }
-    this.broadcast(JSON.stringify({ type: 'stateUpdate', state: this.state }));
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
   }
 }

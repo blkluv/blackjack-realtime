@@ -1,12 +1,37 @@
 import type * as Party from 'partykit/server';
+import { unknown } from 'zod';
+import z from 'zod';
 import { BlackjackRoom } from './blackjack-room';
-import { CursorRoom } from './cursor-room';
+import type { BlackjackRecord, } from './blackjack.types';
 
+import { type CursorRecord, CursorRoom, } from './cursor-room';
 export type Id = `0x${string}` | 'guest';
+
+export const SocketMessageSchema = z.object({
+  room: z.enum(['blackjack', 'cursor']),
+  type: z.string(),
+  data: z.object({}),
+});
 
 type ConnectionState = {
   id: Id;
 };
+
+// Define a mapping from room name to its Record type
+type RoomRecordMap = {
+  cursor: CursorRecord;
+  blackjack: BlackjackRecord;
+};
+
+//  TPartyKitServerMessage - Attempt with direct lookup and conditional types
+export type TPartyKitServerMessage<TRoom extends keyof RoomRecordMap = keyof RoomRecordMap> =
+  TRoom extends keyof RoomRecordMap ? // Conditional type based on TRoom
+  { room: TRoom } & { // Intersection to add room property
+    [TType in keyof RoomRecordMap[TRoom]]: // Mapped type over types for the given room
+    { type: TType; data: RoomRecordMap[TRoom][TType] }
+  }[keyof RoomRecordMap[TRoom]] // Index to distribute mapped type as union
+  : never; // If TRoom is not a valid room, type is never
+
 
 /*-------------------------------------------------------------------------
   Server Class
@@ -84,14 +109,17 @@ export default class Server implements Party.Server {
     }
   }
 
-  async onMessage(message: string, sender: Party.Connection<ConnectionState>) {
-    console.log(`Connection ${sender.id} sent message: ${message}`);
+  async onMessage(
+    unknownMessage: string,
+    sender: Party.Connection<ConnectionState>,
+  ) {
+    console.log(`Connection ${sender.id} sent message: ${unknown}`);
     try {
-      const data = JSON.parse(message);
+      const message = SocketMessageSchema.parse(unknownMessage);
 
       // Route cursor messages to cursor room
-      if (data.type === 'cursor-update') {
-        this.cursorRoom.handleMessage(sender.id, data).catch((err) => {
+      if (message.room === 'cursor') {
+        this.cursorRoom.handleMessage(sender.id, message).catch((err) => {
           console.error('Error handling cursor update:', err);
         });
         return;
@@ -112,7 +140,7 @@ export default class Server implements Party.Server {
       }
 
       room
-        .onMessage(playerAddr, data)
+        .onMessage(playerAddr, message)
         .catch((err) => console.error('Error handling message in room:', err));
     } catch (err) {
       console.error('Failed to parse message as JSON', err);
