@@ -1,8 +1,11 @@
+'use client';
+
 import { env } from '@/env.mjs';
+import { client } from '@/lib/client';
 import { useAppKitAccount } from '@reown/appkit-core/react';
 import { useAppKit } from '@reown/appkit/react';
 import usePartySocket from 'partysocket/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSignMessage } from 'wagmi';
 
 type Position = {
@@ -16,23 +19,21 @@ type Cursor = Position & {
   lastUpdate: number;
 };
 
-type OtherCursorsMap = {
-  [id: string]: Cursor;
-};
+type OtherCursorsMap = Record<string, Cursor>;
 
 const useGame = () => {
   const [seat, setSeat] = useState('');
   const [isMicOn, setIsMicOn] = useState(false);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem('token') || null,
+  );
   const [self, setSelf] = useState<Position | null>(null);
   const [others, setOthers] = useState<OtherCursorsMap>({});
-  const [dimensions, setDimensions] = useState<{
-    width: number;
-    height: number;
-  }>({
-    width: 0,
-    height: 0,
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
   });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const {
     address: walletAddress,
@@ -41,117 +42,139 @@ const useGame = () => {
     status,
   } = useAppKitAccount();
   const { open } = useAppKit();
+
   const { signMessageAsync } = useSignMessage({
     mutation: {
       onSuccess: (data) => {
-        console.log('signed message', data);
-        setToken(data);
+        try {
+          const parsedData = JSON.parse(data) as { token: string };
+          setToken(parsedData.token);
+          localStorage.setItem('token', parsedData.token);
+        } catch (error) {
+          console.error('Failed to parse token response:', error);
+        }
       },
-      onError: (error) => {
-        console.error('error signing message', error);
-      },
+      onError: (error) => console.error('Error signing message:', error),
     },
   });
+
+  const authenticate = useCallback(async () => {
+    if (!walletAddress) return null;
+
+    try {
+      const signature = await signMessageAsync({
+        message: env.NEXT_PUBLIC_SIGN_MSG,
+      });
+
+      const response = await client.post.verifyChallenge.$get({
+        signature,
+        walletAddress,
+      });
+
+      if (!response.ok) throw new Error('Authentication failed');
+
+      const res = await response.json();
+
+      if ('message' in res) {
+        console.error('Authentication response message:', res.message);
+      } else if ('token' in res) {
+        setToken(res.token);
+        localStorage.setItem('token', res.token);
+      } else {
+        console.error('Unexpected authentication response:', res);
+      }
+      return token;
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return null;
+    }
+  }, [walletAddress, signMessageAsync]);
 
   const { send, readyState } = usePartySocket({
     host: env.NEXT_PUBLIC_PARTYKIT_HOST,
     room: 'blackjack',
+    query: { walletAddress, seat, token },
     onOpen: () => {
-      console.log('connected to partykit');
+      console.log('Connected to PartyKit');
       setIsAuthenticated(true);
       send('hello from client');
     },
     onMessage: (evt) => {
-      const msg = JSON.parse(evt.data as string);
-      // TODO: need to add validation here , either common type across client and server or zod
-
-      switch (msg.type) {
-        case 'sync':
-          setOthers({ ...msg.cursors });
-          break;
-        case 'cursor-update': {
-          const other = {
-            x: msg.x,
-            y: msg.y,
-            country: msg.country,
-            lastUpdate: msg.lastUpdate,
-            pointer: msg.pointer,
-          };
-          setOthers((others) => ({ ...others, [msg.id]: other }));
-          break;
+      try {
+        const msg = JSON.parse(evt.data as string);
+        switch (msg.type) {
+          case 'sync':
+            setOthers(msg.cursors);
+            break;
+          case 'cursor-update':
+            setOthers((prev) => ({ ...prev, [msg.id]: msg }));
+            break;
+          case 'cursor-remove':
+            setOthers((prev) => {
+              const updated = { ...prev };
+              delete updated[msg.id];
+              return updated;
+            });
+            break;
+          case 'new-token':
+            setToken(msg.token);
+            localStorage.setItem('token', msg.token);
+            break;
+          default:
+            console.log('Received unknown message:', msg);
         }
-        case 'cursor-remove':
-          setOthers((others) => {
-            const newOthers = { ...others };
-            delete newOthers[msg.id];
-            return newOthers;
-          });
-          break;
-        default:
-          console.log('message received', msg);
+      } catch (error) {
+        console.error('Error parsing incoming message:', error);
       }
     },
-    onClose: (close) => {
-      console.log('disconnected from partykit', close);
+    onClose: () => {
       setIsAuthenticated(false);
+      // If connection closed due to auth error, clear token
+      if (!isAuthenticated) {
+        setToken(null);
+        localStorage.removeItem('token');
+      }
     },
     onError: (err) => {
-      console.error('error in partykit', err);
+      console.error('Error in PartyKit:', err);
       setIsAuthenticated(false);
-    },
-    query: {
-      walletAddress,
-      seat,
-      token,
     },
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    readyState === WebSocket.OPEN,
-  );
-
-  // Track window dimensions
+  // Handle screen resize
   useEffect(() => {
-    const onResize = () => {
+    const onResize = () =>
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
-    };
     window.addEventListener('resize', onResize);
-    onResize();
-    return () => {
-      window.removeEventListener('resize', onResize);
-    };
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Track cursor position
+  // Handle cursor movement
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (readyState !== WebSocket.OPEN) return;
-      if (!dimensions.width || !dimensions.height) return;
+    if (
+      readyState !== WebSocket.OPEN ||
+      !dimensions.width ||
+      !dimensions.height
+    )
+      return;
+
+    const updateCursor = (x: number, y: number, pointer: 'mouse' | 'touch') => {
       const position = {
-        x: e.clientX / dimensions.width,
-        y: e.clientY / dimensions.height,
-        pointer: 'mouse' as const,
+        x: x / dimensions.width,
+        y: y / dimensions.height,
+        pointer,
       };
       send(JSON.stringify({ type: 'cursor-update', ...position }));
       setSelf(position);
     };
 
+    const onMouseMove = (e: MouseEvent) =>
+      updateCursor(e.clientX, e.clientY, 'mouse');
     const onTouchMove = (e: TouchEvent) => {
-      if (readyState !== WebSocket.OPEN) return;
-      if (!dimensions.width || !dimensions.height) return;
-      if (!e.touches[0]) return;
-      e.preventDefault();
-      const position = {
-        x: e.touches[0].clientX / dimensions.width,
-        y: e.touches[0].clientY / dimensions.height,
-        pointer: 'touch' as const,
-      };
-      send(JSON.stringify({ type: 'cursor-update', ...position }));
-      setSelf(position);
+      if (e.touches[0] && e.touches.length > 0)
+        updateCursor(e.touches[0].clientX, e.touches[0].clientY, 'touch');
     };
-
     const onTouchEnd = () => {
-      if (readyState !== WebSocket.OPEN) return;
       send(JSON.stringify({ type: 'cursor-remove' }));
       setSelf(null);
     };
@@ -167,10 +190,20 @@ const useGame = () => {
     };
   }, [readyState, dimensions, send]);
 
-  const joinGame = (seat: number) => {
-    setSeat(seat.toString());
-    signMessageAsync({ message: env.NEXT_PUBLIC_SIGN_MSG });
-  };
+  const joinGame = useCallback(
+    async (seatNumber: number) => {
+      setSeat(seatNumber.toString());
+
+      if (!token && walletAddress) {
+        const newToken = await authenticate();
+        if (!newToken) {
+          console.error('Failed to authenticate');
+          return;
+        }
+      }
+    },
+    [authenticate, token, walletAddress],
+  );
 
   return {
     joinGame,
@@ -187,7 +220,7 @@ const useGame = () => {
     isAuthenticated,
     send,
     readyState,
-    cursors: { self, others }, // Add cursors to the return object
+    cursors: { self, others },
   };
 };
 

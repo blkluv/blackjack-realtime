@@ -218,6 +218,7 @@ const ActionButtons = () => {
     isMicOn,
     isConnected,
     walletAddress,
+    open,
   } = useGame();
 
   //   useEffect(() => {
@@ -242,7 +243,7 @@ const ActionButtons = () => {
           >
             {isMicOn ? <MicIcon size={24} /> : <MicOffIcon size={24} />}
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
           >
@@ -259,11 +260,11 @@ const ActionButtons = () => {
             className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
           >
             Start Game
-          </Button>
+          </Button> */}
         </>
       )}
 
-      <Button
+      {/* <Button
         size={'sm'}
         className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
         onClick={() => (!isAuthenticated && isConnected ? joinGame(2) : open())}
@@ -273,6 +274,9 @@ const ActionButtons = () => {
           : isConnected
             ? 'Join Game'
             : 'Connect Wallet'}
+      </Button> */}
+      <Button size={'sm'} onClick={() => open()}>
+        {isConnected ? truncateAddress(walletAddress) : 'Connect Wallet'}
       </Button>
     </div>
   );

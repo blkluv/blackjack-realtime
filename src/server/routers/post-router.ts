@@ -1,11 +1,9 @@
 import { env } from '@/env.mjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { type Address, verifyMessage } from 'viem';
 import { z } from 'zod';
 import { j, publicProcedure } from '../jstack';
 import { constructMessage, generateNonce } from '../utils/web3';
-
-const JWT_SECRET = env.JWT_SECRET;
 
 export const postRouter = j.router({
   generateChallenge: publicProcedure
@@ -33,16 +31,15 @@ export const postRouter = j.router({
       z.object({
         walletAddress: z.string().toLowerCase(),
         signature: z.string(),
-        message: z.string(),
       }),
     )
     .get(async ({ ctx, c, input }) => {
-      const { walletAddress, signature, message } = input;
+      const { walletAddress, signature } = input;
 
       try {
         const isValidSignature = await verifyMessage({
           address: walletAddress as Address,
-          message: message,
+          message: env.NEXT_PUBLIC_SIGN_MSG,
           signature: signature as Address,
         });
 
@@ -50,16 +47,11 @@ export const postRouter = j.router({
           return c.superjson({ message: 'Invalid signature' }, 401); // 401 Unauthorized
         }
 
-        // Signature is valid, generate JWT
-        const jwtPayload = {
-          walletAddress: walletAddress,
-
-          // You can add other relevant user data to the payload here, but keep it minimal
-        };
-
-        const token = jwt.sign(jwtPayload, JWT_SECRET, {
-          expiresIn: '24h',
-        });
+        const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+        const token = await new SignJWT({ walletAddress })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setExpirationTime('24h')
+          .sign(secretKey);
 
         return c.superjson({ token }); // Return the JWT in the response
       } catch (error) {
