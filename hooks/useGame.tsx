@@ -5,6 +5,8 @@ import usePartySocket from 'partysocket/react';
 import { useEffect, useState } from 'react';
 import { useSignMessage } from 'wagmi';
 import type { TPartyKitServerMessage } from '../party';
+import type { TBlackjackMessageSchema } from '../party/blackjack.types';
+import type { TCursorMessageSchema } from '../party/cursor-room';
 
 type Position = {
   x: number;
@@ -54,19 +56,17 @@ const useGame = () => {
     },
   });
 
-  const { send, readyState } = usePartySocket({
+  const { send: wssend, readyState } = usePartySocket({
     host: env.NEXT_PUBLIC_PARTYKIT_HOST,
     room: 'blackjack',
     onOpen: () => {
       console.log('connected to partykit');
       setIsAuthenticated(true);
-      send('hello from client');
     },
     onMessage: (evt) => {
       const { room, data, type } = JSON.parse(
         evt.data as string,
       ) as TPartyKitServerMessage;
-      // TODO: need to add validation here , either common type across client and server or zod
       if (room === 'cursor') {
         switch (type) {
           case 'cursor-sync': {
@@ -98,8 +98,10 @@ const useGame = () => {
           default:
             console.log('message received', room, type, data);
         }
-      } else {
+      } else if (room === 'blackjack') {
         console.log('blackjack', type, data);
+      } else {
+        console.log('message received', room, type, data);
       }
     },
     onClose: (close) => {
@@ -116,6 +118,14 @@ const useGame = () => {
       token,
     },
   });
+
+  const cursorSend = (message: TCursorMessageSchema) => {
+    wssend(JSON.stringify({ room: 'cursor', ...message }));
+  };
+
+  const blackjackSend = (message: TBlackjackMessageSchema) => {
+    wssend(JSON.stringify({ room: 'blackjack', ...message }));
+  };
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     readyState === WebSocket.OPEN,
@@ -134,66 +144,65 @@ const useGame = () => {
   }, []);
 
   // Track cursor position
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (readyState !== WebSocket.OPEN) return;
-      if (!dimensions.width || !dimensions.height) return;
-      const position = {
-        x: e.clientX / dimensions.width,
-        y: e.clientY / dimensions.height,
-        pointer: 'mouse' as const,
-      };
-      send(
-        JSON.stringify({
-          room: 'cursor',
-          type: 'cursor-update',
-          data: position,
-        }),
-      );
-      setSelf(position);
-    };
+  // useEffect(() => {
+  //   const onMouseMove = (e: MouseEvent) => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     if (!dimensions.width || !dimensions.height) return;
+  //     const position = {
+  //       x: e.clientX / dimensions.width,
+  //       y: e.clientY / dimensions.height,
+  //       pointer: 'mouse' as const,
+  //     };
+  //     send(
+  //       JSON.stringify({
+  //         room: 'cursor',
+  //         type: 'cursor-update',
+  //         data: position,
+  //       }),
+  //     );
+  //     setSelf(position);
+  //   };
 
-    const onTouchMove = (e: TouchEvent) => {
-      if (readyState !== WebSocket.OPEN) return;
-      if (!dimensions.width || !dimensions.height) return;
-      if (!e.touches[0]) return;
-      e.preventDefault();
-      const position = {
-        x: e.touches[0].clientX / dimensions.width,
-        y: e.touches[0].clientY / dimensions.height,
-        pointer: 'touch' as const,
-      };
-      send(
-        JSON.stringify({
-          room: 'cursor',
-          type: 'cursor-update',
-          data: position,
-        }),
-      );
-      setSelf(position);
-    };
+  //   const onTouchMove = (e: TouchEvent) => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     if (!dimensions.width || !dimensions.height) return;
+  //     if (!e.touches[0]) return;
+  //     e.preventDefault();
+  //     const position = {
+  //       x: e.touches[0].clientX / dimensions.width,
+  //       y: e.touches[0].clientY / dimensions.height,
+  //       pointer: 'touch' as const,
+  //     };
+  //     send(
+  //       JSON.stringify({
+  //         room: 'cursor',
+  //         type: 'cursor-update',
+  //         data: position,
+  //       }),
+  //     );
+  //     setSelf(position);
+  //   };
 
-    const onTouchEnd = () => {
-      if (readyState !== WebSocket.OPEN) return;
-      send(JSON.stringify({ room: 'cursor', type: 'cursor-remove', data: {} }));
-      setSelf(null);
-    };
+  //   const onTouchEnd = () => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     send(JSON.stringify({ room: 'cursor', type: 'cursor-remove', data: {} }));
+  //     setSelf(null);
+  //   };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('touchend', onTouchEnd);
+  //   window.addEventListener('mousemove', onMouseMove);
+  //   window.addEventListener('touchmove', onTouchMove);
+  //   window.addEventListener('touchend', onTouchEnd);
 
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [readyState, dimensions, send]);
+  //   return () => {
+  //     window.removeEventListener('mousemove', onMouseMove);
+  //     window.removeEventListener('touchmove', onTouchMove);
+  //     window.removeEventListener('touchend', onTouchEnd);
+  //   };
+  // }, [readyState, dimensions, send]);
 
   const joinGame = (seat: number) => {
     setSeat(seat.toString());
-    send('');
-    // signMessageAsync({ message: env.NEXT_PUBLIC_SIGN_MSG });
+    blackjackSend({ type: 'playerJoin', data: { seat } });
   };
 
   return {
@@ -209,7 +218,8 @@ const useGame = () => {
     status,
     open,
     isAuthenticated,
-    send,
+    blackjackSend,
+    cursorSend,
     readyState,
     cursors: { self, others }, // Add cursors to the return object
   };

@@ -27,6 +27,7 @@ const CursorRemoveSchema = z.object({
 });
 
 const CursorMessageSchema = z.union([CursorUpdateSchema, CursorRemoveSchema]);
+export type TCursorMessageSchema = z.infer<typeof CursorMessageSchema>;
 
 export type CursorRecord = {
   'cursor-sync': { cursors: Cursor[] };

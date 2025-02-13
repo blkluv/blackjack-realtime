@@ -18,10 +18,15 @@ export type ConnectionState = {
   country: string | null;
 };
 
+type DefaultRecord = {
+  'hello-world': { message: string };
+};
+
 // Define a mapping from room name to its Record type
 type RoomRecordMap = {
   cursor: CursorRecord;
   blackjack: BlackjackRecord;
+  default: DefaultRecord;
 };
 
 //  TPartyKitServerMessage - Attempt with direct lookup and conditional types
@@ -95,12 +100,11 @@ export default class Server implements Party.Server {
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
-      conn.send(
-        JSON.stringify({
-          type: 'welcome',
-          message: `Welcome to Blackjack! ${id}`,
-        }),
-      );
+      this.send(id, {
+        room: 'default',
+        type: 'hello-world',
+        data: { message: 'hello-from-server' },
+      });
 
       conn.setState({ id, country });
       // Join both rooms
@@ -111,6 +115,16 @@ export default class Server implements Party.Server {
       conn.send(JSON.stringify({ type: 'error', message: err }));
       conn.close();
     }
+  }
+
+  send(id: string, message: TPartyKitServerMessage) {
+    const connection = this.room.getConnection(id);
+    if (!connection) return;
+    connection.send(JSON.stringify(message));
+  }
+
+  broadcast(message: TPartyKitServerMessage, without?: string[]) {
+    this.room.broadcast(JSON.stringify(message));
   }
 
   async onMessage(

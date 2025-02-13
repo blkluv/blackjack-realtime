@@ -67,8 +67,6 @@ export class BlackjackRoom {
         player.connection = client.connection;
       }
     }
-
-    client.connection.send('welcome guest');
   }
 
   async onMessage(
