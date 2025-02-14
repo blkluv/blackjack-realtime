@@ -1,13 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import { env } from '@/env.mjs';
 import { eq } from 'drizzle-orm';
 import { SignJWT } from 'jose';
-import { type Address, verifyMessage } from 'viem';
+import { verifyMessage } from 'viem';
 import { z } from 'zod';
 import { challengeStore } from '../db/schema';
 import { j, publicProcedure } from '../jstack';
 import { constructMessage, generateNonce } from '../utils/web3';
 
-export const postRouter = j.router({
+export const authRouter = j.router({
   generateChallenge: publicProcedure
     .input(z.object({ walletAddress: z.string().toLowerCase() }))
     .get(async ({ ctx, c, input }) => {
@@ -46,11 +47,12 @@ export const postRouter = j.router({
           nonce,
         });
 
-        return message;
+        return c.superjson(message);
       }
 
       await ctx.db.insert(challengeStore).values([
         {
+          id: randomUUID(),
           walletAddress: input.walletAddress,
           issuedAt: issuedAt.toISOString(),
           expiresAt: expiresAt.toISOString(),
@@ -69,25 +71,38 @@ export const postRouter = j.router({
       }),
     )
     .get(async ({ ctx, c, input }) => {
-      const { walletAddress, signature } = input;
+      const { walletAddress: address, signature } = input;
 
       try {
-        ctx.db
-          .select({
-            nonce: challengeStore.nonce,
-          })
-          .from(challengeStore)
-          .where(eq(challengeStore.walletAddress, walletAddress));
+        const walletAddress = address.toLowerCase();
 
-        const isValidSignature = await verifyMessage({
-          address: walletAddress as Address,
-          message: nonce,
-          signature: signature as Address,
+        const challengeData = await ctx.db.query.challengeStore.findFirst({
+          where: (challengeStore, { eq }) =>
+            eq(challengeStore.walletAddress, walletAddress),
         });
 
-        if (!isValidSignature) {
-          return c.superjson({ message: 'Invalid signature' }, 401); // 401 Unauthorized
+        if (!challengeData) {
+          throw new Error('Challenge not found.');
         }
+
+        const message = constructMessage({
+          walletAddress: challengeData.walletAddress,
+          issuedAt: new Date(challengeData.issuedAt),
+          expiresAt: new Date(challengeData.expiresAt),
+          nonce: challengeData.nonce,
+        });
+
+        const isVerfied = await verifyMessage({
+          address: walletAddress as `0x${string}`,
+          message,
+          signature: signature as `0x${string}`,
+        });
+
+        if (!isVerfied) throw new Error('Signature verification failed.');
+
+        await ctx.db
+          .delete(challengeStore)
+          .where(eq(challengeStore.walletAddress, walletAddress));
 
         const secretKey = new TextEncoder().encode(env.JWT_SECRET);
         const token = await new SignJWT({ walletAddress })

@@ -1,5 +1,5 @@
 import { j } from './jstack';
-import { postRouter } from './routers/post-router';
+import { authRouter } from './routers/auth';
 
 /**
  * This is your base API.
@@ -18,7 +18,7 @@ const api = j
  * All routers in /server/routers should be added here manually.
  */
 const appRouter = j.mergeRouters(api, {
-  post: postRouter,
+  auth: authRouter,
 });
 
 export type AppRouter = typeof appRouter;
