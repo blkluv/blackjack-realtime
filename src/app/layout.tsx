@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 
 import './globals.css';
-// import { Providers } from '@/components/providers';
-import { Web3Provider } from '@/components/auth/Web3Provider';
+import { WalletProvider } from '@/components/auth/WalletProvider';
 
 export const metadata: Metadata = {
   title: 'JStack App',
@@ -18,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Web3Provider>{children}</Web3Provider>
+        <WalletProvider>{children}</WalletProvider>
       </body>
     </html>
   );

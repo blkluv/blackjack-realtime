@@ -1,12 +1,20 @@
+import { Button } from '../ui/button';
 import { useUser } from '@/hooks/useUser';
-// import { truncateAddress } from '@/lib/utils';
-import type React from 'react';
-// import { Button } from '../ui/button';
-import { ConnectKitButton } from 'connectkit';
+import { truncateAddress } from '@/lib/utils';
+import { useAppKit, useAppKitEvents } from '@reown/appkit/react';
 
-const WalletConnect: React.FC = () => {
+const WalletConnect = () => {
+  const { open, close } = useAppKit();
+  const events = useAppKitEvents();
+
   const { user } = useUser();
-  return <ConnectKitButton />;
+  return (
+    <Button size={'sm'} onClick={() => open()}>
+      {user.walletAddress
+        ? truncateAddress(user.walletAddress)
+        : 'Connect Wallet'}
+    </Button>
+  );
 };
 
 export default WalletConnect;
