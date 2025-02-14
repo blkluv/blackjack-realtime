@@ -25,7 +25,6 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
     NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
-    NEXT_PUBLIC_SIGN_MSG: z.string().min(1),
   },
 
   /**
@@ -44,6 +43,5 @@ export const env = createEnv({
     // public env vars
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
-    NEXT_PUBLIC_SIGN_MSG: process.env.NEXT_PUBLIC_SIGN_MSG,
   },
 });

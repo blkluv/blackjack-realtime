@@ -1,7 +1,9 @@
 import { env } from '@/env.mjs';
+import { eq } from 'drizzle-orm';
 import { SignJWT } from 'jose';
 import { type Address, verifyMessage } from 'viem';
 import { z } from 'zod';
+import { challengeStore } from '../db/schema';
 import { j, publicProcedure } from '../jstack';
 import { constructMessage, generateNonce } from '../utils/web3';
 
@@ -23,6 +25,39 @@ export const postRouter = j.router({
         nonce,
       });
 
+      const existingMessage = await ctx.db.query.challengeStore.findFirst({
+        where: eq(challengeStore.walletAddress, input.walletAddress),
+      });
+
+      if (existingMessage) {
+        await ctx.db
+          .update(challengeStore)
+          .set({
+            issuedAt: issuedAt.toISOString(),
+            expiresAt: expiresAt.toISOString(),
+            nonce,
+          })
+          .where(eq(challengeStore.walletAddress, input.walletAddress));
+
+        const message = constructMessage({
+          walletAddress: input.walletAddress,
+          issuedAt,
+          expiresAt,
+          nonce,
+        });
+
+        return message;
+      }
+
+      await ctx.db.insert(challengeStore).values([
+        {
+          walletAddress: input.walletAddress,
+          issuedAt: issuedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          nonce,
+        },
+      ]);
+
       return c.superjson(message);
     }),
   // verify challenge and return a signed jwt for cookie
@@ -37,9 +72,16 @@ export const postRouter = j.router({
       const { walletAddress, signature } = input;
 
       try {
+        ctx.db
+          .select({
+            nonce: challengeStore.nonce,
+          })
+          .from(challengeStore)
+          .where(eq(challengeStore.walletAddress, walletAddress));
+
         const isValidSignature = await verifyMessage({
           address: walletAddress as Address,
-          message: env.NEXT_PUBLIC_SIGN_MSG,
+          message: nonce,
           signature: signature as Address,
         });
 

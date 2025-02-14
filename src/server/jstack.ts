@@ -3,7 +3,6 @@ import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { env as honoenv } from 'hono/adapter';
 import { jstack } from 'jstack';
-
 interface Env {
   Bindings: typeof env;
 }
@@ -22,6 +21,7 @@ const databaseMiddleware = j.middleware(async ({ c, next }) => {
     url: TURSO_CONNECTION_URL,
     authToken: TURSO_AUTH_TOKEN,
   });
+
   const db = drizzle(client);
 
   return await next({ db });
