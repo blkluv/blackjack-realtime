@@ -50,7 +50,7 @@ type TPartyKitServerMessage<
   This class implements Party.Server and wires up connections, requests,
   and in-room messages for our Blackjack game.
 ---------------------------------------------------------------------------*/
-class Server implements Party.Server {
+export default class Server implements Party.Server {
   private roomMap: { [id: string]: BlackjackRoom };
   private cursorRoom: CursorRoom;
   readonly room: Party.Room;
