@@ -1,9 +1,12 @@
 'use client';
 
+import WalletConnect from '@/components/auth/WalletConnect';
 import { Button } from '@/components/ui/button';
+// import WalletConnect from '@/components/auth/WalletConnect';
 import useMounted from '@/hooks/useMounted';
+import { useUser } from '@/hooks/useUser';
 import { useWindowSize } from '@/hooks/useWindowSize';
-import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
+import { cn, getRandomCard } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
 import { MicIcon, MicOffIcon } from 'lucide-react';
@@ -146,7 +149,8 @@ const DeckOfCards = ({
 };
 
 const PlayerLayout = () => {
-  const { joinGame, isAuthenticated } = useGame();
+  const { user } = useUser();
+
   const { q } = useWindowSize();
   const numPlayers = 5;
   const curveHeight = q / 4.6;
@@ -187,8 +191,8 @@ const PlayerLayout = () => {
               }}
             >
               <Button
-                disabled={isAuthenticated}
-                onClick={() => joinGame(i + 1)}
+                disabled={user.isAuthenticated}
+                onClick={() => alert('TODO')}
                 size="sm"
                 className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
               >
@@ -211,37 +215,27 @@ const PlayerLayout = () => {
 };
 
 const ActionButtons = () => {
-  const {
-    isAuthenticated,
-    setIsMicOn,
-    joinGame,
-    isMicOn,
-    isConnected,
-    walletAddress,
-    open,
-  } = useGame();
-
-  //   useEffect(() => {
-  //     if (status === "connected") {
-  //       signMessageAsync({ message: "hello" });
-  //     }
-  //   }, [status]);
+  const { user } = useUser();
 
   return (
     <div className="flex fixed bottom-4 items-center p-4 border border-zinc-200/10 backdrop-blur-sm rounded-xl space-x-4">
-      {isAuthenticated && (
+      {user.isAuthenticated && (
         <>
           <Button
-            onClick={() => setIsMicOn(!isMicOn)}
+            onClick={() => alert('todo')}
             size="sm"
             className={cn(
               'bg-yellow-400 text-black cursor-pointer rounded-lg',
-              isMicOn
-                ? 'bg-yellow-400 hover:bg-yellow-500'
-                : 'bg-red-400 hover:bg-red-500',
+              // isMicOn
+              //   ? 'bg-yellow-400 hover:bg-yellow-500'
+              //   : 'bg-red-400 hover:bg-red-500',
             )}
           >
-            {isMicOn ? <MicIcon size={24} /> : <MicOffIcon size={24} />}
+            {user.isAuthenticated ? (
+              <MicIcon size={24} />
+            ) : (
+              <MicOffIcon size={24} />
+            )}
           </Button>
           {/* <Button
             size="sm"
@@ -275,9 +269,7 @@ const ActionButtons = () => {
             ? 'Join Game'
             : 'Connect Wallet'}
       </Button> */}
-      <Button size={'sm'} onClick={() => open()}>
-        {isConnected ? truncateAddress(walletAddress) : 'Connect Wallet'}
-      </Button>
+      <WalletConnect />
     </div>
   );
 };

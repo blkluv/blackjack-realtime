@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 import './globals.css';
-import WalletProvider from '@/components/WalletProvider';
-import { headers } from 'next/headers';
+// import { Providers } from '@/components/providers';
+import { Web3Provider } from '@/components/auth/Web3Provider';
 
 export const metadata: Metadata = {
   title: 'JStack App',
@@ -10,17 +10,15 @@ export const metadata: Metadata = {
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersObj = await headers();
-  const cookies = headersObj.get('cookie');
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <WalletProvider cookies={cookies}>{children}</WalletProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <Web3Provider>{children}</Web3Provider>
       </body>
     </html>
   );

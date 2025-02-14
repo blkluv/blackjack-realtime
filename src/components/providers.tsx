@@ -1,5 +1,4 @@
 'use client';
-
 import {
   QueryCache,
   QueryClient,
@@ -21,7 +20,6 @@ export const Providers = ({ children }: PropsWithChildren) => {
         }),
       }),
   );
-
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );

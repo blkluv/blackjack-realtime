@@ -35,6 +35,7 @@
     "@tanstack/react-query": "^5.66.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "connectkit": "^1.8.2",
     "drizzle-orm": "^0.39.3",
     "hono": "^4.7.1",
     "jose": "^5.9.6",
@@ -51,7 +52,7 @@
     "superjson": "^2.2.2",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
-    "viem": "^2.23.2",
+    "viem": "2.x",
     "wagmi": "^2.14.11",
     "wrangler": "^3.109.0",
     "zod": "^3.24.2"

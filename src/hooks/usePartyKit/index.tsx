@@ -11,7 +11,7 @@ export const usePartyKit = () => {
   const { send: wssend, readyState } = usePartySocket({
     host: env.NEXT_PUBLIC_PARTYKIT_HOST,
     room: 'blackjack',
-    query: { walletAddress, token },
+    query: { token: 'abcd' },
     onOpen: () => {
       console.log('Connected to PartyKit');
     },
