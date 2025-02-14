@@ -1,6 +1,8 @@
+import { client } from '@/lib/client';
 import { useAppKitAccount } from '@reown/appkit/react';
-import { atom, useAtom, useSetAtom } from 'jotai';
-import { useSession } from 'next-auth/react';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+
+import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
 type User = {
@@ -15,41 +17,60 @@ const userAtom = atom<User>({
   isAuthenticated: false,
 });
 
-const setIsAuthenticatedAtom = atom(
-  null,
-  (get, set, isAuthenticated: boolean) => {
-    const user = get(userAtom);
-    set(userAtom, { ...user, isAuthenticated });
-  },
-);
-
-const setWalletAddressAtom = atom(null, (get, set, walletAddress: string) => {
-  const user = get(userAtom);
-  set(userAtom, { ...user, walletAddress });
+const setUserAtom = atom(null, (get, set, user: User) => {
+  set(userAtom, user);
 });
 
 // set/update single entry in map
 export const useUser = () => {
   const { status, address } = useAppKitAccount();
   const { data: session } = useSession();
-  const [user, setUser] = useAtom(userAtom);
-  const updateAuthStatus = useSetAtom(setIsAuthenticatedAtom);
-  const updateWalletAddress = useSetAtom(setWalletAddressAtom);
+  const user = useAtomValue(userAtom);
+
+  const updateUser = useSetAtom(setUserAtom);
+
+  const fetchWsToken = async () => {
+    const response = await client.token.getPlayerToken.$get();
+    const { token } = await response.json();
+
+    return token;
+  };
+
+  const logout = async () => {
+    try {
+      await signOut({ redirect: false });
+
+      updateUser({
+        isAuthenticated: false,
+        walletAddress: '',
+        wsToken: '',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   useEffect(() => {
-    if (status === 'connected' && address && session?.address) {
-      updateAuthStatus(true);
-      updateWalletAddress(session.address);
-    } else {
-      updateAuthStatus(false);
-      updateWalletAddress('');
+    if (!user.isAuthenticated && status === 'connected' && session?.address) {
+      updateUser({
+        isAuthenticated: true,
+        walletAddress: session.address,
+        wsToken: '',
+      });
+    }
+
+    if (user.isAuthenticated && status === 'disconnected') {
+      updateUser({
+        isAuthenticated: false,
+        walletAddress: '',
+        wsToken: '',
+      });
     }
   }, [status, address, session]);
 
   return {
     user,
-    setUser,
-    updateAuthStatus,
-    updateWalletAddress,
+    logout,
+    fetchWsToken,
   };
 };

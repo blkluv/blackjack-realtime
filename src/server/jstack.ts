@@ -63,16 +63,15 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
       secret: env.JWT_SECRET,
     });
 
-    if (!token || !token.address) {
+    if (!token || !token.name) {
       throw new HTTPException(401, { message: 'Invalid token' });
     }
 
     // Add the user info to the context for use in procedures
     return await next({
       user: {
-        address: token.address,
-        chainId: token.chainId as number,
-        wsToken: token.wsToken as string,
+        id: token.sub,
+        address: token.name,
       },
     });
   } catch (error) {

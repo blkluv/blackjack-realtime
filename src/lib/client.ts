@@ -11,10 +11,10 @@ export const client = createClient<AppRouter>({
 
 function getBaseUrl() {
   // 👇 In production, use the production worker
-  if (env.NODE_ENV === 'production' && env.WRANGLER_URL) {
-    return env.WRANGLER_URL;
+  if (env.NODE_ENV === 'production' && env.NEXT_PUBLIC_WRANGLER_URL) {
+    return env.NEXT_PUBLIC_WRANGLER_URL;
   }
 
   // 👇 Locally, use wrangler backend
-  return 'http://localhost:8080';
+  return 'http://localhost:3000';
 }

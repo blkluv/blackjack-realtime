@@ -7,7 +7,6 @@ import {
   getAddressFromMessage,
 } from '@reown/appkit-siwe';
 import { env } from '@/env.mjs';
-import { SignJWT } from 'jose';
 
 declare module 'next-auth' {
   interface Session extends SIWESession {
@@ -58,15 +57,10 @@ const providers = [
           projectId,
         });
 
-        const secretKey = new TextEncoder().encode(env.JWT_SECRET);
-        const token = await new SignJWT({ walletAddress: address })
-          .setProtectedHeader({ alg: 'HS256' })
-          .setExpirationTime('24h')
-          .sign(secretKey);
-
         if (isValid) {
           return {
             id: `${chainId}:${address}`,
+            name: address,
           };
         }
 
