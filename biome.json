@@ -21,52 +21,15 @@
         "useJsxKeyInIterable": "off",
         "noUnusedImports": "error"
       }
-    },
-    "ignore": [
-      "node_modules",
-      ".next",
-      "dist",
-      "esmbuild",
-      "packages/huddle01_flutter_client",
-      "apps/contracts/broadcast",
-      "packages/unity_webgl",
-      "packages/unity"
-    ]
+    }
   },
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,
-    "enabled": true,
-    "ignore": [
-      "node_modules",
-      ".next",
-      "dist",
-      "gen/*",
-      "esmbuild",
-      "artifacts",
-      "packages/huddle01_flutter_client",
-      "packages/unity_webgl",
-      "packages/unity",
-      "typechain-types/",
-      "broadcast/*"
-    ]
+    "enabled": true
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "contracts/lib/*",
-      "openzeppelin-contracts/*",
-      ".next",
-      "dist",
-      "gen/*",
-      "esmbuild",
-      "packages/huddle01_flutter_client",
-      "packages/huddle01-python",
-      "artifacts",
-      "deployments/*",
-      "broadcast/*",
-      "typechain-types/"
-    ]
+    "ignore": ["node_modules", ".next", "dist"]
   },
   "javascript": {
     "formatter": {

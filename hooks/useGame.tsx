@@ -1,12 +1,14 @@
 'use client';
 
 import { env } from '@/env.mjs';
-import { verifyUserAction } from '@/lib/action';
 import { useAppKitAccount } from '@reown/appkit-core/react';
 import { useAppKit } from '@reown/appkit/react';
 import usePartySocket from 'partysocket/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSignMessage } from 'wagmi';
+import type { TPartyKitServerMessage } from '../party';
+import type { TBlackjackMessageSchema } from '../party/blackjack/blackjack.types';
+import type { TCursorMessageSchema } from '../party/cursor/cursor.types';
 
 type Position = {
   x: number;
@@ -33,7 +35,6 @@ const useGame = () => {
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const {
     address: walletAddress,
@@ -58,75 +59,53 @@ const useGame = () => {
     },
   });
 
-  const authenticate = useCallback(async () => {
-    if (!walletAddress) return null;
-
-    try {
-      const signature = await signMessageAsync({
-        message: env.NEXT_PUBLIC_SIGN_MSG,
-      });
-
-      //   const response = await client.post.verifyChallenge.$get({
-      //     signature,
-      //     walletAddress,
-      //   });
-
-      //   if (!response.ok) throw new Error("Authentication failed");
-
-      const res = await verifyUserAction(signature, walletAddress);
-
-      console.log(res);
-
-      if ('message' in res) {
-        console.error('Authentication response message:', res.message);
-      } else if ('token' in res) {
-        setToken(res.token);
-        localStorage.setItem('token', res.token);
-      } else {
-        console.error('Unexpected authentication response:', res);
-      }
-      return token;
-    } catch (error) {
-      console.error('Authentication error:', error);
-      return null;
-    }
-  }, [walletAddress, signMessageAsync]);
-
-  const { send, readyState } = usePartySocket({
+  const { send: wssend, readyState } = usePartySocket({
     host: env.NEXT_PUBLIC_PARTYKIT_HOST,
     room: 'blackjack',
     query: { walletAddress, seat, token },
     onOpen: () => {
       console.log('Connected to PartyKit');
       setIsAuthenticated(true);
-      send('hello from client');
     },
     onMessage: (evt) => {
-      try {
-        const msg = JSON.parse(evt.data as string);
-        switch (msg.type) {
-          case 'sync':
-            setOthers(msg.cursors);
+      const { room, data, type } = JSON.parse(
+        evt.data as string,
+      ) as TPartyKitServerMessage;
+      if (room === 'cursor') {
+        switch (type) {
+          case 'cursor-sync': {
+            const newOthers: OtherCursorsMap = {};
+            for (const cursor of data.cursors) {
+              newOthers[cursor.id] = cursor;
+            }
+            setOthers(newOthers);
             break;
-          case 'cursor-update':
-            setOthers((prev) => ({ ...prev, [msg.id]: msg }));
+          }
+          case 'cursor-update': {
+            const other = {
+              x: data.cursor.x,
+              y: data.cursor.y,
+              country: data.cursor.country,
+              lastUpdate: data.cursor.lastUpdate,
+              pointer: data.cursor.pointer,
+            };
+            setOthers((others) => ({ ...others, [data.cursor.id]: other }));
             break;
+          }
           case 'cursor-remove':
-            setOthers((prev) => {
-              const updated = { ...prev };
-              delete updated[msg.id];
-              return updated;
+            setOthers((others) => {
+              const newOthers = { ...others };
+              delete newOthers[data.id];
+              return newOthers;
             });
             break;
-          case 'new-token':
-            setToken(msg.token);
-            localStorage.setItem('token', msg.token);
-            break;
           default:
-            console.log('Received unknown message:', msg);
+            console.log('message received', room, type, data);
         }
-      } catch (error) {
-        console.error('Error parsing incoming message:', error);
+      } else if (room === 'blackjack') {
+        console.log('blackjack', type, data);
+      } else {
+        console.log('message received', room, type, data);
       }
     },
     onClose: () => {
@@ -143,7 +122,19 @@ const useGame = () => {
     },
   });
 
-  // Handle screen resize
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    readyState === WebSocket.OPEN,
+  );
+
+  const cursorSend = (message: TCursorMessageSchema) => {
+    wssend(JSON.stringify({ room: 'cursor', ...message }));
+  };
+
+  const blackjackSend = (message: TBlackjackMessageSchema) => {
+    wssend(JSON.stringify({ room: 'blackjack', ...message }));
+  };
+
+  // Track window dimensions
   useEffect(() => {
     const onResize = () =>
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
@@ -151,61 +142,67 @@ const useGame = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Handle cursor movement
-  useEffect(() => {
-    if (
-      readyState !== WebSocket.OPEN ||
-      !dimensions.width ||
-      !dimensions.height
-    )
-      return;
+  // Track cursor position
+  // useEffect(() => {
+  //   const onMouseMove = (e: MouseEvent) => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     if (!dimensions.width || !dimensions.height) return;
+  //     const position = {
+  //       x: e.clientX / dimensions.width,
+  //       y: e.clientY / dimensions.height,
+  //       pointer: 'mouse' as const,
+  //     };
+  //     send(
+  //       JSON.stringify({
+  //         room: 'cursor',
+  //         type: 'cursor-update',
+  //         data: position,
+  //       }),
+  //     );
+  //     setSelf(position);
+  //   };
 
-    const updateCursor = (x: number, y: number, pointer: 'mouse' | 'touch') => {
-      const position = {
-        x: x / dimensions.width,
-        y: y / dimensions.height,
-        pointer,
-      };
-      send(JSON.stringify({ type: 'cursor-update', ...position }));
-      setSelf(position);
-    };
+  //   const onTouchMove = (e: TouchEvent) => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     if (!dimensions.width || !dimensions.height) return;
+  //     if (!e.touches[0]) return;
+  //     e.preventDefault();
+  //     const position = {
+  //       x: e.touches[0].clientX / dimensions.width,
+  //       y: e.touches[0].clientY / dimensions.height,
+  //       pointer: 'touch' as const,
+  //     };
+  //     send(
+  //       JSON.stringify({
+  //         room: 'cursor',
+  //         type: 'cursor-update',
+  //         data: position,
+  //       }),
+  //     );
+  //     setSelf(position);
+  //   };
 
-    const onMouseMove = (e: MouseEvent) =>
-      updateCursor(e.clientX, e.clientY, 'mouse');
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches[0] && e.touches.length > 0)
-        updateCursor(e.touches[0].clientX, e.touches[0].clientY, 'touch');
-    };
-    const onTouchEnd = () => {
-      send(JSON.stringify({ type: 'cursor-remove' }));
-      setSelf(null);
-    };
+  //   const onTouchEnd = () => {
+  //     if (readyState !== WebSocket.OPEN) return;
+  //     send(JSON.stringify({ room: 'cursor', type: 'cursor-remove', data: {} }));
+  //     setSelf(null);
+  //   };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('touchend', onTouchEnd);
+  //   window.addEventListener('mousemove', onMouseMove);
+  //   window.addEventListener('touchmove', onTouchMove);
+  //   window.addEventListener('touchend', onTouchEnd);
 
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [readyState, dimensions, send]);
+  //   return () => {
+  //     window.removeEventListener('mousemove', onMouseMove);
+  //     window.removeEventListener('touchmove', onTouchMove);
+  //     window.removeEventListener('touchend', onTouchEnd);
+  //   };
+  // }, [readyState, dimensions, send]);
 
-  const joinGame = useCallback(
-    async (seatNumber: number) => {
-      setSeat(seatNumber.toString());
-
-      if (!token && walletAddress) {
-        const newToken = await authenticate();
-        if (!newToken) {
-          console.error('Failed to authenticate');
-          return;
-        }
-      }
-    },
-    [authenticate, token, walletAddress],
-  );
+  const joinGame = (seat: number) => {
+    setSeat(seat.toString());
+    blackjackSend({ type: 'playerJoin', data: { seat } });
+  };
 
   return {
     joinGame,
@@ -220,7 +217,8 @@ const useGame = () => {
     status,
     open,
     isAuthenticated,
-    send,
+    blackjackSend,
+    cursorSend,
     readyState,
     cursors: { self, others },
   };
