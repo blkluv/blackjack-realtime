@@ -1,6 +1,4 @@
-import type * as Party from 'partykit/server';
 import { z } from 'zod';
-import type { Id } from '../index';
 
 /**
  * Cards are represented as "rank+suit".
@@ -16,8 +14,10 @@ type PlayerJoinData = {
   seat: number;
 };
 type PlayerState = {
-  connection: Party.Connection;
-  walletAddr: `0x${string}`;
+  // this is the partykit connection id of the player
+  connectionId: string;
+  // this is the wallet address of the player
+  userId: `0x${string}`;
   seat: number; // Seat number from 1 to 5.
   bet: number;
   hand: Card[];
@@ -26,16 +26,11 @@ type PlayerState = {
   isStanding: boolean;
 };
 
-type Client = {
-  connection: Party.Connection;
-  id: Id;
-};
-
 type GameState = {
-  players: { [walletAddr: string]: PlayerState };
+  players: { [userId: `0x${string}`]: PlayerState };
   dealerHand: Card[];
   deck: Card[];
-  playerOrder: string[]; // player IDs sorted by seat order.
+  playerOrder: `0x${string}`[]; // player IDs sorted by seat order.
   currentPlayerIndex: number;
   status:
     | 'waiting' // Waiting for players.
@@ -103,7 +98,6 @@ export {
   BlackjackMessageSchema,
   type PlayerState,
   type GameState,
-  type Client,
   type PlayerJoinData,
   type Card,
 };

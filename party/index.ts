@@ -9,7 +9,7 @@ import { BlackjackRoom } from './blackjack/room';
 import type { CursorRecord } from './cursor/cursor.types';
 import { CursorRoom } from './cursor/room';
 
-type Id = `0x${string}` | 'guest';
+type UserId = `0x${string}` | 'guest';
 
 const SocketMessageSchema = z.object({
   room: z.enum(['blackjack', 'cursor']),
@@ -18,7 +18,7 @@ const SocketMessageSchema = z.object({
 });
 
 type ConnectionState = {
-  id: Id;
+  userId: UserId;
   country: string | null;
 };
 
@@ -100,28 +100,6 @@ export default class Server implements Party.Server {
     }
   }
 
-  // static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
-  //   try {
-  //     // replace with jwt token and fetch walletaddress from the signature
-  //     const walletAddress =
-  //       new URL(req.url).searchParams.get("walletAddress")?.toLowerCase() ?? "";
-
-  //     if (walletAddress !== "") {
-  //       req.headers.set("X-User-Id", walletAddress);
-  //     } else {
-  //       req.headers.set("X-User-Id", "guest");
-  //     }
-  //     return req;
-  //   } catch (e: unknown) {
-  //     if (e instanceof Error) {
-  //       return new Response(`Unauthorized ${e.message} `, { status: 401 });
-  //     }
-  //     return new Response("Unauthorized: An unexpected error occurred", {
-  //       status: 401,
-  //     });
-  //   }
-  // }
-
   async onConnect(
     conn: Party.Connection<ConnectionState>,
     { request }: Party.ConnectionContext,
@@ -132,24 +110,24 @@ export default class Server implements Party.Server {
         throw new Error('Room not found');
       }
 
-      let id = request.headers.get('X-User-Id') as Id | null;
+      let userId = request.headers.get('X-User-Id') as UserId | null;
       const country = (request.cf?.country ?? null) as string | null;
 
-      if (!id) {
+      if (!userId) {
         console.log('guest user');
-        id = 'guest';
+        userId = 'guest';
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
-      this.send(id, {
+      this.send(userId, {
         room: 'default',
         type: 'hello-world',
         data: { message: 'hello-from-server' },
       });
 
-      conn.setState({ id, country });
+      conn.setState({ userId, country });
       // Join both rooms
-      await room.onJoin({ connection: conn, id: id });
+      await room.onJoin(conn);
       await this.cursorRoom.onJoin(conn);
     } catch (err) {
       console.error(`Error joining room: ${err}`);
@@ -165,20 +143,20 @@ export default class Server implements Party.Server {
   }
 
   broadcast(message: TPartyKitServerMessage, without?: string[]) {
-    this.room.broadcast(JSON.stringify(message));
+    this.room.broadcast(JSON.stringify(message), without);
   }
 
   async onMessage(
     unknownMessage: string,
-    sender: Party.Connection<ConnectionState>,
+    conn: Party.Connection<ConnectionState>,
   ) {
-    console.log(`Connection ${sender.id} sent message: ${unknown}`);
+    console.log(`Connection ${conn.id} sent message: ${unknown}`);
     try {
       const message = SocketMessageSchema.parse(unknownMessage);
 
       // Route cursor messages to cursor room
       if (message.room === 'cursor') {
-        this.cursorRoom.handleMessage(sender.id, message).catch((err) => {
+        this.cursorRoom.handleMessage(conn.id, message).catch((err) => {
           console.error('Error handling cursor update:', err);
         });
         return;
@@ -189,17 +167,17 @@ export default class Server implements Party.Server {
       if (!room) {
         throw new Error('Room not found');
       }
-      const playerAddr = sender.state?.id;
-      if (!playerAddr) {
+      const userId = conn.state?.userId;
+      if (!userId) {
         throw new Error('No player address found');
       }
 
-      if (playerAddr === 'guest') {
+      if (userId === 'guest') {
         return;
       }
 
       room
-        .onMessage(playerAddr, message)
+        .onMessage(conn, message)
         .catch((err) => console.error('Error handling message in room:', err));
     } catch (err) {
       console.error('Failed to parse message as JSON', err);
@@ -210,4 +188,4 @@ export default class Server implements Party.Server {
 // Ensure our server class satisfies Party.Worker.
 Server satisfies Party.Worker;
 
-export type { Id, ConnectionState, TPartyKitServerMessage };
+export type { UserId, ConnectionState, TPartyKitServerMessage };
