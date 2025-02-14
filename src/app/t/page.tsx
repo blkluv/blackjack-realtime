@@ -1,11 +1,11 @@
 'use client';
 import { Button } from '@/components/ui/button';
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { getRandomCard } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
-import { useWindowSize } from '../../../hooks/useWindowSize';
 
 const BlackjackTable = () => {
   const { height, width, q, q2 } = useWindowSize();

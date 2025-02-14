@@ -1,9 +1,9 @@
 'use client';
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { getRandomCard } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
 import { nanoid } from 'nanoid';
-import { useWindowSize } from '../../../hooks/useWindowSize';
 
 const A = () => {
   return (

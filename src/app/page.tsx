@@ -1,6 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import useMounted from '@/hooks/useMounted';
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { cn, getRandomCard, truncateAddress } from '@/lib/utils';
 // @ts-ignore
 import Card from '@heruka_urgyen/react-playing-cards';
@@ -8,9 +10,6 @@ import { MicIcon, MicOffIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
-import useGame from '../../hooks/useGame';
-import useMounted from '../../hooks/useMounted';
-import { useWindowSize } from '../../hooks/useWindowSize';
 
 const GamePage = () => {
   return (
