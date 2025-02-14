@@ -2,12 +2,12 @@ import type * as Party from 'partykit/server';
 import {
   BlackjackMessageSchema,
   type BlackjackRecord,
-  type Client,
   type GameState,
   type PlayerJoinData,
   type TBlackjackServerMessage,
 } from './blackjack.types';
 
+import type { ConnectionState } from '..';
 import { createDeck, handValue } from './blackjack.utils';
 
 /*-------------------------------------------------------------------------
@@ -19,12 +19,10 @@ export class BlackjackRoom {
   room: Party.Room;
   readonly maxPlayers = 5;
   state: GameState;
-  clients: { [connectionId: string]: Client };
 
   constructor(id: string, room: Party.Room) {
     this.id = id;
     this.room = room;
-    this.clients = {};
     this.state = {
       players: {},
       dealerHand: [],
@@ -47,41 +45,67 @@ export class BlackjackRoom {
     id: string,
     message: TBlackjackServerMessage<T>,
   ) {
-    const client = this.clients[id];
-    if (!client) {
+    const connection = this.room.getConnection(id);
+    if (!connection) {
       return;
     }
 
-    client.connection.send(JSON.stringify(message));
+    connection.send(JSON.stringify(message));
   }
 
-  async onJoin(client: Client) {
-    this.clients[client.connection.id] = client;
-
+  async onJoin(connection: Party.Connection<ConnectionState>) {
     // check if wallet adddress is already in the game
-    if (client.id !== 'guest') {
-      const player = this.state.players[client.id];
+    const userId = connection.state?.userId;
+    if (userId === undefined) {
+      //close connection throw error
+      //TODO:Implement close error codes
+      connection.close(4000, 'Invalid wallet address');
+      return;
+    }
+
+    if (userId !== 'guest') {
+      const player = this.state.players[userId];
       if (player) {
-        player.connection.close();
-        //update connection id
-        player.connection = client.connection;
+        const oldConnection = this.room.getConnection(player.connectionId);
+        if (oldConnection) {
+          oldConnection.close(
+            4000,
+            'Player already in game, Reconnected , Closing Old Socket',
+          );
+        }
+        player.connectionId = connection.id;
       }
     }
   }
 
   async onMessage(
-    playerAddr: `0x${string}`,
+    connection: Party.Connection<ConnectionState>,
     unknownData: unknown,
   ): Promise<void> {
     const { type, data } = BlackjackMessageSchema.parse(unknownData);
+    const userId = connection.state?.userId;
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+    if (userId === 'guest') {
+      throw new Error('Guests cannot join the game');
+    }
+    // check if player is a connected client
+    if (connection.readyState !== WebSocket.OPEN) {
+      throw new Error('Player is not connected');
+    }
 
+    //check if player is already in the game
+    if (this.state.players[userId]) {
+      throw new Error('Player is already in the game');
+    }
     switch (type) {
       case 'playerJoin': {
-        this.playerJoin(playerAddr, { seat: data.seat });
+        this.playerJoin(connection.id, userId, { seat: data.seat });
         break;
       }
       case 'placeBet': {
-        this.placeBet(playerAddr, data.bet);
+        this.placeBet(userId, data.bet);
         break;
       }
       case 'startRound': {
@@ -89,11 +113,11 @@ export class BlackjackRoom {
         break;
       }
       case 'hit': {
-        this.playerHit(playerAddr);
+        this.playerHit(userId);
         break;
       }
       case 'stand': {
-        this.playerStand(playerAddr);
+        this.playerStand(userId);
         break;
       }
       default:
@@ -101,22 +125,14 @@ export class BlackjackRoom {
     }
   }
 
-  playerJoin(playerAddr: `0x${string}`, data: PlayerJoinData) {
+  playerJoin(
+    connectionId: string,
+    userId: `0x${string}`,
+    data: PlayerJoinData,
+  ) {
     if (Object.keys(this.state.players).length >= this.maxPlayers) {
       throw new Error('Table is full');
     }
-
-    // check if player is a connected client
-
-    const player = this.clients[playerAddr];
-    if (!player) {
-      throw new Error('Player not found');
-    }
-    //check if player is already in the game
-    if (this.state.players[playerAddr]) {
-      throw new Error('Player is already in the game');
-    }
-
     const { seat } = data;
 
     //check if seat is already taken
@@ -124,9 +140,9 @@ export class BlackjackRoom {
       throw new Error('Seat is already taken');
     }
 
-    this.state.players[playerAddr] = {
-      connection: player.connection,
-      walletAddr: playerAddr,
+    this.state.players[userId] = {
+      connectionId,
+      userId,
       seat,
       bet: 0,
       hand: [],
@@ -138,7 +154,7 @@ export class BlackjackRoom {
     // Update order by seat.
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
-      .map((p) => p.walletAddr);
+      .map((p) => p.userId);
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -146,12 +162,12 @@ export class BlackjackRoom {
     });
   }
 
-  playerLeave(playerAddr: `0x${string}`): void {
-    delete this.state.players[playerAddr];
+  playerLeave(userId: `0x${string}`): void {
+    delete this.state.players[userId];
 
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
-      .map((p) => p.walletAddr);
+      .map((p) => p.userId);
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -159,11 +175,11 @@ export class BlackjackRoom {
     });
   }
 
-  placeBet(playerAddr: `0x${string}`, bet: number): void {
+  placeBet(userId: `0x${string}`, bet: number): void {
     if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
-    const p = this.state.players[playerAddr];
+    const p = this.state.players[userId];
     if (!p) return;
     p.bet = bet;
     this.broadcast({
@@ -212,11 +228,11 @@ export class BlackjackRoom {
     });
   }
 
-  playerHit(playerAddr: `0x${string}`): void {
+  playerHit(userId: `0x${string}`): void {
     const currentPlayerId =
       this.state.playerOrder[this.state.currentPlayerIndex];
-    if (playerAddr !== currentPlayerId) return;
-    const p = this.state.players[playerAddr];
+    if (userId !== currentPlayerId) return;
+    const p = this.state.players[userId];
     if (!p) throw new Error('Player not found');
     const card = this.state.deck.pop();
     if (!card) throw new Error('Deck is empty');
@@ -233,11 +249,11 @@ export class BlackjackRoom {
     });
   }
 
-  playerStand(playerAddr: `0x${string}`): void {
+  playerStand(userId: `0x${string}`): void {
     const currentPlayerId =
       this.state.playerOrder[this.state.currentPlayerIndex];
-    if (playerAddr !== currentPlayerId) return;
-    const p = this.state.players[playerAddr];
+    if (userId !== currentPlayerId) return;
+    const p = this.state.players[userId];
     if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
