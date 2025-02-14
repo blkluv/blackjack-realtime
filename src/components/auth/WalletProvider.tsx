@@ -1,6 +1,6 @@
 'use client';
 
-import { wagmiAdapter, projectId } from './config';
+import { wagmiAdapter, projectId, siweConfig } from './config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createAppKit } from '@reown/appkit/react';
 import { mainnet, arbitrum } from '@reown/appkit/networks';
@@ -29,8 +29,9 @@ const modal = createAppKit({
   networks: [mainnet, arbitrum],
   defaultNetwork: mainnet,
   metadata: metadata,
+  siweConfig: siweConfig,
   features: {
-    analytics: true, // Optional - defaults to your Cloud configuration
+    analytics: false, // Optional - defaults to your Cloud configuration
   },
 });
 

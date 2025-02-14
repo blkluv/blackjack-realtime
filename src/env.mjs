@@ -8,13 +8,13 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    NODE_ENV: z.enum(['development', 'production']).default('development'),
     TURSO_CONNECTION_URL: z.string().min(1),
     TURSO_AUTH_TOKEN: z.string().min(1),
     CLOUDFLARE_API_TOKEN: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     WRANGLER_URL: z.string().optional(),
     JWT_SECRET: z.string().min(1),
-    NODE_ENV: z.enum(['development', 'production']).default('development'),
   },
 
   /**

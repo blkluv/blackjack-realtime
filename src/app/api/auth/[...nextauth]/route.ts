@@ -6,6 +6,7 @@ import {
   getChainIdFromMessage,
   getAddressFromMessage,
 } from '@reown/appkit-siwe';
+import { env } from '@/env.mjs';
 
 declare module 'next-auth' {
   interface Session extends SIWESession {
@@ -14,7 +15,7 @@ declare module 'next-auth' {
   }
 }
 
-const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+const nextAuthSecret = env.JWT_SECRET;
 if (!nextAuthSecret) {
   throw new Error('NEXTAUTH_SECRET is not set');
 }
