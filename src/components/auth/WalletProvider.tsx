@@ -1,6 +1,7 @@
 'use client';
 
 import { wagmiAdapter, projectId, siweConfig } from './config';
+import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createAppKit } from '@reown/appkit/react';
 import { mainnet, arbitrum } from '@reown/appkit/networks';
@@ -47,11 +48,15 @@ export const WalletProvider: React.FC<Props> = ({ children, cookies }) => {
   );
 
   return (
-    <WagmiProvider
-      config={wagmiAdapter.wagmiConfig as Config}
-      initialState={initialState}
-    >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </WagmiProvider>
+    <SessionProvider>
+      <WagmiProvider
+        config={wagmiAdapter.wagmiConfig as Config}
+        initialState={initialState}
+      >
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </WagmiProvider>
+    </SessionProvider>
   );
 };

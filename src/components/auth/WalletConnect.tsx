@@ -1,13 +1,12 @@
 import { Button } from '../ui/button';
 import { useUser } from '@/hooks/useUser';
 import { truncateAddress } from '@/lib/utils';
-import { useAppKit, useAppKitEvents } from '@reown/appkit/react';
+import { useAppKit } from '@reown/appkit/react';
 
 const WalletConnect = () => {
-  const { open, close } = useAppKit();
-  const events = useAppKitEvents();
-
+  const { open } = useAppKit();
   const { user } = useUser();
+
   return (
     <Button size={'sm'} onClick={() => open()}>
       {user.walletAddress

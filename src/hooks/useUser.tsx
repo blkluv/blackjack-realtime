@@ -1,22 +1,18 @@
+import { useAppKitAccount } from '@reown/appkit/react';
 import { atom, useAtom, useSetAtom } from 'jotai';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 type User = {
   walletAddress?: string;
-
-  token?: string;
-
+  wsToken?: string;
   isAuthenticated: boolean;
 };
 
 const userAtom = atom<User>({
   walletAddress: '',
-  token: '',
+  wsToken: '',
   isAuthenticated: false,
-});
-
-const setUserAtom = atom(null, (get, set, user: User) => {
-  get(userAtom);
-  set(userAtom, user);
 });
 
 const setIsAuthenticatedAtom = atom(
@@ -34,9 +30,21 @@ const setWalletAddressAtom = atom(null, (get, set, walletAddress: string) => {
 
 // set/update single entry in map
 export const useUser = () => {
+  const { status, address } = useAppKitAccount();
+  const { data: session } = useSession();
   const [user, setUser] = useAtom(userAtom);
   const updateAuthStatus = useSetAtom(setIsAuthenticatedAtom);
   const updateWalletAddress = useSetAtom(setWalletAddressAtom);
+
+  useEffect(() => {
+    if (status === 'connected' && address && session?.address) {
+      updateAuthStatus(true);
+      updateWalletAddress(session.address);
+    } else {
+      updateAuthStatus(false);
+      updateWalletAddress('');
+    }
+  }, [status, address, session]);
 
   return {
     user,
