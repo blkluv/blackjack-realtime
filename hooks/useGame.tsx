@@ -1,3 +1,5 @@
+'use client';
+
 import { env } from '@/env.mjs';
 import { useAppKitAccount } from '@reown/appkit-core/react';
 import { useAppKit } from '@reown/appkit/react';
@@ -19,22 +21,19 @@ type Cursor = Position & {
   lastUpdate: number;
 };
 
-type OtherCursorsMap = {
-  [id: string]: Cursor;
-};
+type OtherCursorsMap = Record<string, Cursor>;
 
 const useGame = () => {
   const [seat, setSeat] = useState('');
   const [isMicOn, setIsMicOn] = useState(false);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem('token') || null,
+  );
   const [self, setSelf] = useState<Position | null>(null);
   const [others, setOthers] = useState<OtherCursorsMap>({});
-  const [dimensions, setDimensions] = useState<{
-    width: number;
-    height: number;
-  }>({
-    width: 0,
-    height: 0,
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
   });
 
   const {
@@ -44,23 +43,28 @@ const useGame = () => {
     status,
   } = useAppKitAccount();
   const { open } = useAppKit();
+
   const { signMessageAsync } = useSignMessage({
     mutation: {
       onSuccess: (data) => {
-        console.log('signed message', data);
-        setToken(data);
+        try {
+          const parsedData = JSON.parse(data) as { token: string };
+          setToken(parsedData.token);
+          localStorage.setItem('token', parsedData.token);
+        } catch (error) {
+          console.error('Failed to parse token response:', error);
+        }
       },
-      onError: (error) => {
-        console.error('error signing message', error);
-      },
+      onError: (error) => console.error('Error signing message:', error),
     },
   });
 
   const { send: wssend, readyState } = usePartySocket({
     host: env.NEXT_PUBLIC_PARTYKIT_HOST,
     room: 'blackjack',
+    query: { walletAddress, seat, token },
     onOpen: () => {
-      console.log('connected to partykit');
+      console.log('Connected to PartyKit');
       setIsAuthenticated(true);
     },
     onMessage: (evt) => {
@@ -104,20 +108,23 @@ const useGame = () => {
         console.log('message received', room, type, data);
       }
     },
-    onClose: (close) => {
-      console.log('disconnected from partykit', close);
+    onClose: () => {
       setIsAuthenticated(false);
+      // If connection closed due to auth error, clear token
+      if (!isAuthenticated) {
+        setToken(null);
+        localStorage.removeItem('token');
+      }
     },
     onError: (err) => {
-      console.error('error in partykit', err);
+      console.error('Error in PartyKit:', err);
       setIsAuthenticated(false);
     },
-    query: {
-      walletAddress,
-      seat,
-      token,
-    },
   });
+
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    readyState === WebSocket.OPEN,
+  );
 
   const cursorSend = (message: TCursorMessageSchema) => {
     wssend(JSON.stringify({ room: 'cursor', ...message }));
@@ -127,20 +134,12 @@ const useGame = () => {
     wssend(JSON.stringify({ room: 'blackjack', ...message }));
   };
 
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    readyState === WebSocket.OPEN,
-  );
-
   // Track window dimensions
   useEffect(() => {
-    const onResize = () => {
+    const onResize = () =>
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
-    };
     window.addEventListener('resize', onResize);
-    onResize();
-    return () => {
-      window.removeEventListener('resize', onResize);
-    };
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   // Track cursor position
@@ -221,7 +220,7 @@ const useGame = () => {
     blackjackSend,
     cursorSend,
     readyState,
-    cursors: { self, others }, // Add cursors to the return object
+    cursors: { self, others },
   };
 };
 
