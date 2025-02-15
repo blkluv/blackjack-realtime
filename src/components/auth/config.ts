@@ -1,20 +1,17 @@
+import { env } from '@/env.mjs';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { arbitrum, mainnet, sepolia } from '@reown/appkit/networks';
-import { cookieStorage, createStorage } from '@wagmi/core';
-import { getCsrfToken, signIn, signOut, getSession } from 'next-auth/react';
 import { createSIWEConfig, formatMessage } from '@reown/appkit-siwe';
 import type {
-  SIWEVerifyMessageArgs,
   SIWECreateMessageArgs,
   SIWESession,
+  SIWEVerifyMessageArgs,
 } from '@reown/appkit-siwe';
+import { arbitrum, mainnet, sepolia } from '@reown/appkit/networks';
+import { cookieStorage, createStorage } from '@wagmi/core';
+import { getCsrfToken, getSession, signIn, signOut } from 'next-auth/react';
 
 // Get projectId from https://cloud.reown.com
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
-
-if (!projectId) {
-  throw new Error('Project ID is not defined');
-}
+const projectId = env.NEXT_PUBLIC_PROJECT_ID;
 
 export const networks = [mainnet, arbitrum];
 

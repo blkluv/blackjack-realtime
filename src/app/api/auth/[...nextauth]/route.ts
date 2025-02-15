@@ -1,12 +1,12 @@
-import NextAuth from 'next-auth';
-import credentialsProvider from 'next-auth/providers/credentials';
+import { env } from '@/env.mjs';
 import {
   type SIWESession,
-  verifySignature,
-  getChainIdFromMessage,
   getAddressFromMessage,
+  getChainIdFromMessage,
+  verifySignature,
 } from '@reown/appkit-siwe';
-import { env } from '@/env.mjs';
+import NextAuth from 'next-auth';
+import credentialsProvider from 'next-auth/providers/credentials';
 
 declare module 'next-auth' {
   interface Session extends SIWESession {
