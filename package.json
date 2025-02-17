@@ -19,7 +19,8 @@
     "api:deploy": "wrangler deploy",
     "api:dev": "wrangler dev",
     "party:dev": "partykit dev",
-    "party:deploy": "dotenv -- partykit deploy",
+    "party:deploy": "dotenv -- partykit deploy --with-vars",
+    "party:env": "dotenv -- partykit env",
     "fix": "biome check --write ./",
     "taze": "taze -r -I",
     "start": "next start"

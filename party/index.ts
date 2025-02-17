@@ -61,6 +61,18 @@ export default class Server implements Party.Server {
     };
   }
 
+  async onRequest(request: Party.Request) {
+    const urlParams = new URL(request.url).searchParams;
+
+    if (request.method === 'GET') {
+      const res = new Response('Hello World', { status: 200 });
+      return res;
+    }
+    return new Response(JSON.stringify({ message: 'Method not allowed' }), {
+      status: 405,
+    });
+  }
+
   static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
     try {
       const urlParams = new URL(req.url).searchParams;
