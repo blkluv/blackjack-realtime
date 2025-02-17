@@ -64,8 +64,6 @@ export class CursorRoom {
       type: 'cursor-sync',
       data: { cursors: cursorsArray },
     });
-
-    console.log('joined cursor room ', { connection });
   }
 
   async onLeave(connection: Party.Connection<ConnectionState>) {

@@ -17,6 +17,7 @@ const SocketMessageSchema = z.object({
 
 type ConnectionState = {
   userId: UserId;
+  staticId: string;
   country: string | null;
 };
 
@@ -53,19 +54,34 @@ export default class Server implements Party.Server {
   private cursorRoom: CursorRoom;
   readonly room: Party.Room;
 
+  private staticIdMap: { [staticId: string]: string };
+
   constructor(room: Party.Room) {
     this.room = room;
     this.cursorRoom = new CursorRoom('cursors', this.room);
     this.roomMap = {
       main: new BlackjackRoom('main', this.room),
     };
+
+    this.staticIdMap = {};
   }
 
   async onRequest(request: Party.Request) {
     const urlParams = new URL(request.url).searchParams;
 
     if (request.method === 'GET') {
-      const res = new Response('Hello World', { status: 200 });
+      // get all connectionids
+      const connections = this.room.getConnections<ConnectionState>();
+      const arr: { [id: string]: ConnectionState } = {};
+      for (const connection of connections) {
+        arr[connection.id] = {
+          userId: connection.state?.userId ?? 'guest',
+          staticId: connection.state?.staticId ?? '',
+          country: connection.state?.country ?? '',
+        };
+      }
+
+      const res = new Response(JSON.stringify(arr), { status: 200 });
       return res;
     }
     return new Response(JSON.stringify({ message: 'Method not allowed' }), {
@@ -78,6 +94,12 @@ export default class Server implements Party.Server {
       const urlParams = new URL(req.url).searchParams;
       const token = urlParams.get('token');
       const walletAddress = urlParams.get('walletAddress')?.toLowerCase();
+      const staticId = urlParams.get('staticId');
+
+      if (!staticId) {
+        throw new Error('UnAuthorised');
+      }
+      req.headers.set('X-Static-Id', staticId);
 
       if (!walletAddress) {
         req.headers.set('X-User-Id', 'guest');
@@ -123,12 +145,21 @@ export default class Server implements Party.Server {
         throw new Error('Room not found');
       }
 
-      let userId = request.headers.get('X-User-Id') as UserId | null;
+      const staticId = request.headers.get('X-Static-Id') as string;
+      const userId = request.headers.get('X-User-Id') as UserId;
       const country = (request.cf?.country ?? null) as string | null;
 
-      if (!userId) {
-        console.log('guest user');
-        userId = 'guest';
+      if (this.staticIdMap[staticId]) {
+        const oldConnectionId = this.staticIdMap[staticId];
+
+        const oldConnection = this.room.getConnection(oldConnectionId);
+        oldConnection?.close();
+
+        console.log('closed old connection');
+
+        this.staticIdMap[staticId] = conn.id;
+      } else {
+        this.staticIdMap[staticId] = conn.id;
       }
 
       console.log(`Connected: id: ${conn.id}, room: ${room.id}`);
@@ -138,7 +169,7 @@ export default class Server implements Party.Server {
         data: { message: 'hello-from-server' },
       });
 
-      conn.setState({ userId, country });
+      conn.setState({ userId, country, staticId });
       // Join both rooms
       await room.onJoin(conn);
       await this.cursorRoom.onJoin(conn);
@@ -149,6 +180,15 @@ export default class Server implements Party.Server {
       conn.send(JSON.stringify({ type: 'error', message: err }));
       conn.close();
     }
+  }
+
+  onClose(connection: Party.Connection<ConnectionState>): void | Promise<void> {
+    console.log(`Connection ${connection.id} closed`);
+    const room = this.roomMap.main;
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    this.cursorRoom.onLeave(connection);
   }
 
   send(id: string, message: TPartyKitServerMessage) {

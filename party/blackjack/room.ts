@@ -98,8 +98,6 @@ export class BlackjackRoom {
       type: 'stateUpdate',
       data: { state: this.state },
     });
-
-    console.log('joined blackjackroom', { connection });
   }
 
   async onMessage(

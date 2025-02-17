@@ -1,19 +1,21 @@
 import { atom } from 'jotai';
 import type PartySocket from 'partysocket';
 
-// type Message = string | ArrayBuffer | Blob | ArrayBufferView;
+function generateRandomString(length: number) {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  let randomString = '';
+  const stringLength = length || 10; // Default length if not provided
 
-// type WsSend = (data: Message) => void;
+  for (let i = 0; i < stringLength; i++) {
+    randomString += characters.charAt(
+      Math.floor(Math.random() * charactersLength),
+    );
+  }
 
-// const wsSendAtom = atom<{ wssend: WsSend | null }>({
-//   wssend: null,
-// });
-
-// const setWsSendAtom = atom(null, (_get, set, newSend: WsSend) => {
-//   set(wsSendAtom, { wssend: newSend });
-// });
-
-// export { type WsSend, wsSendAtom, setWsSendAtom };
+  return randomString;
+}
 
 const partyKitAtom = atom<PartySocket | null>(null);
 
@@ -21,4 +23,4 @@ const setPartyKitAtom = atom(null, (_get, set, newParty: PartySocket) => {
   set(partyKitAtom, newParty);
 });
 
-export { partyKitAtom, setPartyKitAtom };
+export { partyKitAtom, setPartyKitAtom, generateRandomString };

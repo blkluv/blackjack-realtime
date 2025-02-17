@@ -13,8 +13,6 @@ const PlayerLayout = () => {
   const { mySeat, blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState(0);
 
-  console.log({ mySeat });
-
   const numPlayers = 5;
   const curveHeight = q / 4.6;
   const radius = curveHeight + q / 15;
