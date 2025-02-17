@@ -21,7 +21,6 @@ const useCursor = () => {
   const cursorSend: CursorSend = (message) => {
     if (!partyKit) return;
     partyKit.send(JSON.stringify({ room: 'cursor', ...message }));
-    return;
   };
 
   const cursorMap = useAtomValue(cursorMapAtom);

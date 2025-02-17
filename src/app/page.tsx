@@ -1,6 +1,7 @@
 'use client';
 import WalletConnect from '@/components/auth/WalletConnect';
 import { Button } from '@/components/ui/button';
+import { useBlackjack } from '@/hooks/useBlackjack';
 import { useCursor } from '@/hooks/useCursor';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
@@ -23,7 +24,7 @@ const GamePage = () => {
       <Background />
       <PlayerLayout />
       <ActionButtons />
-      <CursorSpace />
+      {/* <CursorSpace /> */}
     </div>
   );
 };
@@ -154,6 +155,10 @@ const DeckOfCards = ({
 const PlayerLayout = () => {
   const { user } = useUser();
   const { q } = useWindowSize();
+  const { mySeat, blackjackSend } = useBlackjack();
+
+  console.log({ mySeat });
+
   const numPlayers = 5;
   const curveHeight = q / 4.6;
   const radius = curveHeight + q / 15;
@@ -170,7 +175,6 @@ const PlayerLayout = () => {
         const x = radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
         const rotationAngle = Math.atan2(centerY - y, x) * (180 / Math.PI) - 90;
-
         return (
           <div
             key={nanoid()}
@@ -192,14 +196,32 @@ const PlayerLayout = () => {
                 transform: `rotate(${-rotationAngle}deg)`,
               }}
             >
-              <Button
-                disabled={!user.isAuthenticated}
-                onClick={() => {}}
-                size="sm"
-                className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
-              >
-                Join Game
-              </Button>
+              {mySeat === -1 ? (
+                <Button
+                  disabled={!user.isAuthenticated}
+                  onClick={() => {
+                    blackjackSend({
+                      type: 'playerJoin',
+                      data: {
+                        seat: i + 1,
+                      },
+                    });
+                  }}
+                  size="sm"
+                  className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
+                >
+                  Join Game
+                </Button>
+              ) : null}
+              {mySeat === i + 1 ? (
+                <Button
+                  onClick={() => {}}
+                  size="sm"
+                  className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
+                >
+                  Your Seat
+                </Button>
+              ) : null}
               <div className="flex space-x-4">
                 <div className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
                   Score: 322

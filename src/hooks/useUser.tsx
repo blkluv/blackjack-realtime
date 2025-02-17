@@ -32,7 +32,7 @@ export const useUser = () => {
   const fetchWsToken = async () => {
     if (!address) return;
     const response = await client.token.getPlayerToken.$get({
-      walletAddress: address,
+      walletAddress: address.toLowerCase(),
     });
     const { token } = await response.json();
 
@@ -59,7 +59,7 @@ export const useUser = () => {
         .then((token) => {
           updateUser({
             isAuthenticated: true,
-            walletAddress: session.address,
+            walletAddress: session.address.toLowerCase(),
             wsToken: token,
           });
         })
