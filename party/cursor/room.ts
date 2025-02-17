@@ -82,6 +82,7 @@ export class CursorRoom {
     connection: Party.Connection<ConnectionState>,
     unknownData: unknown,
   ) {
+    console.log({ unknownData });
     try {
       const { type, data } = CursorMessageSchema.parse(unknownData);
 

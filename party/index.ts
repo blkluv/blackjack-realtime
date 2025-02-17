@@ -1,7 +1,6 @@
 import { env } from '@/env.mjs';
 import { jwtVerify } from 'jose';
 import type * as Party from 'partykit/server';
-import { unknown } from 'zod';
 import z from 'zod';
 import type { BlackjackRecord } from './blackjack/blackjack.types';
 import { BlackjackRoom } from './blackjack/room';
@@ -14,7 +13,6 @@ type UserId = `0x${string}` | 'guest';
 const SocketMessageSchema = z.object({
   room: z.enum(['blackjack', 'cursor']),
   type: z.string(),
-  data: z.object({}),
 });
 
 type ConnectionState = {
@@ -76,11 +74,11 @@ export default class Server implements Party.Server {
 
       if (token) {
         try {
-          console.log('Token received:', token);
+          // console.log('Token received:', token);
 
           const secretKey = new TextEncoder().encode(env.JWT_SECRET);
           const { payload } = await jwtVerify(token, secretKey);
-          console.log({ payload });
+          // console.log({ payload });
           if (
             typeof payload === 'object' &&
             'walletAddress' in payload &&
@@ -155,14 +153,15 @@ export default class Server implements Party.Server {
     unknownMessage: string,
     conn: Party.Connection<ConnectionState>,
   ) {
-    console.log(`Connection ${conn.id} sent message: ${unknown}`);
+    // console.log(`Connection ${conn.id} sent message: `);
+    // console.log({ unknownMessage })
     try {
-      // const json = JSON.parse(unknownMessage);
-      const message = SocketMessageSchema.parse(unknownMessage);
-
+      const json = JSON.parse(unknownMessage);
+      const message = SocketMessageSchema.parse(json);
+      // console.log(message)
       // Route cursor messages to cursor room
       if (message.room === 'cursor') {
-        this.cursorRoom.handleMessage(conn, unknownMessage).catch(() => {
+        this.cursorRoom.handleMessage(conn, json).catch(() => {
           console.error('Error handling cursor messages:');
         });
         return;
@@ -183,7 +182,7 @@ export default class Server implements Party.Server {
       }
 
       room
-        .onMessage(conn, unknownMessage)
+        .onMessage(conn, json)
         .catch((err) => console.error('Error handling message in room:', err));
     } catch (err) {
       console.error('Failed to parse message as JSON', unknownMessage);
