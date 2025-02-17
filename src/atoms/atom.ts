@@ -18,7 +18,7 @@ function generateRandomString(length: number) {
   return randomString;
 }
 
-const staticIdAtom = atomWithStorage('staticId', generateRandomString(10));
+const staticIdAtom = atomWithStorage('staticId', '');
 
 const partyKitAtom = atom<PartySocket | null>(null);
 

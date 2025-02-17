@@ -1,8 +1,12 @@
 'use client';
-import { setPartyKitAtom, staticIdAtom } from '@/atoms/atom';
+import {
+  generateRandomString,
+  setPartyKitAtom,
+  staticIdAtom,
+} from '@/atoms/atom';
 
 import { env } from '@/env.mjs';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { usePartySocket } from 'partysocket/react';
 import { useEffect } from 'react';
 import type { TPartyKitServerMessage } from '../../../party';
@@ -14,7 +18,12 @@ import { useDefaultHandler } from './default.handler';
 export const usePartyKit = () => {
   const { user } = useUser();
   const setPartyKit = useSetAtom(setPartyKitAtom);
-  const staticId = useAtomValue(staticIdAtom);
+  const [staticId, setStaticId] = useAtom(staticIdAtom);
+
+  if (staticId === '') {
+    const randStr = generateRandomString(10);
+    setStaticId(randStr);
+  }
 
   const { cursorHandler } = useCursorHandler();
   const { blackjackHandler } = useBlackjackHandler();
