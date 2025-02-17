@@ -1,20 +1,20 @@
-'use client';
-import WalletConnect from '@/components/auth/WalletConnect';
-import { Button } from '@/components/ui/button';
-import { useBlackjack } from '@/hooks/useBlackjack';
-import { useCursor } from '@/hooks/useCursor';
-import useMounted from '@/hooks/useMounted';
-import { usePartyKit } from '@/hooks/usePartyKit';
-import { useUser } from '@/hooks/useUser';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { cn, getRandomCard } from '@/lib/utils';
+"use client";
+import WalletConnect from "@/components/auth/WalletConnect";
+import { Button } from "@/components/ui/button";
+import { useBlackjack } from "@/hooks/useBlackjack";
+import { useCursor } from "@/hooks/useCursor";
+import useMounted from "@/hooks/useMounted";
+import { usePartyKit } from "@/hooks/usePartyKit";
+import { useUser } from "@/hooks/useUser";
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { cn, getRandomCard } from "@/lib/utils";
 // @ts-ignore
 import Card from "@heruka_urgyen/react-playing-cards";
 import { MicIcon, MicOffIcon, MousePointer2 } from "lucide-react";
 import { motion } from "motion/react";
 import { nanoid } from "nanoid";
 import Image from "next/image";
-import { useState } from 'react';
+import { useState } from "react";
 
 const GamePage = () => {
   const { readyState } = usePartyKit();
@@ -25,7 +25,7 @@ const GamePage = () => {
       <Background />
       <PlayerLayout />
       <ActionButtons />
-      {/* <CursorSpace /> */}
+      <CursorSpace />
     </div>
   );
 };
@@ -206,7 +206,7 @@ const PlayerLayout = () => {
                   disabled={!user.isAuthenticated}
                   onClick={() => {
                     blackjackSend({
-                      type: 'playerJoin',
+                      type: "playerJoin",
                       data: {
                         seat: i + 1,
                       },
@@ -230,7 +230,7 @@ const PlayerLayout = () => {
               {player ? (
                 <div className="flex space-x-4">
                   <div className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
-                    ID:{' '}
+                    ID:{" "}
                     {player.userId.length > 4
                       ? `${player.userId.slice(0, 4)}...`
                       : player.userId}
@@ -244,8 +244,8 @@ const PlayerLayout = () => {
                 // add a bet input and button , they should be side by side
                 isMe &&
                 player &&
-                (gameState.status === 'betting' ||
-                  gameState.status === 'waiting') ? (
+                (gameState.status === "betting" ||
+                  gameState.status === "waiting") ? (
                   <div className="flex space-x-2">
                     <input
                       type="number"
@@ -258,7 +258,7 @@ const PlayerLayout = () => {
                       onClick={() => {
                         // handle bet submission here
                         blackjackSend({
-                          type: 'placeBet',
+                          type: "placeBet",
                           data: {
                             bet: betAmount,
                           },
@@ -274,12 +274,12 @@ const PlayerLayout = () => {
               }
               {
                 // add hit and stand button here
-                isMe && player && gameState.status === 'playing' ? (
+                isMe && player && gameState.status === "playing" ? (
                   <div className="flex space-x-4">
                     <Button
                       onClick={() => {
                         blackjackSend({
-                          type: 'hit',
+                          type: "hit",
                           data: {},
                         });
                       }}
@@ -291,7 +291,7 @@ const PlayerLayout = () => {
                     <Button
                       onClick={() => {
                         blackjackSend({
-                          type: 'stand',
+                          type: "stand",
                           data: {},
                         });
                       }}
@@ -371,46 +371,46 @@ const ActionButtons = () => {
   );
 };
 
-// const CursorSpace = () => {
-//   const { cursorMap } = useCursor();
-//   const { height, width } = useWindowSize();
-//   console.log(cursorMap);
-//   // country: "IN";
-//   // id: "0";
-//   // lastUpdate: 1739794803807;
-//   // pointer: "mouse";
-//   // x: 0.7019027484143763;
-//   // y: 0.8498452012383901;
-//   const lastKey = Object.keys(cursorMap).pop();
-//   const lastValue = lastKey ? cursorMap[lastKey] : null;
-//   if (!lastValue) return null;
-//   console.log(lastValue);
-//   return (
-//     <div className="w-full h-full">
-//       <motion.div
-//         animate={{
-//           x: lastValue.x * width,
-//           y: lastValue.y * height - (48 * 4 - 24),
-//         }}
-//         className="text-black h-8 w-fit rounded-full relative"
-//       >
-//         <MousePointer2 className="absolute top-0 left-0 text-white" />
-//         <div className="pt-3 pl-5">
-//           {getFlagFromCountryCode(lastValue.country)}
-//         </div>
-//       </motion.div>
-//     </div>
-//   );
-// };
+const CursorSpace = () => {
+  const { cursorMap } = useCursor();
+  const { height, width } = useWindowSize();
+  console.log(cursorMap);
+  // country: "IN";
+  // id: "0";
+  // lastUpdate: 1739794803807;
+  // pointer: "mouse";
+  // x: 0.7019027484143763;
+  // y: 0.8498452012383901;
+  const lastKey = Object.keys(cursorMap).pop();
+  const lastValue = lastKey ? cursorMap[lastKey] : null;
+  if (!lastValue) return null;
+  console.log(lastValue);
+  return (
+    <div className="w-full h-full">
+      <motion.div
+        animate={{
+          x: lastValue.x * width,
+          y: lastValue.y * height - (48 * 4 - 24),
+        }}
+        className="text-black h-8 w-fit rounded-full relative"
+      >
+        <MousePointer2 className="absolute top-0 left-0 text-white" />
+        <div className="pt-3 pl-5">
+          {getFlagFromCountryCode(lastValue.country)}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
-// const getFlagFromCountryCode = (countryCode: string | null): string => {
-//   if (!countryCode) return "";
+const getFlagFromCountryCode = (countryCode: string | null): string => {
+  if (!countryCode) return "";
 
-//   return countryCode
-//     .toUpperCase()
-//     .split("")
-//     .map((char) => String.fromCodePoint(0x1f1e6 - 65 + char.charCodeAt(0)))
-//     .join("");
-// };
+  return countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => String.fromCodePoint(0x1f1e6 - 65 + char.charCodeAt(0)))
+    .join("");
+};
 
 export default GamePage;
