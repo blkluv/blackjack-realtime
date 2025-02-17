@@ -1,7 +1,8 @@
-import { setPartyKitAtom } from '@/atoms/atom';
+'use client';
+import { setPartyKitAtom, staticIdAtom } from '@/atoms/atom';
 
 import { env } from '@/env.mjs';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { usePartySocket } from 'partysocket/react';
 import { useEffect } from 'react';
 import type { TPartyKitServerMessage } from '../../../party';
@@ -9,12 +10,11 @@ import { useUser } from '../useUser';
 import { useBlackjackHandler } from './blackjack.handler';
 import { useCursorHandler } from './cursor.handler';
 import { useDefaultHandler } from './default.handler';
-import { useStaticId } from './useStaticId';
 
 export const usePartyKit = () => {
   const { user } = useUser();
   const setPartyKit = useSetAtom(setPartyKitAtom);
-  const staticId = useStaticId();
+  const staticId = useAtomValue(staticIdAtom);
 
   const { cursorHandler } = useCursorHandler();
   const { blackjackHandler } = useBlackjackHandler();

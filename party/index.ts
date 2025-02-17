@@ -101,7 +101,7 @@ export default class Server implements Party.Server {
       }
       req.headers.set('X-Static-Id', staticId);
 
-      if (!walletAddress) {
+      if (!walletAddress || !token) {
         req.headers.set('X-User-Id', 'guest');
         return req;
       }
@@ -131,7 +131,7 @@ export default class Server implements Party.Server {
       });
     } catch (error) {
       console.error('Authentication error:', error);
-      return new Response('Authentication error', { status: 401 });
+      return new Response('Authentication error', { status: 402 });
     }
   }
 

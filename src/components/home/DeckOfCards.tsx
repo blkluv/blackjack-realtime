@@ -1,8 +1,9 @@
+'use client';
+
 import { useWindowSize } from '@/hooks/useWindowSize';
-//@ts-ignore
-import Card from '@heruka_urgyen/react-playing-cards';
 import { motion } from 'motion/react';
 import { nanoid } from 'nanoid';
+import Card from '../ui/card';
 
 const DeckOfCards = ({
   cards,

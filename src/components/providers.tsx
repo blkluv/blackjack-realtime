@@ -14,7 +14,10 @@ import { siweConfig, wagmiAdapter } from './auth/config';
 const metadata = {
   name: 'Blackjack',
   description: 'A on-chain blackjack game, earn $ETH by playing!',
-  url: 'https://blackjack.arcy.in', // origin must match your domain & subdomain
+  url:
+    env.NODE_ENV === 'production'
+      ? 'https://blackjack.arcy.in'
+      : 'http://localhost:3000',
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 
