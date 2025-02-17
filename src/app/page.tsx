@@ -1,18 +1,18 @@
-'use client';
-import WalletConnect from '@/components/auth/WalletConnect';
-import { Button } from '@/components/ui/button';
-import { useCursor } from '@/hooks/useCursor';
-import useMounted from '@/hooks/useMounted';
-import { usePartyKit } from '@/hooks/usePartyKit';
-import { useUser } from '@/hooks/useUser';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { cn, getRandomCard } from '@/lib/utils';
+"use client";
+import WalletConnect from "@/components/auth/WalletConnect";
+import { Button } from "@/components/ui/button";
+import { useCursor } from "@/hooks/useCursor";
+import useMounted from "@/hooks/useMounted";
+import { usePartyKit } from "@/hooks/usePartyKit";
+import { useUser } from "@/hooks/useUser";
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { cn, getRandomCard } from "@/lib/utils";
 // @ts-ignore
-import Card from '@heruka_urgyen/react-playing-cards';
-import { MicIcon, MicOffIcon } from 'lucide-react';
-import { motion } from 'motion/react';
-import { nanoid } from 'nanoid';
-import Image from 'next/image';
+import Card from "@heruka_urgyen/react-playing-cards";
+import { MicIcon, MicOffIcon } from "lucide-react";
+import { motion } from "motion/react";
+import { nanoid } from "nanoid";
+import Image from "next/image";
 
 const GamePage = () => {
   const { readyState } = usePartyKit();
@@ -64,7 +64,7 @@ const Background = () => {
           width: q / 2.3,
           top: -q / 4.6,
           outlineWidth: q / 24,
-          outlineColor: '#18181b',
+          outlineColor: "#18181b",
         }}
         className="absolute rounded-full aspect-square outline border-4 border-zinc-300"
       />
@@ -76,7 +76,7 @@ const Background = () => {
         className="absolute overflow-hidden bg-emerald-950 rounded-full aspect-square border-4 border-zinc-300"
       >
         <Image
-          src={'/green-noise.png'}
+          src={"/green-noise.png"}
           alt=""
           height={1000}
           width={1000}
@@ -88,8 +88,8 @@ const Background = () => {
         style={{
           width: q / 3,
           top: -q / 6,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          left: "50%",
+          transform: "translateX(-50%)",
         }}
         className="absolute flex justify-center items-center overflow-hidden rounded-full aspect-square border border-zinc-300"
       />
@@ -114,11 +114,11 @@ const DeckOfCards = ({
           key={nanoid()}
           className="group"
           style={{
-            position: i > 0 ? 'absolute' : 'relative',
+            position: i > 0 ? "absolute" : "relative",
             left: `${i * (q / 256) + (i > 0 ? Math.random() * 20 : 0)}px`,
             top: `${i * 0 + (i > 0 ? Math.random() * (q / 64) : 0)}px`,
             transform: `rotate(${i > 0 ? Math.random() * (q / 64) : 0}deg)`,
-            transition: 'transform 0.3s ease-in-out',
+            transition: "transform 0.3s ease-in-out",
           }}
         >
           <motion.div
@@ -224,10 +224,10 @@ const ActionButtons = () => {
       {user.isAuthenticated && (
         <>
           <Button
-            onClick={() => alert('todo')}
+            onClick={() => alert("todo")}
             size="sm"
             className={cn(
-              'bg-yellow-400 text-black cursor-pointer rounded-lg',
+              "bg-yellow-400 text-black cursor-pointer rounded-lg"
               // isMicOn
               //   ? 'bg-yellow-400 hover:bg-yellow-500'
               //   : 'bg-red-400 hover:bg-red-500',
@@ -278,8 +278,8 @@ const ActionButtons = () => {
 
 const CursorSpace = () => {
   const { cursorMap } = useCursor();
-  console.log(cursorMap);
-  return <div className="w-full h-full absolute top-0 left-0 " />;
+  // console.log(cursorMap);
+  return <div className="w-full h-full absolute top-0 left-0 -z-50" />;
 };
 
 export default GamePage;
