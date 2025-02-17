@@ -13,7 +13,6 @@ const useBlackjack = () => {
   };
 
   const gameState = useAtomValue(gameStateAtom);
-  console.log(gameState);
 
   const getPlayer = (userId: string) => {
     for (const player of Object.values(gameState.players)) {

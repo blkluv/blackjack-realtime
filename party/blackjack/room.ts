@@ -217,6 +217,9 @@ export class BlackjackRoom {
     if (!p) return;
 
     p.bet = bet;
+
+    this.state.status = 'betting';
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
