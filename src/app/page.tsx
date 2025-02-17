@@ -220,7 +220,7 @@ const PlayerLayout = () => {
               ) : null}
               {isMe ? (
                 <Button
-                  onClick={() => {}}
+                  onClick={() => { }}
                   size="sm"
                   className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
                 >
@@ -243,9 +243,9 @@ const PlayerLayout = () => {
               {
                 // add a bet input and button , they should be side by side
                 isMe &&
-                player &&
-                (gameState.status === "betting" ||
-                  gameState.status === "waiting") ? (
+                  player &&
+                  (gameState.status === "betting" ||
+                    gameState.status === "waiting") ? (
                   <div className="flex space-x-2">
                     <input
                       type="number"
@@ -381,10 +381,16 @@ const CursorSpace = () => {
   // pointer: "mouse";
   // x: 0.7019027484143763;
   // y: 0.8498452012383901;
-  const lastKey = Object.keys(cursorMap).pop();
-  const lastValue = lastKey ? cursorMap[lastKey] : null;
+  // get key with latest updated at
+
+  // get key with latest updated at
+  const lastKey = Object.keys(cursorMap).reduce((a, b) => {
+    return cursorMap[a].lastUpdate > cursorMap[b].lastUpdate ? a : b;
+  });
+
+  const lastValue = cursorMap[lastKey];
   if (!lastValue) return null;
-  console.log(lastValue);
+
   return (
     <div className="w-full h-full">
       <motion.div
