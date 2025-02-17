@@ -25,6 +25,7 @@ const useCursor = () => {
   };
 
   const cursorMap = useAtomValue(cursorMapAtom);
+
   // Track window dimensions
   useEffect(() => {
     const onResize = () => {

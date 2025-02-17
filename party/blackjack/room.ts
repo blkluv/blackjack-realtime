@@ -38,7 +38,6 @@ export class BlackjackRoom {
     without?: string[],
   ) {
     this.room.broadcast(JSON.stringify(message), without);
-    console.log(`[Room ${this.id} broadcast]: ${message}`);
   }
 
   send<T extends keyof BlackjackRecord>(

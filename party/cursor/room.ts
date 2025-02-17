@@ -23,7 +23,6 @@ export class CursorRoom {
     without?: string[],
   ) {
     this.room.broadcast(JSON.stringify(message), without);
-    console.log(`[Room ${this.id} broadcast]: ${message}`);
   }
 
   send<T extends keyof CursorRecord>(
@@ -82,7 +81,6 @@ export class CursorRoom {
     connection: Party.Connection<ConnectionState>,
     unknownData: unknown,
   ) {
-    console.log({ unknownData });
     try {
       const { type, data } = CursorMessageSchema.parse(unknownData);
 
