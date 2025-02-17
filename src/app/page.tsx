@@ -1,18 +1,20 @@
-"use client";
-import WalletConnect from "@/components/auth/WalletConnect";
-import { Button } from "@/components/ui/button";
-import { useCursor } from "@/hooks/useCursor";
-import useMounted from "@/hooks/useMounted";
-import { usePartyKit } from "@/hooks/usePartyKit";
-import { useUser } from "@/hooks/useUser";
-import { useWindowSize } from "@/hooks/useWindowSize";
-import { cn, getRandomCard } from "@/lib/utils";
+'use client';
+import WalletConnect from '@/components/auth/WalletConnect';
+import { Button } from '@/components/ui/button';
+import { useBlackjack } from '@/hooks/useBlackjack';
+import { useCursor } from '@/hooks/useCursor';
+import useMounted from '@/hooks/useMounted';
+import { usePartyKit } from '@/hooks/usePartyKit';
+import { useUser } from '@/hooks/useUser';
+import { useWindowSize } from '@/hooks/useWindowSize';
+import { cn, getRandomCard } from '@/lib/utils';
 // @ts-ignore
 import Card from "@heruka_urgyen/react-playing-cards";
 import { MicIcon, MicOffIcon, MousePointer2 } from "lucide-react";
 import { motion } from "motion/react";
 import { nanoid } from "nanoid";
 import Image from "next/image";
+import { useState } from 'react';
 
 const GamePage = () => {
   const { readyState } = usePartyKit();
@@ -154,6 +156,11 @@ const DeckOfCards = ({
 const PlayerLayout = () => {
   const { user } = useUser();
   const { q } = useWindowSize();
+  const { mySeat, blackjackSend, gameState } = useBlackjack();
+  const [betAmount, setBetAmount] = useState(0);
+
+  console.log({ mySeat });
+
   const numPlayers = 5;
   const curveHeight = q / 4.6;
   const radius = curveHeight + q / 15;
@@ -170,6 +177,8 @@ const PlayerLayout = () => {
         const x = radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
         const rotationAngle = Math.atan2(centerY - y, x) * (180 / Math.PI) - 90;
+        const isMe = mySeat === i + 1;
+        const player = gameState.players[i + 1];
 
         return (
           <div
@@ -192,22 +201,108 @@ const PlayerLayout = () => {
                 transform: `rotate(${-rotationAngle}deg)`,
               }}
             >
-              <Button
-                disabled={!user.isAuthenticated}
-                onClick={() => {}}
-                size="sm"
-                className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
-              >
-                Join Game
-              </Button>
-              <div className="flex space-x-4">
-                <div className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
-                  Score: 322
+              {mySeat === -1 && !player ? (
+                <Button
+                  disabled={!user.isAuthenticated}
+                  onClick={() => {
+                    blackjackSend({
+                      type: 'playerJoin',
+                      data: {
+                        seat: i + 1,
+                      },
+                    });
+                  }}
+                  size="sm"
+                  className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
+                >
+                  Join Game
+                </Button>
+              ) : null}
+              {isMe ? (
+                <Button
+                  onClick={() => {}}
+                  size="sm"
+                  className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
+                >
+                  Your Seat
+                </Button>
+              ) : null}
+              {player ? (
+                <div className="flex space-x-4">
+                  <div className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
+                    ID:{' '}
+                    {player.userId.length > 4
+                      ? `${player.userId.slice(0, 4)}...`
+                      : player.userId}
+                  </div>
+                  <div className="rounded-full bg-violet-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
+                    Bet: {player.bet}
+                  </div>
                 </div>
-                <div className="rounded-full bg-violet-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
-                  Bet: 76$
-                </div>
-              </div>
+              ) : null}
+              {
+                // add a bet input and button , they should be side by side
+                isMe &&
+                player &&
+                (gameState.status === 'betting' ||
+                  gameState.status === 'waiting') ? (
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      placeholder="Bet Amount"
+                      value={betAmount}
+                      onChange={(e) => setBetAmount(Number(e.target.value))}
+                      className="bg-transparent border rounded-md px-2 py-1 text-sm text-white w-24"
+                    />
+                    <Button
+                      onClick={() => {
+                        // handle bet submission here
+                        blackjackSend({
+                          type: 'placeBet',
+                          data: {
+                            bet: betAmount,
+                          },
+                        });
+                      }}
+                      size="sm"
+                      className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
+                    >
+                      Bet
+                    </Button>
+                  </div>
+                ) : null
+              }
+              {
+                // add hit and stand button here
+                isMe && player && gameState.status === 'playing' ? (
+                  <div className="flex space-x-4">
+                    <Button
+                      onClick={() => {
+                        blackjackSend({
+                          type: 'hit',
+                          data: {},
+                        });
+                      }}
+                      size="sm"
+                      className="bg-green-400 text-black hover:bg-green-500 cursor-pointer rounded-lg"
+                    >
+                      Hit
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        blackjackSend({
+                          type: 'stand',
+                          data: {},
+                        });
+                      }}
+                      size="sm"
+                      className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
+                    >
+                      Stand
+                    </Button>
+                  </div>
+                ) : null
+              }
             </div>
           </div>
         );

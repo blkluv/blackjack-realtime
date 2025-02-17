@@ -20,18 +20,4 @@ const setGameStateAtom = atom(null, (get, set, newGameState: GameState) => {
 
 type BlackjackSend = (message: TBlackjackMessageSchema) => void;
 
-const blackjackSendAtom = atom<{ blackjackSend: BlackjackSend | null }>({
-  blackjackSend: null,
-});
-
-const setBlackjackSendAtom = atom(null, (_get, set, newSend: BlackjackSend) => {
-  set(blackjackSendAtom, { blackjackSend: newSend });
-});
-
-export {
-  gameStateAtom,
-  setGameStateAtom,
-  type BlackjackSend,
-  setBlackjackSendAtom,
-  blackjackSendAtom,
-};
+export { gameStateAtom, setGameStateAtom, type BlackjackSend };

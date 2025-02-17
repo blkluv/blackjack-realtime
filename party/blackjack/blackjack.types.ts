@@ -27,7 +27,7 @@ type PlayerState = {
 };
 
 type GameState = {
-  players: { [userId: `0x${string}`]: PlayerState };
+  players: { [seat: number]: PlayerState };
   dealerHand: Card[];
   deck: Card[];
   playerOrder: `0x${string}`[]; // player IDs sorted by seat order.
