@@ -60,6 +60,8 @@ export class BlackjackRoom {
       //close connection throw error
       //TODO:Implement close error codes
       connection.close(4000, 'Invalid wallet address');
+      console.log("didn't join blackjackroom ", { connection });
+
       return;
     }
 
@@ -76,6 +78,8 @@ export class BlackjackRoom {
         player.connectionId = connection.id;
       }
     }
+
+    console.log('joined blackjackroom', { connection });
   }
 
   async onMessage(

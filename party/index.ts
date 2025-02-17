@@ -57,7 +57,7 @@ export default class Server implements Party.Server {
 
   constructor(room: Party.Room) {
     this.room = room;
-    this.cursorRoom = new CursorRoom('cursors');
+    this.cursorRoom = new CursorRoom('cursors', this.room);
     this.roomMap = {
       main: new BlackjackRoom('main', this.room),
     };
@@ -73,11 +73,14 @@ export default class Server implements Party.Server {
         req.headers.set('X-User-Id', 'guest');
         return req;
       }
+
       if (token) {
         try {
+          console.log('Token received:', token);
+
           const secretKey = new TextEncoder().encode(env.JWT_SECRET);
           const { payload } = await jwtVerify(token, secretKey);
-
+          console.log({ payload });
           if (
             typeof payload === 'object' &&
             'walletAddress' in payload &&
@@ -129,6 +132,8 @@ export default class Server implements Party.Server {
       // Join both rooms
       await room.onJoin(conn);
       await this.cursorRoom.onJoin(conn);
+
+      console.log({ conn });
     } catch (err) {
       console.error(`Error joining room: ${err}`);
       conn.send(JSON.stringify({ type: 'error', message: err }));
@@ -156,7 +161,7 @@ export default class Server implements Party.Server {
 
       // Route cursor messages to cursor room
       if (message.room === 'cursor') {
-        this.cursorRoom.handleMessage(conn.id, message).catch((err) => {
+        this.cursorRoom.handleMessage(conn, message).catch((err) => {
           console.error('Error handling cursor update:', err);
         });
         return;

@@ -4,35 +4,33 @@ import {
   type Cursor,
   CursorMessageSchema,
   type CursorRecord,
+  type ServerCursor,
   type TCursorServerMessage,
 } from './cursor.types';
 
 export class CursorRoom {
   readonly id: string;
-  private cursors: Map<string, Cursor> = new Map();
-  clients: { [connectionId: string]: Party.Connection<ConnectionState> };
+  room: Party.Room;
+  private cursors: Map<string, ServerCursor> = new Map();
 
-  constructor(id: string) {
+  constructor(id: string, room: Party.Room) {
     this.id = id;
-    this.clients = {};
+    this.room = room;
   }
 
   broadcast<T extends keyof CursorRecord>(
     message: TCursorServerMessage<T>,
-    excludeId?: string,
+    without?: string[],
   ) {
-    for (const [id, conn] of Object.entries(this.clients)) {
-      if (id !== excludeId) {
-        conn.send(JSON.stringify(message));
-      }
-    }
+    this.room.broadcast(JSON.stringify(message), without);
+    console.log(`[Room ${this.id} broadcast]: ${message}`);
   }
 
   send<T extends keyof CursorRecord>(
     id: string,
     message: TCursorServerMessage<T>,
   ) {
-    const connection = this.clients[id];
+    const connection = this.room.getConnection(id);
     if (!connection) {
       return;
     }
@@ -41,51 +39,75 @@ export class CursorRoom {
   }
 
   async onJoin(connection: Party.Connection<ConnectionState>) {
-    this.clients[connection.id] = connection;
+    const userId = connection.state?.userId;
+    if (userId === undefined) {
+      //close connection throw error
+      //TODO:Implement close error codes
+      connection.close(4000, 'Invalid wallet address');
+      return;
+    }
+
     // Send existing cursors to new connection
-    const cursorsArray = Array.from(this.cursors.values());
+    const cursorsArray: Cursor[] = [];
+    for (const cursor of this.cursors.values()) {
+      cursorsArray.push({
+        id: cursor.id,
+        x: cursor.x,
+        y: cursor.y,
+        pointer: cursor.pointer,
+        country: cursor.country,
+        lastUpdate: cursor.lastUpdate,
+      });
+    }
+
     this.send(connection.id, {
       room: 'cursor',
       type: 'cursor-sync',
       data: { cursors: cursorsArray },
     });
+
+    console.log('joined cursor room ', { connection });
   }
 
-  async onLeave(connectionId: string) {
-    delete this.clients[connectionId];
-    this.cursors.delete(connectionId);
+  async onLeave(connection: Party.Connection<ConnectionState>) {
+    this.cursors.delete(connection.id);
     this.broadcast({
       room: 'cursor',
       type: 'cursor-remove',
-      data: { id: connectionId },
+      data: { id: connection.id },
     });
   }
 
-  async handleMessage(connectionId: string, unknownData: unknown) {
+  async handleMessage(
+    connection: Party.Connection<ConnectionState>,
+    unknownData: unknown,
+  ) {
     const { type, data } = CursorMessageSchema.parse(unknownData);
 
     if (type === 'cursor-update') {
-      const connection = this.clients[connectionId];
-      if (!connection) {
+      const country = connection.state?.country ?? null;
+      const userId = connection.state?.userId;
+      if (!userId) {
+        connection.close(4000, 'UserId is required');
         return;
       }
-      const country = connection.state?.country ?? null;
-      const cursor: Cursor = {
-        id: connectionId,
+      const cursor: ServerCursor = {
+        id: connection.id,
         x: data.x,
         y: data.y,
         pointer: data.pointer,
         lastUpdate: Date.now(),
         country: country,
+        userId: userId,
       };
 
-      this.cursors.set(connectionId, cursor);
+      this.cursors.set(connection.id, cursor);
       this.broadcast(
         { room: 'cursor', type: 'cursor-update', data: { cursor } },
-        connectionId,
+        [connection.id],
       );
     } else if (type === 'cursor-remove') {
-      this.onLeave(connectionId);
+      this.onLeave(connection);
     }
   }
 }

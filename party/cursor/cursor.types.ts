@@ -1,12 +1,20 @@
 import { z } from 'zod';
+import type { UserId } from '..';
 
-type Cursor = {
-  id: string;
+type Position = {
   x: number;
   y: number;
   pointer: 'mouse' | 'touch';
+};
+
+type Cursor = Position & {
+  id: string;
   lastUpdate: number;
   country: string | null;
+};
+
+type ServerCursor = Cursor & {
+  userId: UserId;
 };
 
 // all client messages to server
@@ -40,7 +48,9 @@ type TCursorServerMessage<T extends keyof CursorRecord> = {
 };
 
 export {
+  type Position,
   type Cursor,
+  type ServerCursor,
   type TCursorServerMessage,
   type CursorRecord,
   CursorMessageSchema,

@@ -30,7 +30,10 @@ export const useUser = () => {
   const updateUser = useSetAtom(setUserAtom);
 
   const fetchWsToken = async () => {
-    const response = await client.token.getPlayerToken.$get();
+    if (!address) return;
+    const response = await client.token.getPlayerToken.$get({
+      walletAddress: address,
+    });
     const { token } = await response.json();
 
     return token;
@@ -52,11 +55,17 @@ export const useUser = () => {
 
   useEffect(() => {
     if (!user.isAuthenticated && status === 'connected' && session?.address) {
-      updateUser({
-        isAuthenticated: true,
-        walletAddress: session.address,
-        wsToken: '',
-      });
+      fetchWsToken()
+        .then((token) => {
+          updateUser({
+            isAuthenticated: true,
+            walletAddress: session.address,
+            wsToken: token,
+          });
+        })
+        .catch((error) => {
+          console.error('Fetch WS token error:', error);
+        });
     }
 
     if (user.isAuthenticated && status === 'disconnected') {

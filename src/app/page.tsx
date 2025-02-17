@@ -2,8 +2,8 @@
 
 import WalletConnect from '@/components/auth/WalletConnect';
 import { Button } from '@/components/ui/button';
-// import WalletConnect from '@/components/auth/WalletConnect';
 import useMounted from '@/hooks/useMounted';
+import { usePartyKit } from '@/hooks/usePartyKit';
 import { useUser } from '@/hooks/useUser';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { cn, getRandomCard } from '@/lib/utils';
@@ -15,6 +15,7 @@ import { nanoid } from 'nanoid';
 import Image from 'next/image';
 
 const GamePage = () => {
+  const { readyState } = usePartyKit();
   return (
     <div className="h-screen relative w-full overflow-hidden flex flex-col items-center">
       <DealerView />
@@ -150,7 +151,6 @@ const DeckOfCards = ({
 
 const PlayerLayout = () => {
   const { user } = useUser();
-
   const { q } = useWindowSize();
   const numPlayers = 5;
   const curveHeight = q / 4.6;
@@ -191,8 +191,8 @@ const PlayerLayout = () => {
               }}
             >
               <Button
-                disabled={user.isAuthenticated}
-                onClick={() => alert('TODO')}
+                disabled={!user.isAuthenticated}
+                onClick={() => {}}
                 size="sm"
                 className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-lg"
               >

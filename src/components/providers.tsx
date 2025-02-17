@@ -14,7 +14,7 @@ import { siweConfig, wagmiAdapter } from './auth/config';
 const metadata = {
   name: 'Blackjack',
   description: 'A on-chain blackjack game, earn $ETH by playing!',
-  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
+  url: 'https://blackjack.arcy.in', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 
@@ -52,6 +52,7 @@ export const Providers = ({ children, cookies }: Props) => {
         }),
       }),
   );
+
   return (
     <SessionProvider>
       <WagmiProvider

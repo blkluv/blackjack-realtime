@@ -1,5 +1,8 @@
 import { atom } from 'jotai';
-import type { Cursor } from '../../party/cursor/cursor.types';
+import type {
+  Cursor,
+  TCursorMessageSchema,
+} from '../../party/cursor/cursor.types';
 
 type CursorsMap = Record<string, Cursor>;
 
@@ -26,10 +29,24 @@ const removeSingleCursorAtom = atom(null, (get, set, id: string) => {
   set(cursorMapAtom, cursorMap);
 });
 
+type CursorSend = (message: TCursorMessageSchema) => void;
+
+const cursorSendAtom = atom<{ cursorSend: CursorSend | null }>({
+  cursorSend: null,
+});
+
+const setCursorSendAtom = atom(null, (_get, set, newSend: CursorSend) => {
+  set(cursorSendAtom, { cursorSend: newSend });
+});
+
 export {
+  type CursorSend,
   type Cursor,
   type CursorsMap,
+  cursorMapAtom,
   setCursorMapAtom,
   updateSingleCursorAtom,
   removeSingleCursorAtom,
+  cursorSendAtom,
+  setCursorSendAtom,
 };
