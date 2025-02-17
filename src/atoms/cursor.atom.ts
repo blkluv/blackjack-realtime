@@ -1,8 +1,8 @@
-import { atom } from 'jotai';
+import { atom } from "jotai";
 import type {
   Cursor,
   TCursorMessageSchema,
-} from '../../party/cursor/cursor.types';
+} from "../../party/cursor/cursor.types";
 
 type CursorsMap = Record<string, Cursor>;
 
@@ -19,7 +19,7 @@ const updateSingleCursorAtom = atom(
   (get, set, id: string, cursor: Cursor) => {
     const cursorMap = get(cursorMapAtom);
     set(cursorMapAtom, { ...cursorMap, [id]: cursor });
-  },
+  }
 );
 
 //remove single entry from map
