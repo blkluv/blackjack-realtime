@@ -157,12 +157,13 @@ export default class Server implements Party.Server {
   ) {
     console.log(`Connection ${conn.id} sent message: ${unknown}`);
     try {
+      // const json = JSON.parse(unknownMessage);
       const message = SocketMessageSchema.parse(unknownMessage);
 
       // Route cursor messages to cursor room
       if (message.room === 'cursor') {
-        this.cursorRoom.handleMessage(conn, message).catch((err) => {
-          console.error('Error handling cursor update:', err);
+        this.cursorRoom.handleMessage(conn, unknownMessage).catch(() => {
+          console.error('Error handling cursor messages:');
         });
         return;
       }
@@ -182,10 +183,10 @@ export default class Server implements Party.Server {
       }
 
       room
-        .onMessage(conn, message)
+        .onMessage(conn, unknownMessage)
         .catch((err) => console.error('Error handling message in room:', err));
     } catch (err) {
-      console.error('Failed to parse message as JSON', err);
+      console.error('Failed to parse message as JSON', unknownMessage);
     }
   }
 }

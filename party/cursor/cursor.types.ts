@@ -19,6 +19,7 @@ type ServerCursor = Cursor & {
 
 // all client messages to server
 const CursorUpdateSchema = z.object({
+  room: z.literal('cursor'),
   type: z.literal('cursor-update'),
   data: z.object({
     x: z.number(),
@@ -28,6 +29,7 @@ const CursorUpdateSchema = z.object({
 });
 
 const CursorRemoveSchema = z.object({
+  room: z.literal('cursor'),
   type: z.literal('cursor-remove'),
   data: z.object({}),
 });

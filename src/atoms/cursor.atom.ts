@@ -31,14 +31,6 @@ const removeSingleCursorAtom = atom(null, (get, set, id: string) => {
 
 type CursorSend = (message: TCursorMessageSchema) => void;
 
-const cursorSendAtom = atom<{ cursorSend: CursorSend | null }>({
-  cursorSend: null,
-});
-
-const setCursorSendAtom = atom(null, (_get, set, newSend: CursorSend) => {
-  set(cursorSendAtom, { cursorSend: newSend });
-});
-
 export {
   type CursorSend,
   type Cursor,
@@ -47,6 +39,4 @@ export {
   setCursorMapAtom,
   updateSingleCursorAtom,
   removeSingleCursorAtom,
-  cursorSendAtom,
-  setCursorSendAtom,
 };

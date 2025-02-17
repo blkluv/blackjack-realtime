@@ -1,7 +1,7 @@
 'use client';
-
 import WalletConnect from '@/components/auth/WalletConnect';
 import { Button } from '@/components/ui/button';
+import { useCursor } from '@/hooks/useCursor';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
 import { useUser } from '@/hooks/useUser';
@@ -16,12 +16,14 @@ import Image from 'next/image';
 
 const GamePage = () => {
   const { readyState } = usePartyKit();
+
   return (
     <div className="h-screen relative w-full overflow-hidden flex flex-col items-center">
       <DealerView />
       <Background />
       <PlayerLayout />
       <ActionButtons />
+      <CursorSpace />
     </div>
   );
 };
@@ -272,6 +274,12 @@ const ActionButtons = () => {
       <WalletConnect />
     </div>
   );
+};
+
+const CursorSpace = () => {
+  const { cursorMap } = useCursor();
+  console.log(cursorMap);
+  return <div className="w-full h-full absolute top-0 left-0 " />;
 };
 
 export default GamePage;

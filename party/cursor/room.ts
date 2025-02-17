@@ -82,32 +82,42 @@ export class CursorRoom {
     connection: Party.Connection<ConnectionState>,
     unknownData: unknown,
   ) {
-    const { type, data } = CursorMessageSchema.parse(unknownData);
+    try {
+      const { type, data } = CursorMessageSchema.parse(unknownData);
 
-    if (type === 'cursor-update') {
-      const country = connection.state?.country ?? null;
-      const userId = connection.state?.userId;
-      if (!userId) {
-        connection.close(4000, 'UserId is required');
-        return;
+      if (type === 'cursor-update') {
+        const country = connection.state?.country ?? null;
+        const userId = connection.state?.userId;
+        if (!userId) {
+          connection.close(4000, 'UserId is required');
+          return;
+        }
+        const cursor: ServerCursor = {
+          id: connection.id,
+          x: data.x,
+          y: data.y,
+          pointer: data.pointer,
+          lastUpdate: Date.now(),
+          country: country,
+          userId: userId,
+        };
+
+        const oldCursor = this.cursors.get(connection.id);
+        if (
+          (oldCursor && cursor.lastUpdate - oldCursor.lastUpdate > 100) ||
+          !oldCursor
+        ) {
+          this.cursors.set(connection.id, cursor);
+          this.broadcast(
+            { room: 'cursor', type: 'cursor-update', data: { cursor } },
+            [connection.id],
+          );
+        }
+      } else if (type === 'cursor-remove') {
+        this.onLeave(connection);
       }
-      const cursor: ServerCursor = {
-        id: connection.id,
-        x: data.x,
-        y: data.y,
-        pointer: data.pointer,
-        lastUpdate: Date.now(),
-        country: country,
-        userId: userId,
-      };
-
-      this.cursors.set(connection.id, cursor);
-      this.broadcast(
-        { room: 'cursor', type: 'cursor-update', data: { cursor } },
-        [connection.id],
-      );
-    } else if (type === 'cursor-remove') {
-      this.onLeave(connection);
+    } catch (error) {
+      console.error('Error parsing cursor message:', unknownData);
     }
   }
 }

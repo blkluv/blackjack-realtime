@@ -13,7 +13,7 @@ export const cursorMessageHandler = async (message: TPartyKitServerMessage) => {
   const removeSingleCursor = useSetAtom(removeSingleCursorAtom);
 
   const { room, type, data } = message;
-
+  console.log(message);
   if (room === 'cursor') {
     if (type === 'cursor-sync') {
       const newOthers: CursorsMap = {};
