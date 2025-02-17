@@ -16,4 +16,3 @@ export const blackjackMessageHandler = async (
     throw new Error('Invalid room');
   }
 };
-
