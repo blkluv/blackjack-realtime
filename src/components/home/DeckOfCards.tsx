@@ -30,18 +30,18 @@ const DeckOfCards = ({
           }}
         >
           <motion.div
-            initial={{
-              y: -q,
-              rotate: 720,
-            }}
-            animate={{
-              y: 0,
-              rotate: 0,
-            }}
-            transition={{
-              delay: extraDelay + i * 0.3,
-              duration: 0.3,
-            }}
+            // initial={{
+            //   y: -q,
+            //   rotate: 720,
+            // }}
+            // animate={{
+            //   y: 0,
+            //   rotate: 0,
+            // }}
+            // transition={{
+            //   delay: extraDelay + i * 0.3,
+            //   duration: 0.3,
+            // }}
             // drag
             // dragConstraints={{ top: 10, left: 10, right:10, bottom: 10 }}
             className="transform cursor-grab transition-transform duration-300 group-hover:-translate-y-4 group-hover:scale-105"

@@ -5,6 +5,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Chrome, Safari, Edge */
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+  @apply appearance-none m-0;
+}
+
+/* Firefox */
+[type="number"] {
+  -moz-appearance: textfield;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

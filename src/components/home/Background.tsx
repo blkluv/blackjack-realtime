@@ -1,8 +1,12 @@
-import useMounted from '@/hooks/useMounted';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import Image from 'next/image';
+import useMounted from "@/hooks/useMounted";
+import { useWindowSize } from "@/hooks/useWindowSize";
+import Image from "next/image";
+
+const MOBILE_BREAKPOINT = 768;
+
 const Background = () => {
-  const { q } = useWindowSize();
+  const { q, width } = useWindowSize();
+  const isMobile = width < MOBILE_BREAKPOINT;
   const isMounted = useMounted();
   if (!isMounted) return null;
   return (
@@ -19,10 +23,10 @@ const Background = () => {
         style={{
           width: q / 2.3,
           top: -q / 4.6,
-          outlineWidth: q / 24,
-          outlineColor: '#18181b',
+          outlineWidth: isMobile ? 0 : q / 24,
+          outlineColor: "#18181b",
         }}
-        className="absolute rounded-full aspect-square outline border-4 border-zinc-300"
+        className="absolute rounded-full aspect-square outline md:border-4 border-zinc-300"
       />
       <div
         style={{
@@ -32,7 +36,7 @@ const Background = () => {
         className="absolute overflow-hidden bg-emerald-950 rounded-full aspect-square border-4 border-zinc-300"
       >
         <Image
-          src={'/green-noise.png'}
+          src={"/green-noise.png"}
           alt=""
           height={1000}
           width={1000}
@@ -44,8 +48,8 @@ const Background = () => {
         style={{
           width: q / 3,
           top: -q / 6,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          left: "50%",
+          transform: "translateX(-50%)",
         }}
         className="absolute flex justify-center items-center overflow-hidden rounded-full aspect-square border border-zinc-300"
       />
