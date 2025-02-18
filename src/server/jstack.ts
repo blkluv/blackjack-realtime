@@ -66,7 +66,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
     // Get the token from the request using next-auth
     const token = await getToken({
       req: compatReq,
-      secret: env.JWT_SECRET,
+      secret: c.env.JWT_SECRET,
     });
 
     if (!token || !token.name) {
