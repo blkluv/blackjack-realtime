@@ -13,6 +13,9 @@ type Card = string;
 type PlayerJoinData = {
   seat: number;
 };
+
+type RoundResultState = 'win' | 'loss' | 'draw' | 'blackjack';
+
 type PlayerState = {
   // this is the partykit connection id of the player
   connectionId: string;
@@ -24,6 +27,12 @@ type PlayerState = {
   done: boolean;
   hasBusted: boolean;
   isStanding: boolean;
+  roundResult: {
+    // Make roundResult optional
+    bet: number;
+    reward: number; // is negative if loss , 0 if draw
+    state: RoundResultState;
+  } | null;
 };
 
 type GameState = {
@@ -94,6 +103,7 @@ export type TBlackjackServerMessage<T extends keyof BlackjackRecord> = {
 };
 
 export {
+  type RoundResultState,
   type BlackjackRecord,
   type TBlackjackMessageSchema,
   BlackjackMessageSchema,

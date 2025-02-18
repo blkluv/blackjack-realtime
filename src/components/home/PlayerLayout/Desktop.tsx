@@ -4,6 +4,7 @@ import { useWindowSize } from '@/hooks/useWindowSize';
 import { truncateAddress } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 import { useState } from 'react';
+import { handValue } from '../../../../party/blackjack/blackjack.utils';
 import { Button } from '../../ui/button';
 import { DeckOfCards } from '../DeckOfCards';
 
@@ -88,7 +89,27 @@ const DesktopLayout = () => {
                   Your Turn
                 </Button>
               ) : null}
-              {player && (
+
+              {player ? (
+                <div className="rounded-full bg-green-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
+                  {player.hand.length > 0 ? (
+                    <>
+                      {(() => {
+                        const handInfo = handValue(player.hand);
+                        return (
+                          <span>
+                            Value: {handInfo.value}{' '}
+                            {handInfo.isSoft ? '(Soft)' : ''}
+                          </span>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    <span>No cards</span>
+                  )}
+                </div>
+              ) : null}
+              {player ? (
                 <div className="flex space-x-4">
                   <div className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-mono w-fit font-bold border">
                     {truncateAddress(player.userId)}
@@ -97,7 +118,51 @@ const DesktopLayout = () => {
                     Bet: {player.bet}
                   </div>
                 </div>
-              )}
+              ) : null}
+              {player?.roundResult ? (
+                <div className="flex items-center space-x-2">
+                  {player.roundResult.state === 'win' && (
+                    <>
+                      <span role="img" aria-label="Win">
+                        💰
+                      </span>
+                      <span className="text-sm font-semibold text-green-500">
+                        Won {player.roundResult.reward}
+                      </span>
+                    </>
+                  )}
+                  {player.roundResult.state === 'loss' && (
+                    <>
+                      <span role="img" aria-label="Loss">
+                        😭
+                      </span>
+                      <span className="text-sm font-semibold text-red-500">
+                        Lost {Math.abs(player.roundResult.reward)}
+                      </span>
+                    </>
+                  )}
+                  {player.roundResult.state === 'draw' && (
+                    <>
+                      <span role="img" aria-label="Draw">
+                        🤝
+                      </span>
+                      <span className="text-sm font-semibold text-gray-500">
+                        Draw (Bet Returned : {player.roundResult.bet})
+                      </span>
+                    </>
+                  )}
+                  {player.roundResult.state === 'blackjack' && (
+                    <>
+                      <span role="img" aria-label="Blackjack">
+                        🎉
+                      </span>
+                      <span className="text-sm font-semibold text-yellow-500">
+                        Blackjack! Won {player.roundResult.reward}
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         );

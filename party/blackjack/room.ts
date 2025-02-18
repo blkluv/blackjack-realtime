@@ -5,6 +5,7 @@ import {
   type GameState,
   type PlayerJoinData,
   type PlayerState,
+  type RoundResultState,
   type TBlackjackServerMessage,
   type TStatus,
 } from './blackjack.types';
@@ -198,6 +199,7 @@ export class BlackjackRoom {
       done: false,
       hasBusted: false,
       isStanding: false,
+      roundResult: null,
     };
 
     // Update order by seat.
@@ -367,7 +369,7 @@ export class BlackjackRoom {
     const card = this.state.deck.pop();
     if (!card) throw new Error('Deck is empty');
     p.hand.push(card);
-    if (handValue(p.hand) > 21) {
+    if (handValue(p.hand).value > 21) {
       p.hasBusted = true;
       p.done = true;
       this.clearPlayerTimer();
@@ -457,7 +459,7 @@ export class BlackjackRoom {
   }
 
   dealerPlay(): void {
-    while (handValue(this.state.dealerHand) < 17) {
+    while (handValue(this.state.dealerHand).value < 17) {
       const card = this.state.deck.pop();
       if (!card) throw new Error('Deck is empty');
       this.state.dealerHand.push(card);
@@ -467,7 +469,8 @@ export class BlackjackRoom {
 
   endRound(): void {
     this.state.status = 'roundover';
-    const dealerScore = handValue(this.state.dealerHand);
+    const { value: dealerScore } = handValue(this.state.dealerHand);
+
     for (const pid of this.state.playerOrder) {
       const seat = this.getSeat(pid);
       if (!seat) throw new Error('Seat not found');
@@ -475,21 +478,42 @@ export class BlackjackRoom {
       if (!p) {
         throw new Error(`Player ${pid} not found`);
       }
-      const playerScore = handValue(p.hand);
+      const { value: playerScore } = handValue(p.hand);
+      let reward = 0;
+      let state: RoundResultState = 'loss'; // Default state
+
       if (p.hasBusted) {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
+        state = 'loss';
+        reward = -p.bet; // Lost
       } else if (dealerScore > 21 || playerScore > dealerScore) {
         console.log(
           `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
+        state = 'win';
+        reward = p.bet; // Win (1x bet)
       } else if (playerScore === dealerScore) {
         console.log(`Player ${pid} pushes with ${playerScore}`);
+        state = 'draw';
+        reward = 0; // Draw (no reward)
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
+        state = 'loss';
+        reward = -p.bet; // Lost
       }
+
+      // Check for Blackjack (example condition - adjust as needed)
+      if (playerScore === 21 && p.hand.length === 2) {
+        state = 'blackjack';
+        reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
+      }
+
+      // Update the player's state with the round result
+      p.roundResult = { bet: p.bet, reward, state };
     }
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -518,6 +542,7 @@ export class BlackjackRoom {
       player.done = false;
       player.hasBusted = false;
       player.isStanding = false;
+      player.roundResult = null;
     }
 
     this.clearRoundEndTimer();

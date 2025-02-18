@@ -1,6 +1,5 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { env as honoenv } from 'hono/adapter';
 import { HTTPException } from 'hono/http-exception';
 import { jstack } from 'jstack';
 import type { NextApiRequest } from 'next';
@@ -25,11 +24,9 @@ export const j = jstack.init<Env>();
  * @see https://jstack.app/docs/backend/middleware
  */
 const databaseMiddleware = j.middleware(async ({ c, next }) => {
-  const { TURSO_CONNECTION_URL, TURSO_AUTH_TOKEN } = honoenv(c);
-
   const client = createClient({
-    url: TURSO_CONNECTION_URL,
-    authToken: TURSO_AUTH_TOKEN,
+    url: c.env.TURSO_CONNECTION_URL,
+    authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
   const db = drizzle(client, { schema });

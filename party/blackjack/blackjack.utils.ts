@@ -41,7 +41,7 @@ function createDeck(): Card[] {
  * using card.slice(0, 1). (This works because all ranks are one character,
  * with "T" meaning 10.)
  */
-function handValue(hand: Card[]): number {
+function handValue(hand: Card[]): { value: number; isSoft: boolean } {
   let sum = 0;
   let aces = 0;
   for (const card of hand) {
@@ -55,12 +55,16 @@ function handValue(hand: Card[]): number {
       sum += Number.parseInt(r, 10);
     }
   }
+
+  let isSoft = false;
   // Upgrade aces if possible.
   while (aces > 0 && sum + 10 <= 21) {
     sum += 10;
     aces--;
+    isSoft = true; // Hand is soft if we upgrade an Ace
   }
-  return sum;
+
+  return { value: sum, isSoft };
 }
 
 export { createDeck, handValue };
