@@ -1,4 +1,3 @@
-import { env } from '@/env.mjs';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { env as honoenv } from 'hono/adapter';
@@ -7,12 +6,19 @@ import { jstack } from 'jstack';
 import type { NextApiRequest } from 'next';
 import { getToken } from 'next-auth/jwt';
 import * as schema from './db/schema';
+
 interface Env {
-  Bindings: typeof env;
+  Bindings: {
+    TURSO_CONNECTION_URL: string;
+    TURSO_AUTH_TOKEN: string;
+    CLOUDFLARE_API_TOKEN: string;
+    CLOUDFLARE_ACCOUNT_ID: string;
+    WRANGLER_URL: string;
+    JWT_SECRET: string;
+  };
 }
 
 export const j = jstack.init<Env>();
-
 /**
  * Type-safely injects database into all procedures
  *

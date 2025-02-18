@@ -286,6 +286,7 @@ export class BlackjackRoom {
     if (this.timers.betTimer) {
       clearTimeout(this.timers.betTimer);
       this.timers.betTimer = null;
+      this.timers.betTimerStart = null;
     }
 
     if (Object.keys(this.state.players).length === 0) {
@@ -294,6 +295,16 @@ export class BlackjackRoom {
     }
     if (this.state.status !== 'betting' && this.state.status !== 'waiting')
       return;
+
+    // Filter out players with zero bets from playerOrder
+    this.state.playerOrder = this.state.playerOrder.filter((userId) => {
+      const seat = this.getSeat(userId);
+      if (!seat) return false; // Or handle the error appropriately
+      const player = this.state.players[seat];
+      if (!player) return false; // Or handle the error appropriately
+      return player.bet > 0;
+    });
+
     // Replenish deck if needed.
     if (this.state.deck.length < 15) {
       this.state.deck = createDeck();
@@ -331,7 +342,16 @@ export class BlackjackRoom {
       data: { state: this.state },
     });
 
-    this.startPlayerTimer();
+    if (this.state.playerOrder.length > 0) {
+      this.startPlayerTimer();
+    } else {
+      this.state.status = 'waiting';
+      this.broadcast({
+        room: 'blackjack',
+        type: 'stateUpdate',
+        data: { state: this.state },
+      });
+    }
   }
 
   playerHit(userId: `0x${string}`): void {

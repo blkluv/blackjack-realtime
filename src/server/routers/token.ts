@@ -1,4 +1,3 @@
-import { env } from '@/env.mjs';
 import { SignJWT } from 'jose';
 import { z } from 'zod';
 import { j, publicProcedure } from '../jstack';
@@ -11,7 +10,7 @@ export const tokenRouter = j.router({
       }),
     )
     .get(async ({ ctx, c, input }) => {
-      const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+      const secretKey = new TextEncoder().encode(c.env.JWT_SECRET);
 
       const token = await new SignJWT({ walletAddress: input.walletAddress })
         .setProtectedHeader({ alg: 'HS256' })

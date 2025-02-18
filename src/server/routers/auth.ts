@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { env } from '@/env.mjs';
+import { generateRandomString } from '@/atoms/atom';
 import { eq } from 'drizzle-orm';
 import { SignJWT } from 'jose';
 import { verifyMessage } from 'viem';
@@ -52,7 +51,7 @@ export const authRouter = j.router({
 
       await ctx.db.insert(challengeStore).values([
         {
-          id: randomUUID(),
+          id: generateRandomString(10),
           walletAddress: input.walletAddress,
           issuedAt: issuedAt.toISOString(),
           expiresAt: expiresAt.toISOString(),
@@ -104,7 +103,7 @@ export const authRouter = j.router({
           .delete(challengeStore)
           .where(eq(challengeStore.walletAddress, walletAddress));
 
-        const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+        const secretKey = new TextEncoder().encode(c.env.JWT_SECRET);
         const token = await new SignJWT({ walletAddress })
           .setProtectedHeader({ alg: 'HS256' })
           .setExpirationTime('24h')
