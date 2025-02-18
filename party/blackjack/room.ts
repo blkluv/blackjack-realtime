@@ -6,10 +6,27 @@ import {
   type PlayerJoinData,
   type PlayerState,
   type TBlackjackServerMessage,
+  type TStatus,
 } from './blackjack.types';
 
 import type { ConnectionState } from '..';
 import { createDeck, handValue } from './blackjack.utils';
+
+const BETTING_PERIOD = 10000;
+const PLAYER_TURN_PERIOD = 10000;
+const ROUND_END_PERIOD = 10000;
+
+type Timers = {
+  // timer on close will stop accepting bets
+  betTimer: NodeJS.Timeout | null;
+  // Store the start time of the bet timer
+  betTimerStart: number | null;
+  // timer on close will stop accepting player actions hit/stand
+  playerTimer: NodeJS.Timeout | null;
+
+  // timer on close will reset the round, timer starts when round ends
+  roundEndTimer: NodeJS.Timeout | null;
+};
 
 /*-------------------------------------------------------------------------
   BlackjackRoom Class
@@ -20,6 +37,7 @@ export class BlackjackRoom {
   room: Party.Room;
   readonly maxPlayers = 5;
   state: GameState;
+  timers: Timers;
 
   constructor(id: string, room: Party.Room) {
     this.id = id;
@@ -31,6 +49,13 @@ export class BlackjackRoom {
       playerOrder: [],
       currentPlayerIndex: 0,
       status: 'waiting',
+    };
+
+    this.timers = {
+      betTimer: null,
+      betTimerStart: null,
+      playerTimer: null,
+      roundEndTimer: null,
     };
   }
 
@@ -123,7 +148,7 @@ export class BlackjackRoom {
         break;
       }
       case 'placeBet': {
-        this.placeBet(userId, data.bet);
+        this.placeBet(connection.id, userId, data.bet);
         break;
       }
       case 'startRound': {
@@ -184,6 +209,12 @@ export class BlackjackRoom {
       type: 'stateUpdate',
       data: { state: this.state },
     });
+
+    if (this.state.status === 'betting' && this.timers.betTimer) {
+      if (this.getBetTimerRemainingTime() < 15) {
+        this.resetBetTimer();
+      }
+    }
   }
 
   playerLeave(userId: `0x${string}`): void {
@@ -203,7 +234,7 @@ export class BlackjackRoom {
     });
   }
 
-  placeBet(userId: `0x${string}`, bet: number): void {
+  placeBet(connectionId: string, userId: `0x${string}`, bet: number): void {
     if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
@@ -223,11 +254,46 @@ export class BlackjackRoom {
       type: 'stateUpdate',
       data: { state: this.state },
     });
+
+    if (!this.timers.betTimer) {
+      this.startBetTimer();
+    }
+  }
+
+  startBetTimer(): void {
+    this.timers.betTimerStart = Date.now(); // Store the start time
+    this.timers.betTimer = setTimeout(() => {
+      this.startRound();
+    }, BETTING_PERIOD); // 20 seconds
+  }
+
+  resetBetTimer(): void {
+    if (this.timers.betTimer) {
+      clearTimeout(this.timers.betTimer);
+    }
+    this.startBetTimer();
+  }
+
+  getBetTimerRemainingTime(): number {
+    if (!this.timers.betTimer || this.timers.betTimerStart === null) return 0;
+
+    const elapsedTime = Date.now() - this.timers.betTimerStart;
+    const timeRemaining = BETTING_PERIOD - elapsedTime;
+    return Math.max(0, timeRemaining);
   }
 
   startRound(): void {
-    if (Object.keys(this.state.players).length === 0) return;
-    if (this.state.status !== 'betting') return;
+    if (this.timers.betTimer) {
+      clearTimeout(this.timers.betTimer);
+      this.timers.betTimer = null;
+    }
+
+    if (Object.keys(this.state.players).length === 0) {
+      this.state.status = 'waiting';
+      return;
+    }
+    if (this.state.status !== 'betting' && this.state.status !== 'waiting')
+      return;
     // Replenish deck if needed.
     if (this.state.deck.length < 15) {
       this.state.deck = createDeck();
@@ -264,6 +330,8 @@ export class BlackjackRoom {
       type: 'stateUpdate',
       data: { state: this.state },
     });
+
+    this.startPlayerTimer();
   }
 
   playerHit(userId: `0x${string}`): void {
@@ -282,7 +350,10 @@ export class BlackjackRoom {
     if (handValue(p.hand) > 21) {
       p.hasBusted = true;
       p.done = true;
+      this.clearPlayerTimer();
       this.advanceTurn();
+    } else {
+      this.resetPlayerTimer();
     }
     this.broadcast({
       room: 'blackjack',
@@ -301,6 +372,7 @@ export class BlackjackRoom {
     if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
+    this.clearPlayerTimer();
     this.advanceTurn();
     this.broadcast({
       room: 'blackjack',
@@ -309,7 +381,43 @@ export class BlackjackRoom {
     });
   }
 
+  startPlayerTimer(): void {
+    this.clearPlayerTimer();
+    this.timers.playerTimer = setTimeout(() => {
+      // Player timed out, force stand
+      const currentPlayerId =
+        this.state.playerOrder[this.state.currentPlayerIndex];
+      if (!currentPlayerId) return;
+      const seat = this.getSeat(currentPlayerId);
+      if (!seat) return;
+      const p = this.state.players[seat];
+      if (!p) return;
+
+      p.isStanding = true;
+      p.done = true;
+      this.broadcast({
+        room: 'blackjack',
+        type: 'stateUpdate',
+        data: { state: this.state },
+      });
+      this.advanceTurn();
+    }, PLAYER_TURN_PERIOD);
+  }
+
+  resetPlayerTimer(): void {
+    this.clearPlayerTimer();
+    this.startPlayerTimer();
+  }
+
+  clearPlayerTimer(): void {
+    if (this.timers.playerTimer) {
+      clearTimeout(this.timers.playerTimer);
+      this.timers.playerTimer = null;
+    }
+  }
+
   advanceTurn(): void {
+    this.clearPlayerTimer();
     while (this.state.currentPlayerIndex < this.state.playerOrder.length - 1) {
       this.state.currentPlayerIndex++;
       const pid = this.state.playerOrder[this.state.currentPlayerIndex];
@@ -319,6 +427,7 @@ export class BlackjackRoom {
       const player = this.state.players[seat];
       if (!player) throw new Error('Player not found');
       if (!player.done) {
+        this.startPlayerTimer();
         return;
       }
     }
@@ -361,6 +470,45 @@ export class BlackjackRoom {
         );
       }
     }
+    this.broadcast({
+      room: 'blackjack',
+      type: 'stateUpdate',
+      data: { state: this.state },
+    });
+
+    this.timers.roundEndTimer = setTimeout(() => {
+      this.resetRound();
+    }, ROUND_END_PERIOD);
+  }
+
+  clearRoundEndTimer(): void {
+    if (this.timers.roundEndTimer) {
+      clearTimeout(this.timers.roundEndTimer);
+      this.timers.roundEndTimer = null;
+    }
+  }
+
+  resetRound(status: TStatus = 'waiting'): void {
+    this.state.status = status;
+    this.state.dealerHand = [];
+    this.state.currentPlayerIndex = 0;
+    for (const player of Object.values(this.state.players)) {
+      player.bet = 0;
+      player.hand = [];
+      player.done = false;
+      player.hasBusted = false;
+      player.isStanding = false;
+    }
+
+    this.clearRoundEndTimer();
+
+    this.timers = {
+      roundEndTimer: null,
+      playerTimer: null,
+      betTimerStart: null,
+      betTimer: null,
+    };
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',

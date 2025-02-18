@@ -1,9 +1,14 @@
+'use client';
+
+import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
-import { getRandomCard } from '@/lib/utils';
 import { DeckOfCards } from './DeckOfCards';
 
 const DealerView = () => {
   const { q } = useWindowSize();
+  const { gameState } = useBlackjack();
+  const hand = gameState.dealerHand;
+
   return (
     <div
       className="flex flex-col space-y-2 z-10 relative"
@@ -12,9 +17,7 @@ const DealerView = () => {
       }}
     >
       <div>Dealer</div>
-      <DeckOfCards
-        cards={Array.from({ length: 2 }).map(() => getRandomCard())}
-      />
+      <DeckOfCards cards={hand} />
     </div>
   );
 };

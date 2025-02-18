@@ -1,13 +1,13 @@
-import { useUser } from "@/hooks/useUser";
-import { truncateAddress } from "@/lib/utils";
-import { useAppKit, useDisconnect } from "@reown/appkit/react";
-import { Button } from "../ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { LogOut } from "lucide-react";
+} from '@/components/ui/popover';
+import { useUser } from '@/hooks/useUser';
+import { truncateAddress } from '@/lib/utils';
+import { useAppKit, useDisconnect } from '@reown/appkit/react';
+import { LogOut } from 'lucide-react';
+import { Button } from '../ui/button';
 
 const WalletConnect = () => {
   const fakeBalance = 1000;
@@ -18,13 +18,13 @@ const WalletConnect = () => {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          size={"sm"}
+          size={'sm'}
           onClick={() => (!user.isAuthenticated ? open() : null)}
           className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-full"
         >
           {user.walletAddress
             ? truncateAddress(user.walletAddress)
-            : "Connect Wallet"}
+            : 'Connect Wallet'}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (

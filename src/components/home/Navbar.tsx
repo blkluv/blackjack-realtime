@@ -1,4 +1,4 @@
-import WalletConnect from "../auth/WalletConnect";
+import WalletConnect from '../auth/WalletConnect';
 
 const Navbar = () => {
   return (

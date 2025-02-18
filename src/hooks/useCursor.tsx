@@ -1,9 +1,9 @@
-import { partyKitAtom } from "@/atoms/atom";
-import { type CursorSend, cursorMapAtom } from "@/atoms/cursor.atom";
-import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
-import type { Position } from "../../party/cursor/cursor.types";
-import { useWindowSize } from "./useWindowSize";
+import { partyKitAtom } from '@/atoms/atom';
+import { type CursorSend, cursorMapAtom } from '@/atoms/cursor.atom';
+import { useAtomValue } from 'jotai';
+import { useEffect, useState } from 'react';
+import type { Position } from '../../party/cursor/cursor.types';
+import { useWindowSize } from './useWindowSize';
 
 const useCursor = () => {
   const [self, setSelf] = useState<Position | null>(null);
@@ -13,7 +13,7 @@ const useCursor = () => {
 
   const cursorSend: CursorSend = (message) => {
     if (!partyKit) return;
-    partyKit.send(JSON.stringify({ room: "cursor", ...message }));
+    partyKit.send(JSON.stringify({ room: 'cursor', ...message }));
   };
 
   useEffect(() => {
@@ -26,15 +26,15 @@ const useCursor = () => {
       const position: Position = {
         x: e.clientX / width,
         y: e.clientY / height,
-        pointer: "mouse",
+        pointer: 'mouse',
       };
       cursorSend?.({
-        type: "cursor-update",
+        type: 'cursor-update',
         data: position,
       });
       setSelf(position);
     };
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener('mousemove', onMouseMove);
 
     const onTouchMove = (e: TouchEvent) => {
       if (!e.touches[0]) return;
@@ -42,29 +42,29 @@ const useCursor = () => {
       const position: Position = {
         x: e.touches[0].clientX / width,
         y: e.touches[0].clientY / height,
-        pointer: "touch",
+        pointer: 'touch',
       };
       cursorSend?.({
-        type: "cursor-update",
+        type: 'cursor-update',
         data: position,
       });
       setSelf(position);
     };
-    window.addEventListener("touchmove", onTouchMove);
+    window.addEventListener('touchmove', onTouchMove);
 
     const onTouchEnd = () => {
       cursorSend?.({
-        type: "cursor-remove",
+        type: 'cursor-remove',
         data: {},
       });
       setSelf(null);
     };
-    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [cursorSend, height, width]);
 

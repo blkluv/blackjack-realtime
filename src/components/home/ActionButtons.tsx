@@ -1,14 +1,14 @@
-import { useUser } from "@/hooks/useUser";
-import { cn } from "@/lib/utils";
-import { MicIcon, MicOffIcon } from "lucide-react";
+import { useBlackjack } from '@/hooks/useBlackjack';
+import { useUser } from '@/hooks/useUser';
+import { cn } from '@/lib/utils';
+import { MicIcon, MicOffIcon } from 'lucide-react';
+import { useState } from 'react';
 // import WalletConnect from '../auth/WalletConnect';
-import { Button } from "../ui/button";
-import { useBlackjack } from "@/hooks/useBlackjack";
-import { useState } from "react";
+import { Button } from '../ui/button';
 
 const ActionButtons = () => {
   const { user } = useUser();
-  const { mySeat, blackjackSend, gameState } = useBlackjack();
+  const { blackjackSend, gameState } = useBlackjack();
   const getPlayer = (userId: string) => {
     for (const player of Object.values(gameState.players)) {
       if (player.userId === userId) {
@@ -20,6 +20,7 @@ const ActionButtons = () => {
     if (!user.walletAddress) return;
     return getPlayer(user.walletAddress);
   };
+  const [isMicOn, setIsMicOn] = useState(false);
   const [betAmount, setBetAmount] = useState(0);
   const player = getCurrentPlayer();
 
@@ -28,13 +29,13 @@ const ActionButtons = () => {
       {user.isAuthenticated && (
         <>
           <Button
-            onClick={() => alert("todo")}
+            onClick={() => setIsMicOn(!isMicOn)}
             size="sm"
             className={cn(
-              "bg-yellow-400 text-black cursor-pointer rounded-full"
-              // isMicOn
-              //   ? 'bg-yellow-400 hover:bg-yellow-500'
-              //   : 'bg-red-400 hover:bg-red-500',
+              'bg-yellow-400 text-black cursor-pointer rounded-full',
+              isMicOn
+                ? 'bg-yellow-400 hover:bg-yellow-500'
+                : 'bg-red-400 hover:bg-red-500',
             )}
           >
             {user.isAuthenticated ? (
@@ -43,12 +44,12 @@ const ActionButtons = () => {
               <MicOffIcon size={24} />
             )}
           </Button>
-          {player && gameState.status === "playing" && (
+          {player && gameState.status === 'playing' && (
             <div className="flex space-x-4">
               <Button
                 onClick={() => {
                   blackjackSend({
-                    type: "hit",
+                    type: 'hit',
                     data: {},
                   });
                 }}
@@ -60,7 +61,7 @@ const ActionButtons = () => {
               <Button
                 onClick={() => {
                   blackjackSend({
-                    type: "stand",
+                    type: 'stand',
                     data: {},
                   });
                 }}
@@ -72,13 +73,14 @@ const ActionButtons = () => {
             </div>
           )}
           {player &&
-            (gameState.status === "betting" ||
-              gameState.status === "waiting") && (
+            (gameState.status === 'betting' ||
+              gameState.status === 'waiting') && (
               <div className="flex space-x-4">
                 <input
+                  disabled={player.bet !== 0}
                   type="number"
                   placeholder="Bet Amount"
-                  value={betAmount}
+                  value={player.bet !== 0 ? player.bet : betAmount}
                   onChange={(e) => {
                     const value = Number(e.target.value);
                     if (value >= 0) setBetAmount(value);
@@ -86,14 +88,18 @@ const ActionButtons = () => {
                   className="bg-transparent border appearance-none border-amber-400 rounded-full px-2 py-1 text-sm text-white w-24"
                 />
                 <Button
+                  disabled={player.bet !== 0}
                   onClick={() => {
+                    if (player.bet !== 0) return;
                     if (betAmount > 0) {
                       blackjackSend({
-                        type: "placeBet",
+                        type: 'placeBet',
                         data: {
                           bet: betAmount,
                         },
                       });
+                    } else {
+                      console.log('Enter amount > 0');
                     }
                   }}
                   size="sm"
