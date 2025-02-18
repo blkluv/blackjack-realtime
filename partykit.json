@@ -4,5 +4,9 @@
   "main": "party/index.ts",
   "domain": "blackjack-party.arcy.in",
   "compatibilityDate": "2025-02-12",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 100
+  },
   "vars": {}
 }

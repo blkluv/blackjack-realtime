@@ -9,6 +9,7 @@ export const useBlackjackHandler = () => {
     const { room, type, data } = message;
     if (room === 'blackjack') {
       if (type === 'stateUpdate') {
+        console.log('game state', data.state);
         setGameState(data.state);
       }
     }

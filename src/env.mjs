@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const env = createEnv({
   shared: {
     NODE_ENV: z.enum(['development', 'production']).default('development'),
-    NEXT_PUBLIC_WRANGLER_URL: z.string().default('http://localhost:3000'),
+    NEXT_PUBLIC_WRANGLER_URL: z.string().default('http://localhost:8080'),
   },
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
