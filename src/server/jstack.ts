@@ -13,7 +13,7 @@ interface Env {
     TURSO_AUTH_TOKEN: string;
     CLOUDFLARE_API_TOKEN: string;
     CLOUDFLARE_ACCOUNT_ID: string;
-    WRANGLER_URL: string;
+    NEXT_PUBLIC_WRANGLER_URL: string;
     JWT_SECRET: string;
   };
 }

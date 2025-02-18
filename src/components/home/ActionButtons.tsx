@@ -23,6 +23,9 @@ const ActionButtons = () => {
   const [isMicOn, setIsMicOn] = useState(false);
   const [betAmount, setBetAmount] = useState(0);
   const player = getCurrentPlayer();
+  const isCurrentTurn =
+    gameState.status === 'playing' &&
+    player?.userId === gameState.playerOrder[gameState.currentPlayerIndex];
 
   return (
     <div className="flex fixed bottom-4 items-center p-4 border border-zinc-200/10 backdrop-blur-sm rounded-full space-x-4">
@@ -44,9 +47,10 @@ const ActionButtons = () => {
               <MicOffIcon size={24} />
             )}
           </Button>
-          {player && gameState.status === 'playing' && (
+          {player && gameState.status === 'playing' && player.bet > 0 && (
             <div className="flex space-x-4">
               <Button
+                disabled={!isCurrentTurn}
                 onClick={() => {
                   blackjackSend({
                     type: 'hit',
@@ -59,6 +63,7 @@ const ActionButtons = () => {
                 Hit
               </Button>
               <Button
+                disabled={!isCurrentTurn}
                 onClick={() => {
                   blackjackSend({
                     type: 'stand',

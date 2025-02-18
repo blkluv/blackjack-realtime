@@ -6,15 +6,5 @@ import { createClient } from 'jstack';
  * @see https://jstack.app/docs/backend/api-client
  */
 export const client = createClient<AppRouter>({
-  baseUrl: `${getBaseUrl()}/api`,
+  baseUrl: `${env.NEXT_PUBLIC_WRANGLER_URL}/api`,
 });
-
-function getBaseUrl() {
-  // 👇 In production, use the production worker
-  if (env.NODE_ENV === 'production' && env.NEXT_PUBLIC_WRANGLER_URL) {
-    return env.NEXT_PUBLIC_WRANGLER_URL;
-  }
-
-  // 👇 Locally, use wrangler backend
-  return 'http://localhost:3000';
-}

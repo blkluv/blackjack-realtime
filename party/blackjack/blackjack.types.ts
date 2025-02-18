@@ -31,7 +31,7 @@ type GameState = {
   dealerHand: Card[];
   deck: Card[];
   playerOrder: `0x${string}`[]; // player IDs sorted by seat order.
-  currentPlayerIndex: number;
+  currentPlayerIndex: number; // Index of the current player in the playerOrder array.
   status: TStatus;
 };
 

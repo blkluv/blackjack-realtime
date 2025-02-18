@@ -18,7 +18,7 @@
     "lint": "next lint",
     "api:deploy": "wrangler deploy",
     "api:dev": "wrangler dev",
-    "api:env:push": "wrangler secret bulk",
+    "api:env:push": "wrangler secret bulk .env",
     "party:dev": "partykit dev",
     "party:deploy": "dotenv -- partykit deploy --with-vars",
     "party:env": "dotenv -- partykit env",

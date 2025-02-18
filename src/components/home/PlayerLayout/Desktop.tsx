@@ -30,6 +30,10 @@ const DesktopLayout = () => {
         const rotationAngle = Math.atan2(centerY - y, x) * (180 / Math.PI) - 90;
         const isMe = mySeat === i + 1;
         const player = gameState.players[i + 1];
+        const isCurrentTurn =
+          gameState.status === 'playing' &&
+          player?.userId ===
+            gameState.playerOrder[gameState.currentPlayerIndex];
         const hand = player?.hand || [];
         return (
           <div
@@ -73,6 +77,15 @@ const DesktopLayout = () => {
                   className="bg-red-400 text-black cursor-pointer rounded-lg"
                 >
                   Your Seat
+                </Button>
+              ) : null}
+              {isCurrentTurn ? (
+                <Button
+                  onClick={() => {}}
+                  size="sm"
+                  className="bg-blue-400 text-black cursor-pointer rounded-lg"
+                >
+                  Your Turn
                 </Button>
               ) : null}
               {player && (
