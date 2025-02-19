@@ -1,20 +1,20 @@
-import { cn } from '@/lib/utils';
-import type { FC, ReactElement } from 'react';
+import { cn } from "@/lib/utils";
+import type { FC, ReactElement } from "react";
 
 const rankMap: { [key: string]: string } = {
-  '2': '2',
-  '3': '3',
-  '4': '4',
-  '5': '5',
-  '6': '6',
-  '7': '7',
-  '8': '8',
-  '9': '9',
-  T: '10',
-  J: 'J',
-  Q: 'Q',
-  K: 'K',
-  A: 'A',
+  "2": "2",
+  "3": "3",
+  "4": "4",
+  "5": "5",
+  "6": "6",
+  "7": "7",
+  "8": "8",
+  "9": "9",
+  T: "10",
+  J: "J",
+  Q: "Q",
+  K: "K",
+  A: "A",
 };
 
 const suitMap: { [key: string]: ReactElement } = {
@@ -54,10 +54,10 @@ const suitMap: { [key: string]: ReactElement } = {
 };
 
 const suitColors: { [key: string]: string } = {
-  c: 'text-zinc-100',
-  d: 'text-red-400',
-  h: 'text-red-400',
-  s: 'text-zinc-100',
+  c: "text-zinc-100",
+  d: "text-red-400",
+  h: "text-red-400",
+  s: "text-zinc-100",
 };
 
 type TPlayingCardProps = {
@@ -70,11 +70,11 @@ type TPlayingCardProps = {
 };
 
 export enum EPlayingCardState {
-  winner = 'border-green-500',
-  loser = 'border-red-500',
-  default = 'border-zinc-800',
-  blackjack = 'border-yellow-500',
-  focus = 'border-blue-500',
+  winner = "border-green-500",
+  loser = "border-red-500",
+  default = "border-zinc-800",
+  blackjack = "border-yellow-500",
+  focus = "border-blue-500",
 }
 
 const PlayingCard: FC<TPlayingCardProps> = ({
@@ -93,9 +93,9 @@ const PlayingCard: FC<TPlayingCardProps> = ({
   return (
     <div
       className={cn(
-        'bg-zinc-950 aspect-[2/3] flex flex-col border rounded',
+        "bg-zinc-900 aspect-[2/3] flex flex-col border rounded",
         state,
-        className,
+        className
       )}
       style={{
         height: `${size / 4}rem`,
@@ -104,7 +104,7 @@ const PlayingCard: FC<TPlayingCardProps> = ({
     >
       {flipped ? (
         <div className="w-full h-full p-2">
-          <div className="bg-zinc-900 h-full w-full rounded flex items-center justify-center">
+          <div className="bg-zinc-800 h-full w-full rounded flex items-center justify-center">
             <div className="text-xs -rotate-45 text-zinc-500 uppercase">
               Gawk
             </div>
@@ -113,11 +113,11 @@ const PlayingCard: FC<TPlayingCardProps> = ({
       ) : (
         <div className="flex flex-col pt-2 space-y-1.5">
           <div
-            className={cn('w-12 text-center font-bold text-2xl', colorClass)}
+            className={cn("w-12 text-center font-bold text-2xl", colorClass)}
           >
             {displayRank}
           </div>
-          <div className={cn('w-12 px-2', colorClass)}>{displaySuit}</div>
+          <div className={cn("w-12 px-2", colorClass)}>{displaySuit}</div>
         </div>
       )}
     </div>
