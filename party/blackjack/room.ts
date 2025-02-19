@@ -240,6 +240,15 @@ export class BlackjackRoom {
 
     this.state.status = 'betting';
 
+    this.state.playerOrder = Object.values(this.state.players)
+      .filter((player) => player.bet > 0)
+      .sort((a, b) => {
+        const seatA = a.seat;
+        const seatB = b.seat;
+        return seatA - seatB;
+      })
+      .map((player) => player.userId);
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -302,13 +311,14 @@ export class BlackjackRoom {
       return;
 
     // Filter out players with zero bets from playerOrder
-    this.state.playerOrder = this.state.playerOrder.filter((userId) => {
-      const seat = this.getSeat(userId);
-      if (!seat) return false; // Or handle the error appropriately
-      const player = this.state.players[seat];
-      if (!player) return false; // Or handle the error appropriately
-      return player.bet > 0;
-    });
+    this.state.playerOrder = Object.values(this.state.players)
+      .filter((player) => player.bet > 0)
+      .sort((a, b) => {
+        const seatA = a.seat;
+        const seatB = b.seat;
+        return seatA - seatB;
+      })
+      .map((player) => player.userId);
 
     // Replenish deck if needed.
     if (this.state.deck.length < 15) {
@@ -558,6 +568,7 @@ export class BlackjackRoom {
     this.state.status = status;
     this.state.dealerHand = [];
     this.state.currentPlayerIndex = 0;
+    this.state.playerOrder = [];
     for (const player of Object.values(this.state.players)) {
       player.bet = 0;
       player.hand = [];
