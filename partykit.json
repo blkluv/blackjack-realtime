@@ -6,7 +6,7 @@
   "compatibilityDate": "2025-02-12",
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 100
+    "head_sampling_rate": 1
   },
   "vars": {}
 }
