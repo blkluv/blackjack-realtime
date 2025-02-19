@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+const BETTING_PERIOD = 10000;
+const PLAYER_TURN_PERIOD = 10000;
+const ROUND_END_PERIOD = 10000;
+
 /**
  * Cards are represented as "rank+suit".
  * In this scheme:
@@ -14,6 +18,16 @@ type PlayerJoinData = {
   seat: number;
 };
 
+type Timers = {
+  // timer on close will stop accepting bets
+  betTimer: NodeJS.Timeout | null;
+  // Store the start time of the bet timer
+  betTimerStart: number | null;
+  // timer on close will stop accepting player actions hit/stand
+  playerTimer: NodeJS.Timeout | null;
+  // timer on close will reset the round, timer starts when round ends
+  roundEndTimer: NodeJS.Timeout | null;
+};
 type RoundResultState = 'win' | 'loss' | 'draw' | 'blackjack';
 
 type PlayerState = {
@@ -94,6 +108,10 @@ type TBlackjackMessageSchema = z.infer<typeof BlackjackMessageSchema>;
 
 type BlackjackRecord = {
   stateUpdate: { state: GameState };
+  betTimerStart: { startedAt: number };
+  betTimerEnd: { endedAt: number };
+  playerTimerStart: { userId: `0x${string}`; startedAt: number }; // Send the user ID of the player whose turn it is
+  playerTimerEnd: { userId: `0x${string}`; endedAt: number }; // Send the user ID of the player whose turn it just ended
 };
 
 export type TBlackjackServerMessage<T extends keyof BlackjackRecord> = {
@@ -112,4 +130,8 @@ export {
   type PlayerJoinData,
   type Card,
   type TStatus,
+  type Timers,
+  BETTING_PERIOD,
+  PLAYER_TURN_PERIOD,
+  ROUND_END_PERIOD,
 };

@@ -1,33 +1,21 @@
 import type * as Party from 'partykit/server';
 import {
+  BETTING_PERIOD,
   BlackjackMessageSchema,
   type BlackjackRecord,
   type GameState,
+  PLAYER_TURN_PERIOD,
   type PlayerJoinData,
   type PlayerState,
+  ROUND_END_PERIOD,
   type RoundResultState,
   type TBlackjackServerMessage,
   type TStatus,
+  type Timers,
 } from './blackjack.types';
 
 import type { ConnectionState } from '..';
 import { createDeck, handValue } from './blackjack.utils';
-
-const BETTING_PERIOD = 10000;
-const PLAYER_TURN_PERIOD = 10000;
-const ROUND_END_PERIOD = 10000;
-
-type Timers = {
-  // timer on close will stop accepting bets
-  betTimer: NodeJS.Timeout | null;
-  // Store the start time of the bet timer
-  betTimerStart: number | null;
-  // timer on close will stop accepting player actions hit/stand
-  playerTimer: NodeJS.Timeout | null;
-
-  // timer on close will reset the round, timer starts when round ends
-  roundEndTimer: NodeJS.Timeout | null;
-};
 
 /*-------------------------------------------------------------------------
   BlackjackRoom Class
@@ -43,6 +31,7 @@ export class BlackjackRoom {
   constructor(id: string, room: Party.Room) {
     this.id = id;
     this.room = room;
+
     this.state = {
       players: {},
       dealerHand: [],
@@ -267,6 +256,13 @@ export class BlackjackRoom {
     this.timers.betTimer = setTimeout(() => {
       this.startRound();
     }, BETTING_PERIOD); // 20 seconds
+
+    // Notify players that the bet timer has started
+    this.broadcast({
+      room: 'blackjack',
+      type: 'betTimerStart',
+      data: { startedAt: Date.now() },
+    });
   }
 
   resetBetTimer(): void {
@@ -290,6 +286,13 @@ export class BlackjackRoom {
       this.timers.betTimer = null;
       this.timers.betTimerStart = null;
     }
+
+    // Notify players that the bet timer has ended
+    this.broadcast({
+      room: 'blackjack',
+      type: 'betTimerEnd',
+      data: { endedAt: Date.now() },
+    });
 
     if (Object.keys(this.state.players).length === 0) {
       this.state.status = 'waiting';
@@ -318,6 +321,7 @@ export class BlackjackRoom {
       player.done = false;
       player.hasBusted = false;
       player.isStanding = false;
+      player.roundResult = null;
     }
     this.state.dealerHand = [];
     // Deal two cards to every player and two to the dealer.
@@ -405,11 +409,12 @@ export class BlackjackRoom {
 
   startPlayerTimer(): void {
     this.clearPlayerTimer();
+    const currentPlayerId =
+      this.state.playerOrder[this.state.currentPlayerIndex];
+    if (!currentPlayerId) return; // Handle case where there's no current player
+
     this.timers.playerTimer = setTimeout(() => {
       // Player timed out, force stand
-      const currentPlayerId =
-        this.state.playerOrder[this.state.currentPlayerIndex];
-      if (!currentPlayerId) return;
       const seat = this.getSeat(currentPlayerId);
       if (!seat) return;
       const p = this.state.players[seat];
@@ -424,8 +429,14 @@ export class BlackjackRoom {
       });
       this.advanceTurn();
     }, PLAYER_TURN_PERIOD);
-  }
 
+    // Notify players that the player timer has started
+    this.broadcast({
+      room: 'blackjack',
+      type: 'playerTimerStart',
+      data: { userId: currentPlayerId, startedAt: Date.now() },
+    });
+  }
   resetPlayerTimer(): void {
     this.clearPlayerTimer();
     this.startPlayerTimer();
@@ -440,6 +451,17 @@ export class BlackjackRoom {
 
   advanceTurn(): void {
     this.clearPlayerTimer();
+
+    const previousPlayerId =
+      this.state.playerOrder[this.state.currentPlayerIndex - 1];
+    if (previousPlayerId) {
+      this.broadcast({
+        room: 'blackjack',
+        type: 'playerTimerEnd',
+        data: { userId: previousPlayerId, endedAt: Date.now() },
+      });
+    }
+
     while (this.state.currentPlayerIndex < this.state.playerOrder.length - 1) {
       this.state.currentPlayerIndex++;
       const pid = this.state.playerOrder[this.state.currentPlayerIndex];
