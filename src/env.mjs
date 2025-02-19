@@ -27,6 +27,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
     NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
+    NEXT_PUBLIC_MULTIAVATAR_API_KEY: z.string().min(1),
   },
 
   /**
@@ -43,5 +44,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
     NEXT_PUBLIC_WRANGLER_URL: process.env.NEXT_PUBLIC_WRANGLER_URL,
+    NEXT_PUBLIC_MULTIAVATAR_API_KEY:
+      process.env.NEXT_PUBLIC_MULTIAVATAR_API_KEY,
   },
 });

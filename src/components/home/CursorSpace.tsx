@@ -20,7 +20,7 @@ const CursorSpace = () => {
               key={id}
               animate={{
                 x: (cursor as Cursor).x * width, // Type assertion if needed
-                y: (cursor as Cursor).y * height - (48 * 4 - 24),
+                y: (cursor as Cursor).y * height - 48,
               }}
               className="text-black h-8 w-fit rounded-full absolute pointer-events-none"
             >

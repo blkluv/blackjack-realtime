@@ -1,30 +1,34 @@
+'use client';
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useUser } from '@/hooks/useUser';
-import { truncateAddress } from '@/lib/utils';
-import { useAppKit, useDisconnect } from '@reown/appkit/react';
+import {
+  useAppKit,
+  useAppKitAccount,
+  useDisconnect,
+} from '@reown/appkit/react';
 import { LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 
 const WalletConnect = () => {
-  const fakeBalance = 1000;
+  const fakeBalance = 75.65124;
   const { open } = useAppKit();
   const { user } = useUser();
   const { disconnect } = useDisconnect();
+  const { address } = useAppKitAccount();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          size={'sm'}
           onClick={() => (!user.isAuthenticated ? open() : null)}
-          className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer rounded-full"
+          className="cursor-pointer rounded-full bg-slate-100 text-slate-900"
         >
-          {user.walletAddress
-            ? truncateAddress(user.walletAddress)
-            : 'Connect Wallet'}
+          {user.walletAddress ? `Bal: ${fakeBalance}` : 'Connect Wallet'}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (
