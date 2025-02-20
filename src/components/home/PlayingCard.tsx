@@ -1,20 +1,20 @@
-import { cn } from "@/lib/utils";
-import type { FC, ReactElement } from "react";
+import { cn } from '@/lib/utils';
+import type { FC, ReactElement } from 'react';
 
 const rankMap: { [key: string]: string } = {
-  "2": "2",
-  "3": "3",
-  "4": "4",
-  "5": "5",
-  "6": "6",
-  "7": "7",
-  "8": "8",
-  "9": "9",
-  T: "10",
-  J: "J",
-  Q: "Q",
-  K: "K",
-  A: "A",
+  '2': '2',
+  '3': '3',
+  '4': '4',
+  '5': '5',
+  '6': '6',
+  '7': '7',
+  '8': '8',
+  '9': '9',
+  T: '10',
+  J: 'J',
+  Q: 'Q',
+  K: 'K',
+  A: 'A',
 };
 
 const suitMap: { [key: string]: ReactElement } = {
@@ -27,8 +27,8 @@ const suitMap: { [key: string]: ReactElement } = {
   d: (
     <svg fill="currentColor" viewBox="0 0 64 64" className="svg-icon ">
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="m37.036 2.1 24.875 24.865a7.098 7.098 0 0 1 2.09 5.04c0 1.969-.799 3.75-2.09 5.04L37.034 61.909a7.076 7.076 0 0 1-5.018 2.078c-.086 0-.174 0-.25-.004v.004h-.01a7.067 7.067 0 0 1-4.79-2.072L2.089 37.05A7.098 7.098 0 0 1 0 32.009c0-1.97.798-3.75 2.09-5.04L26.965 2.102v.002A7.07 7.07 0 0 1 31.754.02l.002-.004h-.012c.088-.002.176-.004.264-.004A7.08 7.08 0 0 1 37.036 2.1Z"
       />
     </svg>
@@ -54,10 +54,10 @@ const suitMap: { [key: string]: ReactElement } = {
 };
 
 const suitColors: { [key: string]: string } = {
-  c: "text-zinc-100",
-  d: "text-red-400",
-  h: "text-red-400",
-  s: "text-zinc-100",
+  c: 'text-zinc-100',
+  d: 'text-red-400',
+  h: 'text-red-400',
+  s: 'text-zinc-100',
 };
 
 type TPlayingCardProps = {
@@ -70,11 +70,11 @@ type TPlayingCardProps = {
 };
 
 export enum EPlayingCardState {
-  winner = "border-green-500",
-  loser = "border-red-500",
-  default = "border-zinc-800",
-  blackjack = "border-yellow-500",
-  focus = "border-blue-500",
+  winner = 'border-green-500',
+  loser = 'border-red-500',
+  default = 'border-zinc-800',
+  blackjack = 'border-yellow-500',
+  focus = 'border-blue-500',
 }
 
 const PlayingCard: FC<TPlayingCardProps> = ({
@@ -93,9 +93,9 @@ const PlayingCard: FC<TPlayingCardProps> = ({
   return (
     <div
       className={cn(
-        "bg-zinc-900 aspect-[2/3] flex flex-col border rounded",
+        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded',
         state,
-        className
+        className,
       )}
       style={{
         height: `${size / 4}rem`,
@@ -113,11 +113,11 @@ const PlayingCard: FC<TPlayingCardProps> = ({
       ) : (
         <div className="flex flex-col pt-2 space-y-1.5">
           <div
-            className={cn("w-12 text-center font-bold text-2xl", colorClass)}
+            className={cn('w-12 text-center font-bold text-2xl', colorClass)}
           >
             {displayRank}
           </div>
-          <div className={cn("w-12 px-2", colorClass)}>{displaySuit}</div>
+          <div className={cn('w-12 px-2', colorClass)}>{displaySuit}</div>
         </div>
       )}
     </div>

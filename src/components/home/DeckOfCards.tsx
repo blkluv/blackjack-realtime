@@ -44,7 +44,7 @@ const DeckOfCards = ({
             // }}
             // drag
             // dragConstraints={{ top: 10, left: 10, right:10, bottom: 10 }}
-            className="transform cursor-grab transition-transform duration-300 group-hover:-translate-y-4 group-hover:scale-105"
+            className="transform cursor-grab transition-transform duration-300 group-hover:-tranzinc-y-4 group-hover:scale-105"
           >
             <Card
               card={card}

@@ -50,7 +50,7 @@ const Background = () => {
           width: q / 3,
           top: -q / 6,
           left: '50%',
-          transform: 'translateX(-50%)',
+          transform: 'tranzincX(-50%)',
         }}
         className="absolute flex justify-center items-center overflow-hidden rounded-full aspect-square border border-zinc-300"
       />

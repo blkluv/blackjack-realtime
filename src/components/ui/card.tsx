@@ -42,7 +42,7 @@ const suitColors: { [key: string]: string } = {
 const Card: React.FC<CardProps> = ({ card, deckType, height, className }) => {
   if (!card) {
     return (
-      <div className="w-16 h-24 border-2 border-gray-300 rounded-md bg-white" />
+      <div className="w-16 h-24 border-2 border-zinc-300 rounded-md bg-white" />
     ); // Placeholder for no card
   }
 
@@ -82,7 +82,7 @@ const Card: React.FC<CardProps> = ({ card, deckType, height, className }) => {
         style={{
           fontSize: 'var(--card-icon-size)',
           top: `calc(${cardHeight}px * 0.45)`,
-          transform: 'translateY(-50%)',
+          transform: 'tranzincY(-50%)',
         }}
       >
         {displaySuit}

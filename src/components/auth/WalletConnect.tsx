@@ -26,7 +26,7 @@ const WalletConnect = () => {
       <PopoverTrigger asChild>
         <Button
           onClick={() => (!user.isAuthenticated ? open() : null)}
-          className="cursor-pointer rounded-full bg-slate-100 text-slate-900"
+          className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
         >
           {user.walletAddress ? `Bal: ${fakeBalance}` : 'Connect Wallet'}
         </Button>

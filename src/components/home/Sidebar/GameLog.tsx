@@ -43,16 +43,16 @@ const FakeLogs = [
 
 const GameLog = () => {
   return (
-    <div className="flex flex-col h-full divide-y divide-slate-900 overflow-hidden">
+    <div className="flex flex-col h-full divide-y divide-zinc-900 overflow-hidden">
       <div className="flex justify-between items-center p-4">
-        <div className="text-slate-400 text-sm">Game Logs: </div>
-        <div className="text-slate-400 text-sm">Players: {2}/5</div>
+        <div className="text-zinc-400 text-sm">Game Logs: </div>
+        <div className="text-zinc-400 text-sm">Players: {2}/5</div>
       </div>
       <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto">
         {FakeLogs.map((log) => (
           <div
             key={log.id}
-            className="bg-slate-900 px-4 text-xs font-light text-slate-300 py-2 rounded-full w-fit"
+            className="bg-zinc-900 px-4 text-xs font-light text-zinc-300 py-2 rounded-full w-fit"
           >
             <span className="font-bold">{log.sender}:</span> {log.message}
           </div>
@@ -60,7 +60,7 @@ const GameLog = () => {
         {FakeLogs.map((log) => (
           <div
             key={log.id}
-            className="bg-slate-900 px-4 text-xs font-light text-slate-300 py-2 rounded-full w-fit"
+            className="bg-zinc-900 px-4 text-xs font-light text-zinc-300 py-2 rounded-full w-fit"
           >
             <span className="font-bold">{log.sender}:</span> {log.message}
           </div>

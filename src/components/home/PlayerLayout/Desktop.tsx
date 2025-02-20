@@ -43,7 +43,7 @@ const DesktopLayout = () => {
             style={{
               bottom: `${y}px`,
               left: `calc(50% + ${x}px)`,
-              transform: `translateX(-50%) rotate(${rotationAngle}deg)`,
+              transform: `tranzincX(-50%) rotate(${rotationAngle}deg)`,
             }}
           >
             <DeckOfCards cards={hand} extraDelay={i * 0.6} />
@@ -146,7 +146,7 @@ const DesktopLayout = () => {
                       <span role="img" aria-label="Draw">
                         🤝
                       </span>
-                      <span className="text-sm font-semibold text-gray-500">
+                      <span className="text-sm font-semibold text-zinc-500">
                         Draw (Bet Returned : {player.roundResult.bet})
                       </span>
                     </>
