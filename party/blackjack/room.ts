@@ -570,6 +570,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       state: RoundResultState;
       bet: number;
       reward: number;
+      handArray: string;
     };
 
     this.state.status = 'roundover';
@@ -646,6 +647,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         roundId: roundId,
         state: state,
         bet: p.bet,
+        handArray: p.hand.toString(),
         reward: reward,
       });
     }
@@ -656,6 +658,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         {
           roundId,
           netDealerReward,
+          dealerHandArray: this.state.dealerHand.toString(),
           date: new Date().toISOString(),
         },
       ])

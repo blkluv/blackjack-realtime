@@ -14,6 +14,7 @@ export const UserRounds = sqliteTable('userRounds', {
   id: text('id').notNull().primaryKey(), // Changed to text and primaryKey
   walletAddress: text('walletAddress').notNull(), // Changed to text
   roundId: text('roundId').notNull(),
+  handArray: text('handArray').notNull(),
   state: text({ enum: ['win', 'loss', 'blackjack'] }).notNull(),
   bet: int('bet').notNull(),
   reward: int('reward').notNull(),
@@ -28,6 +29,7 @@ export const userRoundsRelations = relations(UserRounds, ({ one }) => ({
 
 export const TableRounds = sqliteTable('tableRounds', {
   roundId: text('roundId').notNull().primaryKey(),
+  dealerHandArray: text('dealerHandArray').notNull(),
   netDealerReward: int('netDealerReward').notNull(),
   date: text('date').notNull(),
 });

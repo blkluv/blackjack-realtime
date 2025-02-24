@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a8c99c92-e825-4ce6-9afe-0a2526702b91",
+  "id": "9df4f661-52dd-4596-a765-0442751a1cd4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "challengeStore": {
@@ -59,6 +59,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "dealerHandArray": {
+          "name": "dealerHandArray",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "netDealerReward": {
           "name": "netDealerReward",
           "type": "integer",
@@ -99,6 +106,13 @@
         },
         "roundId": {
           "name": "roundId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "handArray": {
+          "name": "handArray",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
