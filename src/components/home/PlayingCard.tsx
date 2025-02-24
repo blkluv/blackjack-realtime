@@ -62,12 +62,14 @@ const suitColors: { [key: string]: string } = {
 
 type TPlayingCardProps = {
   card: string; // e.g., "Ac", "Th", "2c"
-  size?: number; // tailwind size in rem
+  size?: TPlayingCardSize;
   className?: string;
   state?: EPlayingCardState;
   flipped?: boolean;
   style?: React.CSSProperties;
 };
+
+export type TPlayingCardSize = 'sm' | 'md' | 'lg';
 
 export enum EPlayingCardState {
   winner = 'border-green-500',
@@ -80,7 +82,7 @@ export enum EPlayingCardState {
 const PlayingCard: FC<TPlayingCardProps> = ({
   card,
   className,
-  size = 32,
+  size = 'sm',
   state = EPlayingCardState.default,
   flipped = false,
   style,
@@ -89,16 +91,22 @@ const PlayingCard: FC<TPlayingCardProps> = ({
   const suit = card.slice(-1);
   const displayRank = rankMap[rank];
   const displaySuit = suitMap[suit];
+  const cardSizeMap: { [key in TPlayingCardSize]: number } = {
+    sm: 0.6,
+    md: 1,
+    lg: 1.4,
+  };
+  const cardSize = cardSizeMap[size];
   const colorClass = suitColors[suit];
   return (
     <div
       className={cn(
-        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded',
+        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded h-32',
         state,
         className,
       )}
       style={{
-        height: `${size / 4}rem`,
+        scale: cardSize,
         ...style,
       }}
     >
