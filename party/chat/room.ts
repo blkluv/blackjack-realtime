@@ -60,7 +60,11 @@ export class ChatRoom {
         this.broadcast({
           room: 'chat',
           type: 'user-message',
-          data: { message, userId },
+          data: {
+            message,
+            userId,
+            role: connection.state?.isPlayer ? 'player' : 'viewer',
+          },
         });
       }
     } catch (error) {

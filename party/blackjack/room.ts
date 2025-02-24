@@ -116,6 +116,14 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
             'Player already in game, Reconnected , Closing Old Socket',
           );
         }
+
+        connection.setState({
+          userId: userId,
+          country: connection.state?.country ?? null,
+          staticId: connection.state?.staticId ?? generateRandomString(9),
+          isPlayer: true,
+        });
+
         player.online = true;
         this.emit('game-log', `Player ${userId} Reconnected`);
         player.connectionId = connection.id;
@@ -135,7 +143,20 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     if (userId !== 'guest') {
       const player = this.getPlayer(userId);
       if (player) {
-        player.online = false;
+        if (this.state.status === 'playing') {
+          player.online = false;
+        } else {
+          connection.setState({
+            userId: userId,
+            country: connection.state?.country ?? null,
+            staticId: connection.state?.staticId ?? generateRandomString(9),
+            isPlayer: false,
+          });
+
+          // remove player from game
+          delete this.state.players[player.seat];
+        }
+
         this.emit('game-log', `Player ${userId} Disconnected`);
         this.sendGameState('broadcast');
       }

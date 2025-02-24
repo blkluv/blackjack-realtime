@@ -63,3 +63,16 @@
 body {
   font-family: "Press Start 2P", cursive;
 }
+
+/* Hide scrollbar for Chrome, Safari and Edge */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

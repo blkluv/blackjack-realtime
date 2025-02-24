@@ -1,70 +1,127 @@
-const FakeLogs = [
-  {
-    id: 0,
-    sender: 'GawkGawk',
-    message: 'Welcome to GawkGawk',
-  },
-  {
-    id: 1,
-    sender: 'GawkGawk',
-    message: '0x1234 has joined the game',
-  },
-  {
-    id: 2,
-    sender: 'GawkGawk',
-    message: '0x1235 has joined the game',
-  },
-  {
-    id: 3,
-    sender: 'GawkGawk',
-    message: '0x1236 has placed a bet',
-  },
-  {
-    id: 4,
-    sender: 'GawkGawk',
-    message: 'Welcome to GawkGawk',
-  },
-  {
-    id: 5,
-    sender: 'GawkGawk',
-    message: '0x1234 has joined the game',
-  },
-  {
-    id: 6,
-    sender: 'GawkGawk',
-    message: '0x1235 has joined the game',
-  },
-  {
-    id: 7,
-    sender: 'GawkGawk',
-    message: '0x1236 has placed a bet',
-  },
+import { chatLogsAtom } from '@/atoms/chat.atom';
+import { useAtomValue } from 'jotai';
+import { useEffect, useRef, useState } from 'react'; // Import useState
+
+// Define a color palette for usernames - Brighter colors added
+const usernameColors = [
+  'text-red-500',
+  'text-green-500',
+  'text-blue-500',
+  'text-yellow-500',
+  'text-purple-500',
+  'text-pink-500',
+  'text-orange-500',
+  'text-cyan-500',
+  'text-lime-500',
+  'text-rose-500',
+  'text-teal-500',
+  'text-amber-500',
 ];
 
+const getUsernameColor = (userId: string): string => {
+  let hash = 7;
+  for (let i = 0; i < userId.length; i++) {
+    hash = hash * 31 + userId.charCodeAt(i);
+  }
+  const index = Math.abs(hash % usernameColors.length);
+  const result = usernameColors[index] ?? 'text-gray-400';
+  return result;
+};
+
 const GameLog = () => {
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const chatLogs = useAtomValue(chatLogsAtom); // Use chatLogsAtom from Jotai
+
+  const scrollToBottom = () => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatLogs]); // useEffect dependency on chatLogs to scroll on updates
+
+  const handleScroll = () => {
+    if (logContainerRef.current) {
+      const container = logContainerRef.current;
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop <=
+        container.clientHeight + 50;
+      setShowScrollButton(!isAtBottom);
+    }
+  };
+
+  useEffect(() => {
+    const container = logContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col h-full divide-y divide-zinc-900 overflow-hidden">
-      <div className="flex justify-between items-center p-4">
-        <div className="text-zinc-400 text-sm">Game Logs: </div>
+    <div className="flex flex-col h-full overflow-hidden bg-zinc-950">
+      {showScrollButton && ( // Button is now outside the scrollable div, directly inside the main div
+        <button
+          type="button"
+          onClick={scrollToBottom}
+          className="absolute bottom-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-full p-2 transition-colors duration-200"
+          aria-label="Scroll to bottom"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 13.5L12 21m0 0L4.5 13.5M12 21V10.5"
+            />
+          </svg>
+        </button>
+      )}
+      <div className="flex justify-between items-center p-3 bg-zinc-900">
+        <div className="text-zinc-400 text-sm font-bold">Game Logs</div>
         <div className="text-zinc-400 text-sm">Players: {2}/5</div>
       </div>
-      <div className="flex flex-col h-full p-4 space-y-4 overflow-y-auto">
-        {FakeLogs.map((log) => (
-          <div
-            key={log.id}
-            className="bg-zinc-900 px-4 text-xs font-light text-zinc-300 py-2 rounded-full w-fit"
-          >
-            <span className="font-bold">{log.sender}:</span> {log.message}
-          </div>
-        ))}
-        {FakeLogs.map((log) => (
-          <div
-            key={log.id}
-            className="bg-zinc-900 px-4 text-xs font-light text-zinc-300 py-2 rounded-full w-fit"
-          >
-            <span className="font-bold">{log.sender}:</span> {log.message}
-          </div>
-        ))}
+      <div
+        ref={logContainerRef}
+        className="flex flex-col h-full p-3 space-y-2 overflow-y-auto scrollbar-hide relative" // scrollbar-hide class added here
+      >
+        {chatLogs.map(
+          (
+            log, // Use chatLogs instead of FakeLogs
+          ) => (
+            <div
+              key={log.id} // Make sure your ChatSchema has an 'id' or use index as key if not available and order is consistent
+              className={`px-3 py-1 rounded-md w-fit transition-colors duration-100 ${
+                log.isGameLog
+                  ? 'text-zinc-400 text-center mx-auto w-full'
+                  : 'text-zinc-300 hover:bg-zinc-900 hover:bg-opacity-70'
+              }`}
+            >
+              {log.isGameLog ? (
+                <span className="text-sm">{log.message}</span>
+              ) : (
+                <>
+                  <span className={`font-bold ${getUsernameColor(log.userId)}`}>
+                    {' '}
+                    {/* Use log.userId for color */}
+                    {log.userId}: {/* Display userId as username */}
+                  </span>
+                  <span className="text-sm">{log.message}</span>
+                </>
+              )}
+            </div>
+          ),
+        )}
+        <div ref={logEndRef} />
       </div>
     </div>
   );

@@ -11,9 +11,11 @@ const ChatUserMessageSchema = z.object({
 const ChatMessageSchema = ChatUserMessageSchema;
 type TChatMessageSchema = z.infer<typeof ChatMessageSchema>;
 
+type ChatRole = 'player' | 'viewer';
+
 type ChatRecord = {
   'game-log': { message: string };
-  'user-message': { userId: UserId; message: string };
+  'user-message': { userId: UserId; message: string; role: ChatRole };
 };
 
 type ChatServerMessage<T extends keyof ChatRecord> = {

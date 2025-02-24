@@ -21,6 +21,7 @@ const SocketMessageSchema = z.object({
 
 type ConnectionState = {
   userId: UserId;
+  isPlayer: boolean;
   staticId: string;
   country: string | null;
 };
@@ -97,6 +98,7 @@ export default class Server implements Party.Server {
           userId: connection.state?.userId ?? 'guest',
           staticId: connection.state?.staticId ?? '',
           country: connection.state?.country ?? '',
+          isPlayer: connection.state?.isPlayer ?? false,
         };
       }
 
@@ -188,7 +190,7 @@ export default class Server implements Party.Server {
         data: { message: 'hello-from-server' },
       });
 
-      conn.setState({ userId, country, staticId });
+      conn.setState({ userId, country, staticId, isPlayer: false });
       // Join both rooms
       await room.onJoin(conn);
       await this.cursorRoom.onJoin(conn);

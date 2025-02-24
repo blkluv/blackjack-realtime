@@ -1,15 +1,27 @@
 // import { useSetAtom } from 'jotai';
+import { addChatLogAtom, generateRandomId } from '@/atoms/chat.atom';
+import { useSetAtom } from 'jotai';
 import type { TPartyKitServerMessage } from '../../../party';
-
 export const useChatHandler = () => {
   const chatHandler = (message: TPartyKitServerMessage) => {
+    const addChatLog = useSetAtom(addChatLogAtom);
     const { room, type, data } = message;
 
     if (room === 'chat') {
       if (type === 'game-log') {
-        console.log(type, data);
+        addChatLog({
+          id: generateRandomId(),
+          isGameLog: true,
+          userId: 'GameLog',
+          message: data.message,
+        });
       } else if (type === 'user-message') {
-        console.log(type, data);
+        addChatLog({
+          id: generateRandomId(),
+          isGameLog: false,
+          userId: data.userId,
+          message: data.message,
+        });
       }
     }
   };
