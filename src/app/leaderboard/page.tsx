@@ -12,7 +12,7 @@ import { env } from '@/env.mjs';
 import { truncateAddress } from '@/lib/utils';
 import Image from 'next/image';
 
-export const getAvatarSrc = (key?: string): string => {
+const getAvatarSrc = (key?: string): string => {
   const avatarId = key?.replace('0x', '');
   const r = fetch(`https://api.multiavatar.com/${JSON.stringify(avatarId)}`)
     .then((res) => res.text())
