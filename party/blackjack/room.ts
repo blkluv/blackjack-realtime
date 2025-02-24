@@ -546,20 +546,29 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         return;
       }
     }
-    // All players have been processed; now it's the dealer's turn.
-    this.emit('game-log', 'All Players have played, Dealers Turn Begins');
-    this.state.status = 'dealerTurn';
+
     this.dealerPlay();
   }
 
   dealerPlay(): void {
+    // All players have been processed; now it's the dealer's turn.
+
+    this.emit('game-log', 'All Players have played, Dealers Turn Begins');
+    this.state.status = 'dealerTurn';
+
     while (handValue(this.state.dealerHand).value < 17) {
       const card = this.state.deck.pop();
       if (!card) throw new Error('Deck is empty');
+
       this.state.dealerHand.push(card);
       this.emit('game-log', `Dealer draws ${getCardName(card)}`);
     }
-    this.endRound();
+
+    this.sendGameState('broadcast');
+
+    setTimeout(() => {
+      this.endRound();
+    }, 5000);
   }
 
   endRound(): void {
