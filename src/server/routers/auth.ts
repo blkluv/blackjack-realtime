@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { SignJWT } from 'jose';
 import { verifyMessage } from 'viem';
 import { z } from 'zod';
-import { challengeStore } from '../db/schema';
+import { ChallengeStore } from '../db/schema';
 import { j, publicProcedure } from '../jstack';
 import { constructMessage, generateNonce } from '../utils/web3';
 
@@ -25,19 +25,19 @@ export const authRouter = j.router({
         nonce,
       });
 
-      const existingMessage = await ctx.db.query.challengeStore.findFirst({
-        where: eq(challengeStore.walletAddress, input.walletAddress),
+      const existingMessage = await ctx.db.query.ChallengeStore.findFirst({
+        where: eq(ChallengeStore.walletAddress, input.walletAddress),
       });
 
       if (existingMessage) {
         await ctx.db
-          .update(challengeStore)
+          .update(ChallengeStore)
           .set({
             issuedAt: issuedAt.toISOString(),
             expiresAt: expiresAt.toISOString(),
             nonce,
           })
-          .where(eq(challengeStore.walletAddress, input.walletAddress));
+          .where(eq(ChallengeStore.walletAddress, input.walletAddress));
 
         const message = constructMessage({
           walletAddress: input.walletAddress,
@@ -49,7 +49,7 @@ export const authRouter = j.router({
         return c.superjson(message);
       }
 
-      await ctx.db.insert(challengeStore).values([
+      await ctx.db.insert(ChallengeStore).values([
         {
           id: generateRandomString(10),
           walletAddress: input.walletAddress,
@@ -75,9 +75,9 @@ export const authRouter = j.router({
       try {
         const walletAddress = address.toLowerCase();
 
-        const challengeData = await ctx.db.query.challengeStore.findFirst({
-          where: (challengeStore, { eq }) =>
-            eq(challengeStore.walletAddress, walletAddress),
+        const challengeData = await ctx.db.query.ChallengeStore.findFirst({
+          where: (ChallengeStore, { eq }) =>
+            eq(ChallengeStore.walletAddress, walletAddress),
         });
 
         if (!challengeData) {
@@ -100,8 +100,8 @@ export const authRouter = j.router({
         if (!isVerfied) throw new Error('Signature verification failed.');
 
         await ctx.db
-          .delete(challengeStore)
-          .where(eq(challengeStore.walletAddress, walletAddress));
+          .delete(ChallengeStore)
+          .where(eq(ChallengeStore.walletAddress, walletAddress));
 
         const secretKey = new TextEncoder().encode(c.env.JWT_SECRET);
         const token = await new SignJWT({ walletAddress })

@@ -44,7 +44,7 @@ export const usePartyKit = () => {
         event.data as string,
       ) as TPartyKitServerMessage;
 
-      const { room, type, data } = message;
+      const { room } = message;
 
       if (room === 'cursor') {
         cursorHandler(message);

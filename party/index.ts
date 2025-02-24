@@ -1,15 +1,17 @@
-import { env } from '@/env.mjs';
 import { jwtVerify } from 'jose';
 import type * as Party from 'partykit/server';
 import z from 'zod';
 import type { BlackjackRecord } from './blackjack/blackjack.types';
 import { BlackjackRoom } from './blackjack/room';
 
+import { env } from '@/env.mjs';
+import { type Client, createClient } from '@libsql/client';
+import { type LibSQLDatabase, drizzle } from 'drizzle-orm/libsql';
+import * as schema from '../src/server/db/schema';
 import type { ChatRecord } from './chat/chat.types';
 import { ChatRoom } from './chat/room';
 import type { CursorRecord } from './cursor/cursor.types';
 import { CursorRoom } from './cursor/room';
-
 type UserId = `0x${string}` | 'guest';
 
 const SocketMessageSchema = z.object({
@@ -47,6 +49,10 @@ type TPartyKitServerMessage<
     }[keyof RoomRecordMap[TRoom]] // Index to distribute mapped type as union
   : never; // If TRoom is not a valid room, type is never
 
+type TDatabase = LibSQLDatabase<typeof schema> & {
+  $client: Client;
+};
+
 /*-------------------------------------------------------------------------
   Server Class
   This class implements Party.Server and wires up connections, requests,
@@ -58,14 +64,19 @@ export default class Server implements Party.Server {
   };
   private cursorRoom: CursorRoom;
   readonly room: Party.Room;
-
+  db: TDatabase;
   private staticIdMap: { [staticId: string]: string };
 
   constructor(room: Party.Room) {
     this.room = room;
     this.cursorRoom = new CursorRoom('cursors', this.room);
+    const client = createClient({
+      url: env.TURSO_CONNECTION_URL,
+      authToken: env.TURSO_AUTH_TOKEN,
+    });
+    this.db = drizzle(client, { schema });
 
-    const blackjack = new BlackjackRoom('main', this.room);
+    const blackjack = new BlackjackRoom('main', this.room, this.db);
 
     this.roomMap = {
       main: { blackjack, chat: new ChatRoom('chat', this.room, blackjack) },
@@ -264,4 +275,4 @@ export default class Server implements Party.Server {
 // Ensure our server class satisfies Party.Worker.
 Server satisfies Party.Worker;
 
-export type { UserId, ConnectionState, TPartyKitServerMessage };
+export type { UserId, ConnectionState, TPartyKitServerMessage, TDatabase };

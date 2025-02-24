@@ -3,6 +3,7 @@ import {
   BETTING_PERIOD,
   BlackjackMessageSchema,
   type BlackjackRecord,
+  type ClientSideGameState,
   type GameState,
   PLAYER_TURN_PERIOD,
   type PlayerJoinData,
@@ -14,7 +15,9 @@ import {
   type Timers,
 } from './blackjack.types';
 
-import type { ConnectionState } from '..';
+import { generateRandomString } from '@/atoms/atom';
+import { TableRounds, UserRounds } from '@/server/db/schema';
+import type { ConnectionState, TDatabase } from '..';
 import { EnhancedEventEmitter } from '../EnhancedEventEmitter';
 import { createDeck, getCardName, handValue } from './blackjack.utils';
 
@@ -32,11 +35,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   readonly maxPlayers = 5;
   state: GameState;
   timers: Timers;
+  db: TDatabase;
 
-  constructor(id: string, room: Party.Room) {
+  constructor(id: string, room: Party.Room, db: TDatabase) {
     super();
     this.id = id;
     this.room = room;
+    this.db = db;
 
     this.state = {
       players: {},
@@ -45,6 +50,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       playerOrder: [],
       currentPlayerIndex: 0,
       status: 'waiting',
+      roundId: null,
     };
 
     this.timers = {
@@ -115,11 +121,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       }
     }
 
-    this.send(connection.id, {
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('send', [connection.id]);
   }
 
   async onMessage(
@@ -165,6 +167,46 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
     console.log({ gamestate: this.state });
   }
+  sendGameState(mode: 'broadcast' | 'send', toConnectionIds?: string[]) {
+    // Create a copy of the state to avoid modifying the original
+    const clientGameState: ClientSideGameState = {
+      players: this.state.players,
+      currentPlayerIndex: this.state.currentPlayerIndex,
+      dealerHand: this.state.dealerHand,
+      playerOrder: this.state.playerOrder,
+      status: this.state.status,
+    };
+
+    // In 'playing' state, hide deck and dealer's second card
+    if (this.state.status === 'playing') {
+      let firstCard = this.state.dealerHand[0];
+      if (!firstCard) {
+        firstCard = '**';
+      }
+      clientGameState.dealerHand = [firstCard, '**'];
+    } else if (
+      this.state.status === 'dealerTurn' ||
+      this.state.status === 'roundover'
+    ) {
+      clientGameState.dealerHand = this.state.dealerHand; // keep dealer hand empty before game start or betting state
+    }
+
+    if (mode === 'broadcast') {
+      this.broadcast({
+        room: 'blackjack',
+        type: 'stateUpdate',
+        data: { state: clientGameState },
+      });
+    } else if (mode === 'send' && toConnectionIds) {
+      for (const connectionId of toConnectionIds) {
+        this.send(connectionId, {
+          room: 'blackjack',
+          type: 'stateUpdate',
+          data: { state: clientGameState },
+        });
+      }
+    }
+  }
 
   playerJoin(
     connectionId: string,
@@ -205,11 +247,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     this.emit('game-log', `Player ${userId} joined the Table`);
 
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
 
     if (this.state.status === 'betting' && this.timers.betTimer) {
       if (this.getBetTimerRemainingTime() < 15) {
@@ -230,11 +268,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     this.emit('game-log', `Player ${userId} left the Table`);
 
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
   }
 
   placeBet(connectionId: string, userId: `0x${string}`, bet: number): void {
@@ -263,11 +297,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
 
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
 
     if (!this.timers.betTimer) {
       this.startBetTimer();
@@ -371,7 +401,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       this.state.dealerHand.push(card);
     }
     this.state.status = 'playing';
-
+    this.state.roundId = generateRandomString(9);
     this.state.currentPlayerIndex = 0;
 
     this.emit(
@@ -379,21 +409,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       'Game has Started, Dealer has dealt two cards to each player',
     );
 
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
 
     if (this.state.playerOrder.length > 0) {
       this.startPlayerTimer();
     } else {
       this.state.status = 'waiting';
-      this.broadcast({
-        room: 'blackjack',
-        type: 'stateUpdate',
-        data: { state: this.state },
-      });
+      this.sendGameState('broadcast');
     }
   }
 
@@ -420,11 +442,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     } else {
       this.resetPlayerTimer();
     }
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
   }
 
   playerStand(userId: `0x${string}`): void {
@@ -440,11 +458,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.emit('game-log', `${p.userId} has chosen to stand`);
     this.clearPlayerTimer();
     this.advanceTurn();
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
   }
 
   startPlayerTimer(): void {
@@ -462,11 +476,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
       p.isStanding = true;
       p.done = true;
-      this.broadcast({
-        room: 'blackjack',
-        type: 'stateUpdate',
-        data: { state: this.state },
-      });
+      this.sendGameState('broadcast');
       this.advanceTurn();
     }, PLAYER_TURN_PERIOD);
 
@@ -534,8 +544,25 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   }
 
   endRound(): void {
+    type UserRoundObj = {
+      id: string;
+      walletAddress: string;
+      roundId: string;
+      state: RoundResultState;
+      bet: number;
+      reward: number;
+    };
+
     this.state.status = 'roundover';
     const { value: dealerScore } = handValue(this.state.dealerHand);
+    const roundId = this.state.roundId;
+    if (roundId === null) {
+      console.error('Round ID is null');
+      this.resetRound();
+      return;
+    }
+    let netDealerReward = 0;
+    const userRoundObj: UserRoundObj[] = [];
 
     for (const pid of this.state.playerOrder) {
       const seat = this.getSeat(pid);
@@ -553,6 +580,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
         state = 'loss';
         reward = -p.bet; // Lost
+        netDealerReward += p.bet;
       } else if (dealerScore > 21 || playerScore > dealerScore) {
         // Check for Blackjack (example condition - adjust as needed)
         if (playerScore === 21 && p.hand.length === 2) {
@@ -560,6 +588,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
           console.log(`Player ${pid} wins with Blackjack!`);
           this.emit('game-log', `Player ${pid} wins with Blackjack!`);
+          netDealerReward -= 1.5 * p.bet;
         } else {
           console.log(
             `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
@@ -570,6 +599,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           );
           state = 'win';
           reward = p.bet; // Win (1x bet)
+          netDealerReward -= p.bet;
         }
       } else if (playerScore === dealerScore) {
         console.log(`Player ${pid} draws with ${playerScore} hence loses`);
@@ -579,22 +609,42 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         );
         state = 'loss';
         reward = -p.bet; // Draw (hence lost)
+        netDealerReward += p.bet;
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
         state = 'loss';
         reward = -p.bet; // Lost
+        netDealerReward += p.bet;
       }
       // Update the player's state with the round result
       p.roundResult = { bet: p.bet, reward, state };
+
+      userRoundObj.push({
+        id: generateRandomString(10),
+        walletAddress: p.userId,
+        roundId: roundId,
+        state: state,
+        bet: p.bet,
+        reward: reward,
+      });
     }
 
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.db
+      .insert(TableRounds)
+      .values([
+        {
+          roundId,
+          netDealerReward,
+          date: new Date().toISOString(),
+        },
+      ])
+      .then(() => {
+        this.db.insert(UserRounds).values(userRoundObj);
+      });
+
+    this.sendGameState('broadcast');
 
     this.timers.roundEndTimer = setTimeout(() => {
       this.resetRound();
@@ -609,6 +659,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   }
 
   resetRound(status: TStatus = 'waiting'): void {
+    this.state.roundId = null;
     this.state.status = status;
     this.state.dealerHand = [];
     this.state.currentPlayerIndex = 0;
@@ -632,10 +683,6 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     };
 
     this.emit('game-log', 'Table is ready for a new game');
-    this.broadcast({
-      room: 'blackjack',
-      type: 'stateUpdate',
-      data: { state: this.state },
-    });
+    this.sendGameState('broadcast');
   }
 }
