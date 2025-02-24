@@ -14,6 +14,7 @@ export const useChatHandler = () => {
           isGameLog: true,
           userId: 'GameLog',
           message: data.message,
+          role: 'viewer',
         });
       } else if (type === 'user-message') {
         addChatLog({
@@ -21,6 +22,7 @@ export const useChatHandler = () => {
           isGameLog: false,
           userId: data.userId,
           message: data.message,
+          role: data.role,
         });
       }
     }
