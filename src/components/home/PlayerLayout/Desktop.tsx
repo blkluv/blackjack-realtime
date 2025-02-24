@@ -141,16 +141,6 @@ const DesktopLayout = () => {
                       </span>
                     </>
                   )}
-                  {player.roundResult.state === 'draw' && (
-                    <>
-                      <span role="img" aria-label="Draw">
-                        🤝
-                      </span>
-                      <span className="text-sm font-semibold text-zinc-500">
-                        Draw (Bet Returned : {player.roundResult.bet})
-                      </span>
-                    </>
-                  )}
                   {player.roundResult.state === 'blackjack' && (
                     <>
                       <span role="img" aria-label="Blackjack">

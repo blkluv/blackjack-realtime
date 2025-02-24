@@ -75,7 +75,7 @@ export class CursorRoom {
     });
   }
 
-  async handleMessage(
+  async onMessage(
     connection: Party.Connection<ConnectionState>,
     unknownData: unknown,
   ) {

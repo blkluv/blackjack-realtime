@@ -7,7 +7,6 @@ export const useBlackjackHandler = () => {
 
   const blackjackHandler = (message: TPartyKitServerMessage) => {
     const { room, type, data } = message;
-    console.log(type, data);
 
     if (room === 'blackjack') {
       if (type === 'stateUpdate') {

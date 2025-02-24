@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import type { TPartyKitServerMessage } from '../../../party';
 import { useUser } from '../useUser';
 import { useBlackjackHandler } from './blackjack.handler';
+import { useChatHandler } from './chat.handler';
 import { useCursorHandler } from './cursor.handler';
 import { useDefaultHandler } from './default.handler';
 
@@ -27,6 +28,7 @@ export const usePartyKit = () => {
 
   const { cursorHandler } = useCursorHandler();
   const { blackjackHandler } = useBlackjackHandler();
+  const { chatHandler } = useChatHandler();
   const { defaultHandler } = useDefaultHandler();
 
   const partyKit = usePartySocket({
@@ -42,12 +44,14 @@ export const usePartyKit = () => {
         event.data as string,
       ) as TPartyKitServerMessage;
 
-      const { room, type, data } = message;
+      const { room } = message;
 
       if (room === 'cursor') {
         cursorHandler(message);
       } else if (room === 'blackjack') {
         blackjackHandler(message);
+      } else if (room === 'chat') {
+        chatHandler(message);
       } else if (room === 'default') {
         defaultHandler(message);
       }

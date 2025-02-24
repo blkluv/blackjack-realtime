@@ -1,22 +1,24 @@
 import { atom } from 'jotai';
 
 import type {
-  GameState,
+  ClientSideGameState,
   TBlackjackMessageSchema,
 } from '../../party/blackjack/blackjack.types';
 
-const gameStateAtom = atom<GameState>({
+const gameStateAtom = atom<ClientSideGameState>({
   players: {},
   dealerHand: [],
   currentPlayerIndex: 0,
   playerOrder: [],
   status: 'waiting',
-  deck: [],
 });
 
-const setGameStateAtom = atom(null, (get, set, newGameState: GameState) => {
-  set(gameStateAtom, newGameState);
-});
+const setGameStateAtom = atom(
+  null,
+  (get, set, newGameState: ClientSideGameState) => {
+    set(gameStateAtom, newGameState);
+  },
+);
 
 type BlackjackSend = (message: TBlackjackMessageSchema) => void;
 

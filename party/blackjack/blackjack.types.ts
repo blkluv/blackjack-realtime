@@ -6,6 +6,7 @@ const ROUND_END_PERIOD = 10000;
 
 /**
  * Cards are represented as "rank+suit".
+ * If Face Up then **
  * In this scheme:
  *   ranks: ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
  *   suits: ["c", "d", "h", "s"]
@@ -28,7 +29,7 @@ type Timers = {
   // timer on close will reset the round, timer starts when round ends
   roundEndTimer: NodeJS.Timeout | null;
 };
-type RoundResultState = 'win' | 'loss' | 'draw' | 'blackjack';
+type RoundResultState = 'win' | 'loss' | 'blackjack';
 
 type PlayerState = {
   // this is the partykit connection id of the player
@@ -39,6 +40,7 @@ type PlayerState = {
   bet: number;
   hand: Card[];
   done: boolean;
+  online: boolean;
   hasBusted: boolean;
   isStanding: boolean;
   roundResult: {
@@ -49,13 +51,18 @@ type PlayerState = {
   } | null;
 };
 
-type GameState = {
+type ClientSideGameState = {
   players: { [seat: number]: PlayerState };
   dealerHand: Card[];
-  deck: Card[];
   playerOrder: `0x${string}`[]; // player IDs sorted by seat order.
   currentPlayerIndex: number; // Index of the current player in the playerOrder array.
   status: TStatus;
+};
+
+type GameState = ClientSideGameState & {
+  deck: Card[];
+  // nine char round id
+  roundId: string | null;
 };
 
 type TStatus =
@@ -107,7 +114,7 @@ type TBlackjackMessageSchema = z.infer<typeof BlackjackMessageSchema>;
 // all server to client messages
 
 type BlackjackRecord = {
-  stateUpdate: { state: GameState };
+  stateUpdate: { state: ClientSideGameState };
   betTimerStart: { startedAt: number };
   betTimerEnd: { endedAt: number };
   playerTimerStart: { userId: `0x${string}`; startedAt: number }; // Send the user ID of the player whose turn it is
@@ -125,6 +132,7 @@ export {
   type BlackjackRecord,
   type TBlackjackMessageSchema,
   BlackjackMessageSchema,
+  type ClientSideGameState,
   type PlayerState,
   type GameState,
   type PlayerJoinData,
