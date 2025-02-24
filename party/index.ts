@@ -5,13 +5,15 @@ import z from 'zod';
 import type { BlackjackRecord } from './blackjack/blackjack.types';
 import { BlackjackRoom } from './blackjack/room';
 
+import type { ChatRecord } from './chat/chat.types';
+import { ChatRoom } from './chat/room';
 import type { CursorRecord } from './cursor/cursor.types';
 import { CursorRoom } from './cursor/room';
 
 type UserId = `0x${string}` | 'guest';
 
 const SocketMessageSchema = z.object({
-  room: z.enum(['blackjack', 'cursor']),
+  room: z.enum(['blackjack', 'cursor', 'chat']),
   type: z.string(),
 });
 
@@ -28,6 +30,7 @@ type DefaultRecord = {
 // Define a mapping from room name to its Record type
 type RoomRecordMap = {
   cursor: CursorRecord;
+  chat: ChatRecord;
   blackjack: BlackjackRecord;
   default: DefaultRecord;
 };
@@ -50,7 +53,9 @@ type TPartyKitServerMessage<
   and in-room messages for our Blackjack game.
 ---------------------------------------------------------------------------*/
 export default class Server implements Party.Server {
-  private roomMap: { [id: string]: BlackjackRoom };
+  private roomMap: {
+    [id: string]: { blackjack: BlackjackRoom; chat: ChatRoom };
+  };
   private cursorRoom: CursorRoom;
   readonly room: Party.Room;
 
@@ -59,8 +64,11 @@ export default class Server implements Party.Server {
   constructor(room: Party.Room) {
     this.room = room;
     this.cursorRoom = new CursorRoom('cursors', this.room);
+
+    const blackjack = new BlackjackRoom('main', this.room);
+
     this.roomMap = {
-      main: new BlackjackRoom('main', this.room),
+      main: { blackjack, chat: new ChatRoom('chat', this.room, blackjack) },
     };
 
     this.staticIdMap = {};
@@ -140,7 +148,7 @@ export default class Server implements Party.Server {
     { request }: Party.ConnectionContext,
   ) {
     try {
-      const room = this.roomMap.main;
+      const room = this.roomMap.main?.blackjack;
       if (!room) {
         throw new Error('Room not found');
       }
@@ -213,15 +221,15 @@ export default class Server implements Party.Server {
       // console.log(message)
       // Route cursor messages to cursor room
       if (message.room === 'cursor') {
-        this.cursorRoom.handleMessage(conn, json).catch(() => {
+        this.cursorRoom.onMessage(conn, json).catch(() => {
           console.error('Error handling cursor messages:');
         });
         return;
       }
 
-      // Route game messages to blackjack room
-      const room = this.roomMap.main;
-      if (!room) {
+      const blackjackRoom = this.roomMap.main?.blackjack;
+      const chatRoom = this.roomMap.main?.chat;
+      if (!blackjackRoom || !chatRoom) {
         throw new Error('Room not found');
       }
       const userId = conn.state?.userId;
@@ -233,9 +241,20 @@ export default class Server implements Party.Server {
         return;
       }
 
-      room
-        .onMessage(conn, json)
-        .catch((err) => console.error('Error handling message in room:', err));
+      // Route game messages to blackjack room
+      if (message.room === 'blackjack') {
+        blackjackRoom
+          .onMessage(conn, json)
+          .catch((err) =>
+            console.error('Error handling message in room:', err),
+          );
+      } else if (message.room === 'chat') {
+        chatRoom
+          .onMessage(conn, json)
+          .catch((err) =>
+            console.error('Error handling message in room:', err),
+          );
+      }
     } catch (err) {
       console.error('Failed to parse message as JSON', unknownMessage);
     }

@@ -67,4 +67,30 @@ function handValue(hand: Card[]): { value: number; isSoft: boolean } {
   return { value: sum, isSoft };
 }
 
-export { createDeck, handValue };
+function getCardName(card: Card): string {
+  const rank = card.slice(0, 1);
+  const suit = card.slice(1);
+  const suitName =
+    suit === 'c'
+      ? 'Clubs'
+      : suit === 'd'
+        ? 'Diamonds'
+        : suit === 'h'
+          ? 'Hearts'
+          : 'Spades';
+  const rankName =
+    rank === 'A'
+      ? 'Ace'
+      : rank === 'T'
+        ? 'Ten'
+        : rank === 'J'
+          ? 'Jack'
+          : rank === 'Q'
+            ? 'Queen'
+            : rank === 'K'
+              ? 'King'
+              : rank;
+  return `${rankName} of ${suitName}`;
+}
+
+export { createDeck, handValue, getCardName };

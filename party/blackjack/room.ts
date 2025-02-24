@@ -15,13 +15,18 @@ import {
 } from './blackjack.types';
 
 import type { ConnectionState } from '..';
-import { createDeck, handValue } from './blackjack.utils';
+import { EnhancedEventEmitter } from '../EnhancedEventEmitter';
+import { createDeck, getCardName, handValue } from './blackjack.utils';
+
+type BlackjackRoomEvents = {
+  'game-log': [log: string];
+};
 
 /*-------------------------------------------------------------------------
   BlackjackRoom Class
   This class encapsulates all game state and logic for Blackjack.
 ---------------------------------------------------------------------------*/
-export class BlackjackRoom {
+export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   readonly id: string;
   room: Party.Room;
   readonly maxPlayers = 5;
@@ -29,6 +34,7 @@ export class BlackjackRoom {
   timers: Timers;
 
   constructor(id: string, room: Party.Room) {
+    super();
     this.id = id;
     this.room = room;
 
@@ -104,6 +110,7 @@ export class BlackjackRoom {
             'Player already in game, Reconnected , Closing Old Socket',
           );
         }
+        this.emit('game-log', `Player ${userId} Reconnected`);
         player.connectionId = connection.id;
       }
     }
@@ -195,6 +202,9 @@ export class BlackjackRoom {
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
+
+    this.emit('game-log', `Player ${userId} joined the Table`);
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -217,6 +227,8 @@ export class BlackjackRoom {
     this.state.playerOrder = Object.values(this.state.players)
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
+
+    this.emit('game-log', `Player ${userId} left the Table`);
 
     this.broadcast({
       room: 'blackjack',
@@ -249,6 +261,8 @@ export class BlackjackRoom {
       })
       .map((player) => player.userId);
 
+    this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -265,6 +279,11 @@ export class BlackjackRoom {
     this.timers.betTimer = setTimeout(() => {
       this.startRound();
     }, BETTING_PERIOD); // 20 seconds
+
+    this.emit(
+      'game-log',
+      `Players can place bets within the next ${BETTING_PERIOD / 1000} seconds`,
+    );
 
     // Notify players that the bet timer has started
     this.broadcast({
@@ -296,6 +315,7 @@ export class BlackjackRoom {
       this.timers.betTimerStart = null;
     }
 
+    this.emit('game-log', 'Betting Period has Ended');
     // Notify players that the bet timer has ended
     this.broadcast({
       room: 'blackjack',
@@ -307,6 +327,7 @@ export class BlackjackRoom {
       this.state.status = 'waiting';
       return;
     }
+
     if (this.state.status !== 'betting' && this.state.status !== 'waiting')
       return;
 
@@ -352,6 +373,12 @@ export class BlackjackRoom {
     this.state.status = 'playing';
 
     this.state.currentPlayerIndex = 0;
+
+    this.emit(
+      'game-log',
+      'Game has Started, Dealer has dealt two cards to each player',
+    );
+
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
@@ -383,7 +410,9 @@ export class BlackjackRoom {
     const card = this.state.deck.pop();
     if (!card) throw new Error('Deck is empty');
     p.hand.push(card);
+    this.emit('game-log', `${p.userId} has hit with ${getCardName(card)}`);
     if (handValue(p.hand).value > 21) {
+      this.emit('game-log', `${p.userId} has busted`);
       p.hasBusted = true;
       p.done = true;
       this.clearPlayerTimer();
@@ -408,6 +437,7 @@ export class BlackjackRoom {
     if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
+    this.emit('game-log', `${p.userId} has chosen to stand`);
     this.clearPlayerTimer();
     this.advanceTurn();
     this.broadcast({
@@ -439,6 +469,8 @@ export class BlackjackRoom {
       });
       this.advanceTurn();
     }, PLAYER_TURN_PERIOD);
+
+    this.emit('game-log', `${currentPlayerId}'s Turn to Hit or Stand`);
 
     // Notify players that the player timer has started
     this.broadcast({
@@ -486,6 +518,7 @@ export class BlackjackRoom {
       }
     }
     // All players have been processed; now it's the dealer's turn.
+    this.emit('game-log', 'All Players have played, Dealers Turn Begins');
     this.state.status = 'dealerTurn';
     this.dealerPlay();
   }
@@ -495,6 +528,7 @@ export class BlackjackRoom {
       const card = this.state.deck.pop();
       if (!card) throw new Error('Deck is empty');
       this.state.dealerHand.push(card);
+      this.emit('game-log', `Dealer draws ${getCardName(card)}`);
     }
     this.endRound();
   }
@@ -516,18 +550,35 @@ export class BlackjackRoom {
 
       if (p.hasBusted) {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
+        this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
         state = 'loss';
         reward = -p.bet; // Lost
       } else if (dealerScore > 21 || playerScore > dealerScore) {
-        console.log(
-          `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
-        );
-        state = 'win';
-        reward = p.bet; // Win (1x bet)
+        // Check for Blackjack (example condition - adjust as needed)
+        if (playerScore === 21 && p.hand.length === 2) {
+          state = 'blackjack';
+          reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
+          console.log(`Player ${pid} wins with Blackjack!`);
+          this.emit('game-log', `Player ${pid} wins with Blackjack!`);
+        } else {
+          console.log(
+            `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
+          );
+          this.emit(
+            'game-log',
+            `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
+          );
+          state = 'win';
+          reward = p.bet; // Win (1x bet)
+        }
       } else if (playerScore === dealerScore) {
-        console.log(`Player ${pid} pushes with ${playerScore}`);
-        state = 'draw';
-        reward = 0; // Draw (no reward)
+        console.log(`Player ${pid} draws with ${playerScore} hence loses`);
+        this.emit(
+          'game-log',
+          `Player ${pid} draws with ${playerScore} hence loses`,
+        );
+        state = 'loss';
+        reward = -p.bet; // Draw (hence lost)
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
@@ -535,13 +586,6 @@ export class BlackjackRoom {
         state = 'loss';
         reward = -p.bet; // Lost
       }
-
-      // Check for Blackjack (example condition - adjust as needed)
-      if (playerScore === 21 && p.hand.length === 2) {
-        state = 'blackjack';
-        reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
-      }
-
       // Update the player's state with the round result
       p.roundResult = { bet: p.bet, reward, state };
     }
@@ -587,6 +631,7 @@ export class BlackjackRoom {
       betTimer: null,
     };
 
+    this.emit('game-log', 'Table is ready for a new game');
     this.broadcast({
       room: 'blackjack',
       type: 'stateUpdate',
