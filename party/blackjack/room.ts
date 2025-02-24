@@ -116,12 +116,30 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
             'Player already in game, Reconnected , Closing Old Socket',
           );
         }
+        player.online = true;
         this.emit('game-log', `Player ${userId} Reconnected`);
         player.connectionId = connection.id;
+        this.sendGameState('broadcast');
       }
     }
 
     this.sendGameState('send', [connection.id]);
+  }
+
+  async onLeave(connection: Party.Connection<ConnectionState>) {
+    const userId = connection.state?.userId;
+    if (userId === undefined) {
+      return;
+    }
+
+    if (userId !== 'guest') {
+      const player = this.getPlayer(userId);
+      if (player) {
+        player.online = false;
+        this.emit('game-log', `Player ${userId} Disconnected`);
+        this.sendGameState('broadcast');
+      }
+    }
   }
 
   async onMessage(
@@ -234,6 +252,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       seat,
       bet: 0,
       hand: [],
+      online: true,
       done: false,
       hasBusted: false,
       isStanding: false,
@@ -641,7 +660,15 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         },
       ])
       .then(() => {
-        this.db.insert(UserRounds).values(userRoundObj);
+        this.db
+          .insert(UserRounds)
+          .values(userRoundObj)
+          .catch((err) => {
+            console.error('UserRounds insert failed', err);
+          });
+      })
+      .catch((err) => {
+        console.error('TableRounds insert failed', err);
       });
 
     this.sendGameState('broadcast');
@@ -665,12 +692,17 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.state.currentPlayerIndex = 0;
     this.state.playerOrder = [];
     for (const player of Object.values(this.state.players)) {
-      player.bet = 0;
-      player.hand = [];
-      player.done = false;
-      player.hasBusted = false;
-      player.isStanding = false;
-      player.roundResult = null;
+      if (player.online === false) {
+        // remove player from map if offline during reset
+        delete this.state.players[player.seat];
+      } else {
+        player.bet = 0;
+        player.hand = [];
+        player.done = false;
+        player.hasBusted = false;
+        player.isStanding = false;
+        player.roundResult = null;
+      }
     }
 
     this.clearRoundEndTimer();

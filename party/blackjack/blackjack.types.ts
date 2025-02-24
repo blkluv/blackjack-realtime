@@ -40,6 +40,7 @@ type PlayerState = {
   bet: number;
   hand: Card[];
   done: boolean;
+  online: boolean;
   hasBusted: boolean;
   isStanding: boolean;
   roundResult: {
