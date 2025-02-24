@@ -27,7 +27,6 @@ const ActionButtons = () => {
     gameState.status === 'playing' &&
     player?.userId === gameState.playerOrder[gameState.currentPlayerIndex];
 
-
   return (
     <div className="flex fixed bottom-4 items-center p-4 border border-zinc-200/10 backdrop-blur-sm rounded-full space-x-4">
       {user.isAuthenticated && (
