@@ -1,3 +1,6 @@
+'use client';
+
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { nanoid } from 'nanoid';
 import type { FC } from 'react';
 // import { motion } from "motion/react";
@@ -9,17 +12,12 @@ import PlayingCard, {
 type TDeckOfCardsProps = {
   cards: string[];
   state?: EPlayingCardState;
-  flipped?: boolean;
   size?: TPlayingCardSize;
 };
 
-const DeckOfCards2: FC<TDeckOfCardsProps> = ({
-  cards,
-  state,
-  flipped = false,
-  size = 'sm',
-}) => {
-  const { value, extra } = getDeckValue(cards, flipped);
+const DeckOfCards2: FC<TDeckOfCardsProps> = ({ cards, state, size = 'sm' }) => {
+  const { value, extra } = getDeckValue(cards);
+  const { width } = useWindowSize();
   const cardSizeMap: { [key in TPlayingCardSize]: number } = {
     sm: 0.8,
     md: 1,
@@ -42,7 +40,7 @@ const DeckOfCards2: FC<TDeckOfCardsProps> = ({
             left: `${i * 40 * cardSize}px`,
             top: `${i * 12 * cardSize}px`,
           }}
-          flipped={i === cards.length - 1 ? flipped : false}
+          // flipped={i === cards.length - 1 ? flipped : false}
           state={state}
           size={size}
         />
@@ -68,11 +66,11 @@ export default DeckOfCards2;
 
 const getDeckValue = (
   cards: string[],
-  flipped: boolean,
 ): {
   value: number;
   extra?: number;
 } => {
+  const flipped = cards[cards.length - 1] === '**';
   let value = 0;
   let aceCount = 0;
   const cardsToConsider = flipped ? cards.slice(0, -1) : cards;

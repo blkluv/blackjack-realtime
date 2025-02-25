@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 type WindowSize = {
   width: number;
@@ -10,34 +10,28 @@ type WindowSize = {
 
 export const useWindowSize = (): WindowSize => {
   const [size, setSize] = useState<WindowSize>({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
-    q2:
-      typeof window !== 'undefined'
-        ? Math.sqrt(window.innerHeight ** 2 + window.innerWidth ** 2)
-        : 0,
-    q:
-      typeof window !== 'undefined'
-        ? window.innerHeight + window.innerWidth
-        : 0,
+    width: 0,
+    height: 0,
+    q: 0,
+    q2: 0,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handleResize = () => {
+    const updateSize = () => {
       setSize({
         width: window.innerWidth,
         height: window.innerHeight,
-        q2: Math.sqrt(window.innerHeight ** 2 + window.innerWidth ** 2),
-        q: window.innerHeight + window.innerWidth,
+        q: window.innerWidth + window.innerHeight,
+        q2: Math.sqrt(window.innerWidth ** 2 + window.innerHeight ** 2),
       });
     };
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    updateSize();
+    window.addEventListener('resize', updateSize);
 
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', updateSize);
   }, []);
 
   return size;

@@ -65,7 +65,6 @@ type TPlayingCardProps = {
   size?: TPlayingCardSize;
   className?: string;
   state?: EPlayingCardState;
-  flipped?: boolean;
   style?: React.CSSProperties;
 };
 
@@ -82,11 +81,11 @@ export enum EPlayingCardState {
 const PlayingCard: FC<TPlayingCardProps> = ({
   card,
   className,
-  size = 'sm',
+  size = 'md',
   state = EPlayingCardState.default,
-  flipped = false,
   style,
 }) => {
+  const flipped = card === '**';
   const rank = card.slice(0, card.length - 1);
   const suit = card.slice(-1);
   const displayRank = rankMap[rank];
@@ -96,7 +95,7 @@ const PlayingCard: FC<TPlayingCardProps> = ({
     md: 1,
     lg: 1.4,
   };
-  const cardSize = cardSizeMap[size];
+  const cardSize = cardSizeMap[size as TPlayingCardSize];
   const colorClass = suitColors[suit];
   return (
     <div

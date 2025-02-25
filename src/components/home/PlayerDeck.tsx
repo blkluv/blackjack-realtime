@@ -8,9 +8,15 @@ type TPlayingCardProps = {
   cards: string[];
   walletAddress: string;
   bet?: number;
+  dealer?: boolean;
 };
 
-const PlayerDeck: FC<TPlayingCardProps> = ({ bet, cards, walletAddress }) => {
+const PlayerDeck: FC<TPlayingCardProps> = ({
+  bet,
+  cards,
+  walletAddress,
+  dealer,
+}) => {
   const { width } = useWindowSize();
   const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
 
@@ -40,10 +46,9 @@ const PlayerDeck: FC<TPlayingCardProps> = ({ bet, cards, walletAddress }) => {
   };
   return (
     <div className="w-full flex justify-center items-center">
-      <div className="flex flex-col items-center relative lg:bottom-4 xl:bottom-12 left-2">
+      <div className="flex flex-col items-center relative lg:bottom-[-14px] xl:bottom-[-48px] left-2">
         <DeckOfCards2
           cards={cards}
-          flipped
           // state={EPlayingCardState.focus}
           size={size}
         />
@@ -59,11 +64,12 @@ const PlayerDeck: FC<TPlayingCardProps> = ({ bet, cards, walletAddress }) => {
               {truncateAddress(walletAddress)}
             </div>
           </div>
-          {!!bet && (
-            <div className="text-[10px] bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-200">
-              <div className="whitespace-nowrap">Bet: {bet}</div>
+
+          <div className="text-[10px] bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-200">
+            <div className="whitespace-nowrap">
+              {dealer ? <div>Dealer</div> : <div>Bet: {bet}</div>}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
