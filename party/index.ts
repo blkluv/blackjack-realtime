@@ -205,10 +205,11 @@ export default class Server implements Party.Server {
 
   onClose(connection: Party.Connection<ConnectionState>): void | Promise<void> {
     console.log(`Connection ${connection.id} closed`);
-    const room = this.roomMap.main;
-    if (!room) {
-      throw new Error('Room not found');
+    const blackjackRoom = this.roomMap.main?.blackjack;
+    if (!blackjackRoom) {
+      throw new Error('Blackjack Room not found');
     }
+    blackjackRoom.onLeave(connection);
     this.cursorRoom.onLeave(connection);
   }
 

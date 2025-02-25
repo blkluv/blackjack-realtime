@@ -18,10 +18,17 @@ export class ChatRoom {
     this.blackjackRoom = blackjackRoom;
 
     blackjackRoom.on('game-log', (log) => {
+      // write a regex to convert walletaddress if inside the log to short form like this log.userId.substring(0, 3)}...${log.userId.substring(log.userId.length - 3)
+
+      const regex = /(\b0x[a-fA-F0-9]{40}\b)/g;
+      const shortForm = log.replace(regex, (match) => {
+        return `${match.substring(0, 3)}...${match.substring(match.length - 3)}`;
+      });
+
       this.broadcast({
         room: 'chat',
         type: 'game-log',
-        data: { message: log },
+        data: { message: shortForm },
       });
     });
   }
