@@ -112,8 +112,8 @@ const GameLog = () => {
                 <>
                   <span className={`font-bold ${getUsernameColor(log.userId)}`}>
                     {' '}
-                    {/* Use log.userId for color */}
-                    {log.userId}: {/* Display userId as username */}
+                    {log.userId}:
+                    {/* {log.userId.length > 6 ? `${log.userId.substring(0, 3)}...${log.userId.substring(log.userId.length - 3)}` : log.userId}:{' '} */}
                   </span>
                   <span className="text-sm">{log.message}</span>
                 </>

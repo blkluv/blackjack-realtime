@@ -121,7 +121,7 @@ const Table = () => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-6 border-dashed border-zinc-400 xl:bottom-4 xl:size-64 rounded-full aspect-square',
+                    'lg:size-48 relative border-5 border-dashed border-[#f7f7f7] xl:bottom-4 xl:size-64 rounded-full aspect-square',
                     // `${FiveColorMap[index]}`,
                     isMe &&
                       `border-4 ${FiveIconMap[index]?.accent} border-dashed`,
