@@ -4,15 +4,15 @@ import { useEffect, useRef } from 'react';
 
 // Define a color palette for usernames - Brighter colors added
 const usernameColors = [
-  'text-red-500',
-  'text-green-500',
   'text-blue-500',
   'text-yellow-500',
   'text-purple-500',
   'text-pink-500',
+  'text-lime-500',
+  'text-red-500',
   'text-orange-500',
   'text-cyan-500',
-  'text-lime-500',
+  'text-green-500',
   'text-rose-500',
   'text-teal-500',
   'text-amber-500',
@@ -56,11 +56,10 @@ const GameLog = () => {
         {chatLogs.map((log) => (
           <div
             key={log.id} // Assuming 'id' is unique in your ChatSchema
-            className={`px-3 py-1 rounded-md w-fit transition-colors duration-100 ${
-              log.isGameLog
-                ? 'text-zinc-400 text-center mx-auto w-full bg-zinc-800 bg-opacity-50' // Slightly different styling for game logs
-                : 'text-zinc-300 hover:bg-zinc-900 hover:bg-opacity-70'
-            }`}
+            className={`px-3 py-1 rounded-md w-fit transition-colors duration-100 ${log.isGameLog
+              ? 'text-zinc-400 text-center mx-auto w-full bg-zinc-800 bg-opacity-50' // Slightly different styling for game logs
+              : 'text-zinc-300 hover:bg-zinc-900 hover:bg-opacity-70'
+              }`}
           >
             {log.isGameLog ? (
               <span className="text-sm">{log.message}</span>
