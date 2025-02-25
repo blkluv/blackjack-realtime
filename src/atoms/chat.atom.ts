@@ -15,8 +15,7 @@ const chatLogsAtom = atom<ChatSchema[]>(FakeChatLogs);
 
 const addChatLogAtom = atom(null, (get, set, chatLog: ChatSchema) => {
   set(chatLogsAtom, (prev) => {
-    prev.push(chatLog);
-    return prev;
+    return [...prev, chatLog];
   });
 });
 
