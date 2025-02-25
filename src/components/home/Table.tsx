@@ -1,29 +1,24 @@
+import { partyKitAtom } from '@/atoms/atom';
+import { timeStateAtom } from '@/atoms/time.atom';
 import PlayerDeck from '@/components/home/PlayerDeck';
 import PlayingCard from '@/components/home/PlayingCard';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { cn, truncateAddress } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
+import { LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-
-const FiveColorMap = [
-  'bg-zinc-800',
-  'bg-zinc-800',
-  'bg-zinc-800',
-  'bg-zinc-800',
-  'bg-zinc-800',
-];
-
-const FiveAccentMap = ['A', 'B', 'C', 'D', 'E'];
+import type { PlayerState } from '../../../party/blackjack/blackjack.types';
 
 const FiveIconMap = [
-  { src: 'fire.png', accent: 'border-[#FF6C0A]' },
-  { src: 'water.png', accent: 'border-[#0593FF]' },
-  { src: 'wind.png', accent: 'border-[#00FFD5]' },
-  { src: 'lightning.png', accent: 'border-[#EFFF00]' },
-  { src: 'leaf.png', accent: 'border-[#41A851]' },
+  { src: 'fire.png', border: 'border-[#FF6C0A]', text: 'text-[#FF6C0A]' },
+  { src: 'water.png', border: 'border-[#0593FF]', text: 'text-[#0593FF]' },
+  { src: 'wind.png', border: 'border-[#00FFD5]', text: 'text-[#00FFD5]' },
+  { src: 'lightning.png', border: 'border-[#EFFF00]', text: 'text-[#EFFF00]' },
+  { src: 'leaf.png', border: 'border-[#41A851]', text: 'text-[#41A851]' },
 ];
 
 const Table = () => {
@@ -31,7 +26,8 @@ const Table = () => {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const { width } = useWindowSize();
-  const { mySeat, blackjackSend, gameState } = useBlackjack();
+  const { mySeat, gameState } = useBlackjack();
+  const { state, userId } = useAtomValue(timeStateAtom);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -58,10 +54,18 @@ const Table = () => {
   }, []);
 
   return (
-    <div className="h-full w-full p-10 rounded-full bg-amber-950">
+    <div className="h-full w-full outline-4 outline-zinc-950 p-10 rounded-full bg-amber-950 relative">
+      <Image
+        src={'/wood.png'}
+        alt=""
+        layout="fill"
+        objectFit="cover"
+        quality={100}
+        className="brightness-[35%] rounded-full"
+      />
       <div
         ref={containerRef}
-        className="w-full h-full bg-zinc-950 outline-4 outline-amber-500 flex items-center justify-center rounded-full border border-zinc-800 relative"
+        className="w-full h-full bg-zinc-950 outline-4 outline-amber-800 flex items-center justify-center rounded-full border border-zinc-800 relative"
       >
         <Image
           src={'/bg.png'}
@@ -96,10 +100,12 @@ const Table = () => {
 
           const isMe = mySeat === index + 1;
           const player = gameState.players[index + 1];
+          // const isCurrentTurn =
+          //   gameState.status === "playing" &&
+          //   player?.userId ===
+          //     gameState.playerOrder[gameState.currentPlayerIndex];
           const isCurrentTurn =
-            gameState.status === 'playing' &&
-            player?.userId ===
-              gameState.playerOrder[gameState.currentPlayerIndex];
+            state === 'playerTimerStart' && userId === player?.userId;
           const cards = player?.hand;
           const isJoinGame = mySeat === -1 && !player;
 
@@ -121,42 +127,23 @@ const Table = () => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-6 border-dashed border-zinc-400 xl:bottom-4 xl:size-64 rounded-full aspect-square',
+                    'lg:size-48 relative border-6 border-dashed border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square',
                     // `${FiveColorMap[index]}`,
-                    isMe &&
-                      `border-4 ${FiveIconMap[index]?.accent} border-dashed`,
+                    player &&
+                      `border-6 ${FiveIconMap[index]?.border} border-dashed`,
+                    isCurrentTurn &&
+                      `border-6 ${FiveIconMap[index]?.border} border-dashed animate-pulse`,
                   )}
                 >
                   {isJoinGame ? (
                     <JoinGame index={index} />
                   ) : (
-                    <div className="w-full relative rounded-full space-x-2 h-full flex items-center justify-center">
-                      <div className="lg:w-16 xl:w-24 flex flex-col space-y-2">
-                        <Image
-                          src={`/${FiveIconMap[index]?.src}`}
-                          alt=""
-                          height={500}
-                          width={500}
-                          className={cn('size-full', {
-                            'grayscale-100': !player,
-                          })}
-                        />
-                        {player && cards?.length === 0 && (
-                          <div className="text-xs font-mono text-center text-zinc-200">
-                            {truncateAddress(player.userId)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="lg:absolute top-0 left-0 w-full">
-                        {cards && cards.length > 0 && (
-                          <PlayerDeck
-                            cards={cards}
-                            bet={player.bet}
-                            walletAddress={player.userId}
-                          />
-                        )}
-                      </div>
-                    </div>
+                    <InGame
+                      index={index}
+                      player={player}
+                      cards={cards}
+                      isMe={isMe}
+                    />
                   )}
                 </div>
               </span>
@@ -260,6 +247,114 @@ const JoinGame = ({ index }: { index: number }) => {
           </motion.div>
         )}
       </AnimatePresence>
+    </motion.div>
+  );
+};
+
+const InGame = ({
+  index,
+  player,
+  cards,
+  isMe,
+}: {
+  index: number;
+  player?: PlayerState;
+  cards?: string[];
+  isMe: boolean;
+}) => {
+  const [isHovering, setIsHovering] = useState(false);
+  const party = useAtomValue(partyKitAtom);
+  const handleExit = () => {
+    // TODO: leave game
+    if (!party) return;
+    party.close();
+    console.log(party.readyState);
+    console.log('closing');
+  };
+  return (
+    <motion.div
+      onHoverStart={() => setIsHovering(true)}
+      onHoverEnd={() => setIsHovering(false)}
+      className={cn(
+        'w-full relative rounded-full space-x-2 h-full flex items-center justify-center',
+      )}
+    >
+      <div className="lg:w-16 xl:w-24 flex flex-col space-y-3 w-full">
+        <div className="flex space-x-2 w-full">
+          <AnimatePresence mode="popLayout">
+            {(!isHovering || !isMe) && (
+              <motion.div
+                key="icons"
+                initial={{
+                  x: 0,
+                }}
+                animate={{
+                  x: 0,
+                }}
+                exit={{
+                  x: isMe ? -30 : 0,
+                  opacity: isMe ? 0 : 1,
+                }}
+                // transition={{
+                //   duration: 0.6,
+                // }}
+              >
+                <Image
+                  src={`/${FiveIconMap[index]?.src}`}
+                  alt=""
+                  height={500}
+                  width={500}
+                  className={cn('size-full', {
+                    'grayscale-100': !player,
+                  })}
+                />
+              </motion.div>
+            )}
+
+            {isHovering && isMe && (
+              <motion.div
+                layout
+                key={'join'}
+                initial={{
+                  x: 30,
+                }}
+                animate={{
+                  x: 0,
+                }}
+                exit={{
+                  x: 30,
+                  opacity: 0,
+                }}
+                onClick={handleExit}
+                className="flex space-x-2 cursor-pointer justify-center w-full lg:my-4 xl:my-5.5 items-center"
+              >
+                {/* <div className="whitespace-nowrap text-center">Leave</div> */}
+                <LogOut
+                  className={cn(
+                    FiveIconMap[index]?.text,
+                    'lg:size-8 xl:size-13',
+                  )}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {player && cards?.length === 0 && (
+          <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+            {isMe ? 'You' : truncateAddress(player.userId)}
+          </div>
+        )}
+      </div>
+      <div className="lg:absolute top-0 left-0 w-full">
+        {player && cards && cards.length > 0 && (
+          <PlayerDeck
+            cards={cards}
+            bet={player.bet}
+            walletAddress={player.userId}
+          />
+        )}
+      </div>
     </motion.div>
   );
 };

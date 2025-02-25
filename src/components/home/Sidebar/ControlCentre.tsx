@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { motion } from 'motion/react';
 import { type FC, useEffect, useState } from 'react';
+import type { PlayerState } from '../../../../party/blackjack/blackjack.types';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 // import { cn } from "@/lib/utils";
@@ -16,29 +17,31 @@ const ControlCentre = () => {
   const { user } = useUser();
   const { blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState('');
+  const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
+  const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
 
-  const getCurrentPlayer = () => {
-    if (!user.walletAddress) return;
-    for (const player of Object.values(gameState.players)) {
-      if (player.userId === user.walletAddress) {
-        return player;
-      }
-    }
-  };
-
-  const player = getCurrentPlayer();
+  // const player = getCurrentPlayer();
 
   const isCurrentTurn =
-    gameState.status === 'playing' &&
-    player?.userId === gameState.playerOrder[gameState.currentPlayerIndex];
+    state === 'playerTimerStart' && userId === player?.userId;
 
   const isHitOrStand =
     player && gameState.status === 'playing' && player.bet > 0;
 
   const isBet =
     player &&
-    (gameState.status === 'betting' || gameState.status === 'waiting') &&
-    Number(betAmount) > 0;
+    (gameState.status === 'betting' || gameState.status === 'waiting');
+  useEffect(() => {
+    const getCurrentPlayer = () => {
+      if (!user.walletAddress) return;
+      for (const player of Object.values(gameState.players)) {
+        if (player.userId === user.walletAddress) {
+          return player;
+        }
+      }
+    };
+    setPlayer(getCurrentPlayer());
+  }, [gameState, betAmount, user]);
 
   return (
     <div className="flex flex-col space-y-4 py-4 border-b border-zinc-900">
@@ -93,6 +96,7 @@ const ControlCentre = () => {
         <BatteryButton
           text="Stand"
           disabled={!isHitOrStand}
+          animate={isHitOrStand && isCurrentTurn}
           icon={<Hand />}
           className="bg-red-900 text-zinc-100"
           onClick={() => {
@@ -119,8 +123,9 @@ const ControlCentre = () => {
       <div className="px-4">
         <BatteryButton
           text="Bet"
-          disabled={!isBet}
+          disabled={!isBet || !(Number(betAmount) > 0)}
           icon={<HandCoins />}
+          animate={isBet}
           className="text-zinc-900"
           onClick={() => {
             if (!player || player.bet !== 0) return;
@@ -167,7 +172,7 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
 
   useEffect(() => {
     const calculateProgress = () => {
-      if (disabled || !animate) {
+      if (!animate) {
         setProgress(0);
         return;
       }
@@ -210,8 +215,9 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
         disabled={disabled}
         onClick={onClick}
         className={cn(
-          'cursor-pointer z-10 bg-transparent left-0 absolute top-0 space-x-0 w-full rounded-full',
+          'cursor-pointer z-10 left-0 absolute top-0 space-x-0 w-full rounded-full',
           className,
+          'bg-transparent',
         )}
       >
         <div className="font-semibold">{text}</div>
