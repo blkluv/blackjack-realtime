@@ -49,7 +49,7 @@ export class ChatRoom {
     try {
       const { type, data } = ChatMessageSchema.parse(unknownData);
       const userId = connection.state?.userId;
-
+      console.log(data);
       //guests are not allowed to send messages
       if (!userId || userId === 'guest') {
         return;

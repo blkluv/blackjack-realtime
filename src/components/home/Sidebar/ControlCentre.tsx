@@ -1,5 +1,8 @@
+import { timeStateAtom } from '@/atoms/time.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useUser } from '@/hooks/useUser';
+import { cn } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { motion } from 'motion/react';
 import { type FC, useEffect, useState } from 'react';
@@ -22,8 +25,6 @@ const ControlCentre = () => {
       }
     }
   };
-
-  const startTime = 1740444055106;
 
   const player = getCurrentPlayer();
 
@@ -65,6 +66,9 @@ const ControlCentre = () => {
       <div className="flex px-4 space-x-4">
         <BatteryButton
           text="Hit"
+          animate={false}
+          disabled={!isHitOrStand}
+          className="bg-emerald-900 text-zinc-100"
           icon={<HandHelping />}
           onClick={() => {
             blackjackSend({
@@ -88,7 +92,9 @@ const ControlCentre = () => {
         </Button> */}
         <BatteryButton
           text="Stand"
+          disabled={!isHitOrStand}
           icon={<Hand />}
+          className="bg-red-900 text-zinc-100"
           onClick={() => {
             blackjackSend({
               type: 'stand',
@@ -113,7 +119,9 @@ const ControlCentre = () => {
       <div className="px-4">
         <BatteryButton
           text="Bet"
+          disabled={!isBet}
           icon={<HandCoins />}
+          className="text-zinc-900"
           onClick={() => {
             if (!player || player.bet !== 0) return;
             if (Number(betAmount) > 0) {
@@ -139,54 +147,74 @@ type TBatteryButtonProps = {
   text: string;
   icon: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
+  animate?: boolean;
+  className?: string;
 };
 
-const BatteryButton: FC<TBatteryButtonProps> = ({ text, icon, onClick }) => {
+const BatteryButton: FC<TBatteryButtonProps> = ({
+  text,
+  icon,
+  onClick,
+  disabled,
+  animate = true,
+  className,
+}) => {
   const [progress, setProgress] = useState(1);
-  const [startTime] = useState(Date.now());
+  const { startedAt: startTime, state } = useAtomValue(timeStateAtom);
+  // const [startTime] = useState(Date.now());
   const duration = 10000;
 
   useEffect(() => {
-    // Calculate how much time has passed since component mounted
     const calculateProgress = () => {
+      if (disabled || !animate) {
+        setProgress(0);
+        return;
+      }
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
       const newProgress = Math.min(1, elapsed / duration);
-      setProgress(1 - newProgress); // Reverse for discharge effect (1 to 0)
+      setProgress(1 - newProgress);
     };
 
-    // Initial calculation
     calculateProgress();
 
-    // Update progress every 50ms for smooth animation
-    const intervalId = setInterval(calculateProgress, 50);
+    const intervalId = setInterval(calculateProgress, 50); //10ms
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [startTime]);
+  }, [startTime, disabled]);
 
   return (
     <div className="relative w-full">
-      {/* Battery Container */}
-      <div className="w-full h-9 bg-zinc-200 rounded-full relative overflow-hidden">
-        {/* Animated Battery Level */}
+      <div
+        className={cn(
+          'w-full h-9 bg-zinc-200 rounded-full relative overflow-hidden',
+          disabled && 'cursor-not-allowed bg-zinc-400',
+          className,
+        )}
+      >
         <motion.div
-          initial={{ scaleX: 1 }}
+          initial={{ scaleX: 0 }}
           animate={{ scaleX: progress }}
-          className="w-full h-full origin-left bg-green-500"
+          transition={{
+            ease: 'linear',
+          }}
+          className="w-full h-full origin-left bg-yellow-500"
         />
-
-        {/* Battery Tip */}
         <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-zinc-300 rounded-r-sm -mr-1" />
       </div>
 
-      {/* Button Overlay */}
       <Button
+        disabled={disabled}
         onClick={onClick}
-        className="cursor-pointer z-10 bg-transparent left-0 text-zinc-950 absolute top-0 space-x-0 w-full rounded-full"
+        className={cn(
+          'cursor-pointer z-10 bg-transparent left-0 absolute top-0 space-x-0 w-full rounded-full',
+          className,
+        )}
       >
-        <div className="font-semibold text-zinc-900">{text}</div>
+        <div className="font-semibold">{text}</div>
         {icon}
       </Button>
     </div>

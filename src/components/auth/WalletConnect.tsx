@@ -12,6 +12,7 @@ import {
   useDisconnect,
 } from '@reown/appkit/react';
 import { LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import { Button } from '../ui/button';
 
 const WalletConnect = () => {
@@ -69,7 +70,10 @@ const WalletConnect = () => {
             </div>
             <button
               type="button"
-              onClick={() => disconnect()}
+              onClick={() => {
+                disconnect();
+                signOut({ redirect: false });
+              }}
               className="flex justify-between items-center p-4 hover:bg-zinc-950/50 cursor-pointer"
             >
               <div>Disconnect</div>

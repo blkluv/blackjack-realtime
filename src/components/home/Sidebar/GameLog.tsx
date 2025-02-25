@@ -62,7 +62,7 @@ const GameLog = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-zinc-950">
+    <div className="flex flex-col h-full overflow-hidden">
       {showScrollButton && ( // Button is now outside the scrollable div, directly inside the main div
         <button
           type="button"

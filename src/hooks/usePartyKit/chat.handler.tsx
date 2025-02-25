@@ -3,12 +3,14 @@ import { addChatLogAtom, generateRandomId } from '@/atoms/chat.atom';
 import { useSetAtom } from 'jotai';
 import type { TPartyKitServerMessage } from '../../../party';
 export const useChatHandler = () => {
+  const addChatLog = useSetAtom(addChatLogAtom);
+
   const chatHandler = (message: TPartyKitServerMessage) => {
-    const addChatLog = useSetAtom(addChatLogAtom);
     const { room, type, data } = message;
 
     if (room === 'chat') {
       if (type === 'game-log') {
+        console.log(data);
         addChatLog({
           id: generateRandomId(),
           isGameLog: true,
@@ -17,6 +19,7 @@ export const useChatHandler = () => {
           role: 'viewer',
         });
       } else if (type === 'user-message') {
+        console.log(data);
         addChatLog({
           id: generateRandomId(),
           isGameLog: false,
