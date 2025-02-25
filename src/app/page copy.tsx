@@ -110,10 +110,10 @@ const EmtpyDeck = () => {
   const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
   return (
     <div className="flex rotate-90 flex-col">
-      <PlayingCard card="**" flipped />
+      <PlayingCard card="**" />
       <PlayingCard
         card="**"
-        flipped
+    
         size={size}
         className="absolute bottom-4 left-4 hidden xl:block"
       />
