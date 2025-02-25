@@ -113,7 +113,6 @@ const EmtpyDeck = () => {
       <PlayingCard card="**" />
       <PlayingCard
         card="**"
-    
         size={size}
         className="absolute bottom-4 left-4 hidden xl:block"
       />
