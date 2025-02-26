@@ -1,4 +1,3 @@
-import { partyKitAtom } from '@/atoms/atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import PlayerDeck from '@/components/home/PlayerDeck';
 import PlayingCard from '@/components/home/PlayingCard';
@@ -263,12 +262,10 @@ const InGame = ({
   isMe: boolean;
 }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const party = useAtomValue(partyKitAtom);
+  const { blackjackSend } = useBlackjack();
+
   const handleExit = () => {
-    // TODO: leave game
-    if (!party) return;
-    party.close();
-    console.log(party.readyState);
+    blackjackSend({ type: 'leave', data: {} });
     console.log('closing');
   };
   return (
