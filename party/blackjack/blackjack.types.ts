@@ -102,12 +102,18 @@ const StandSchema = z.object({
   data: z.object({}),
 });
 
+const LeaveSchema = z.object({
+  type: z.literal('leave'),
+  data: z.object({}),
+});
+
 const BlackjackMessageSchema = z.union([
   PlayerJoinSchema,
   PlaceBetSchema,
   StartRoundSchema,
   HitSchema,
   StandSchema,
+  LeaveSchema,
 ]);
 type TBlackjackMessageSchema = z.infer<typeof BlackjackMessageSchema>;
 

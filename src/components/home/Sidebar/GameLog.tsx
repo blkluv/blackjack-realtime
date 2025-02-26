@@ -56,10 +56,11 @@ const GameLog = () => {
         {chatLogs.map((log) => (
           <div
             key={log.id} // Assuming 'id' is unique in your ChatSchema
-            className={`px-3 py-1 rounded-md w-fit transition-colors duration-100 ${log.isGameLog
-              ? 'text-zinc-400 text-center mx-auto w-full bg-zinc-800 bg-opacity-50' // Slightly different styling for game logs
-              : 'text-zinc-300 hover:bg-zinc-900 hover:bg-opacity-70'
-              }`}
+            className={`px-3 py-1 rounded-md w-fit transition-colors duration-100 ${
+              log.isGameLog
+                ? 'text-zinc-400 text-center mx-auto w-full bg-zinc-800 bg-opacity-50' // Slightly different styling for game logs
+                : 'text-zinc-300 hover:bg-zinc-900 hover:bg-opacity-70'
+            }`}
           >
             {log.isGameLog ? (
               <span className="text-sm">{log.message}</span>

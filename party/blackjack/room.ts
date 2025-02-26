@@ -201,6 +201,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         this.playerStand(userId);
         break;
       }
+      case 'leave': {
+        this.playerLeave(userId);
+        break;
+      }
       default:
         console.warn(`Unknown message type: ${type}`);
     }
@@ -299,6 +303,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   playerLeave(userId: `0x${string}`): void {
     const seat = this.getSeat(userId);
     if (!seat) return;
+
+    if (this.state.status === 'playing' && this.state.players[seat]) {
+      this.state.players[seat].online = false;
+      this.emit('game-log', `Player ${userId} left the Table`);
+      this.sendGameState('broadcast');
+      return;
+    }
 
     delete this.state.players[seat];
 
