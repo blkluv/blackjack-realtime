@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import type { TChatMessageSchema } from '../../party/chat/chat.types';
-import { FakeChatLogs } from './fakeChats';
+// import { FakeChatLogs } from './fakeChats';
 type ChatSend = (message: TChatMessageSchema) => void;
 
 type ChatSchema = {
@@ -11,7 +11,7 @@ type ChatSchema = {
   role: 'player' | 'viewer';
 };
 
-const chatLogsAtom = atom<ChatSchema[]>(FakeChatLogs);
+const chatLogsAtom = atom<ChatSchema[]>([]);
 
 const addChatLogAtom = atom(null, (get, set, chatLog: ChatSchema) => {
   set(chatLogsAtom, (prev) => {
@@ -26,7 +26,6 @@ function generateRandomId(): string {
 export {
   addChatLogAtom,
   chatLogsAtom,
-  FakeChatLogs,
   generateRandomId,
   type ChatSchema,
   type ChatSend,
