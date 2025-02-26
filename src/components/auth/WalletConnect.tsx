@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { useUser } from '@/hooks/useUser';
+} from "@/components/ui/popover";
+import { useUser } from "@/hooks/useUser";
 import {
   useAppKit,
   useAppKitAccount,
   useDisconnect,
-} from '@reown/appkit/react';
-import { LogOut } from 'lucide-react';
-import { signOut } from 'next-auth/react';
-import { Button } from '../ui/button';
+} from "@reown/appkit/react";
+import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { Button } from "../ui/button";
 
 const WalletConnect = () => {
   const fakeBalance = 75.65124;
@@ -29,7 +29,7 @@ const WalletConnect = () => {
           onClick={() => (!user.isAuthenticated ? open() : null)}
           className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
         >
-          {user.walletAddress ? `Bal: ${fakeBalance}` : 'Connect Wallet'}
+          {user.walletAddress ? `Bal: ${fakeBalance}` : "Connect Wallet"}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (
