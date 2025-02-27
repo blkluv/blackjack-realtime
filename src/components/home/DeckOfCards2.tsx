@@ -79,24 +79,19 @@ const getDeckValue = (
     const rank = card.slice(0, card.length - 1);
     if (rank === 'A') {
       aceCount++;
+      value += 11; // Initially count Ace as 11
     } else if (['J', 'Q', 'K', 'T'].includes(rank)) {
       value += 10;
-    } else {
+    } else if (rank !== '') {
       value += Number.parseInt(rank);
     }
   }
 
-  let extra = 0;
-  if (aceCount > 0) {
-    const minValue = value + aceCount;
-    const maxValue = value + aceCount * 11;
-    if (maxValue <= 21) {
-      value = maxValue;
-    } else {
-      value = minValue;
-      extra = maxValue - 21;
-    }
+  // Adjust for Aces if total value is over 21
+  while (value > 21 && aceCount > 0) {
+    value -= 10; // Convert an Ace from 11 to 1
+    aceCount--;
   }
 
-  return { value, extra };
+  return { value };
 };
