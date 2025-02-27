@@ -1,8 +1,8 @@
-import { useWindowSize } from "@/hooks/useWindowSize";
-import { truncateAddress } from "@/lib/utils";
-import type { FC } from "react";
-import DeckOfCards2 from "./DeckOfCards2";
-import type { EPlayingCardState, TPlayingCardSize } from "./PlayingCard";
+import { useWindowSize } from '@/hooks/useWindowSize';
+import { truncateAddress } from '@/lib/utils';
+import type { FC } from 'react';
+import DeckOfCards2 from './DeckOfCards2';
+import type { EPlayingCardState, TPlayingCardSize } from './PlayingCard';
 
 type TPlayingCardProps = {
   cards: string[];
@@ -10,6 +10,7 @@ type TPlayingCardProps = {
   bet?: number;
   dealer?: boolean;
   state?: EPlayingCardState;
+  index: number;
 };
 
 const PlayerDeck: FC<TPlayingCardProps> = ({
@@ -18,9 +19,10 @@ const PlayerDeck: FC<TPlayingCardProps> = ({
   walletAddress,
   dealer,
   state,
+  index,
 }) => {
   const { width } = useWindowSize();
-  const size: TPlayingCardSize = width < 1280 ? "sm" : "md";
+  const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
 
   const calculate = (): {
     bottom: string;
@@ -29,11 +31,11 @@ const PlayerDeck: FC<TPlayingCardProps> = ({
     let bottom = 0;
     let left = 0;
     switch (size) {
-      case "sm":
+      case 'sm':
         bottom = -16 * cards.length - 8;
         left = -1 * cards.length;
         break;
-      case "md":
+      case 'md':
         bottom = -14 * cards.length - 12;
         left = -10 * cards.length - 12;
         break;
@@ -49,7 +51,12 @@ const PlayerDeck: FC<TPlayingCardProps> = ({
   return (
     <div className="w-full flex justify-center items-center">
       <div className="flex flex-col items-center relative lg:bottom-[-14px] xl:bottom-[-48px] left-2">
-        <DeckOfCards2 cards={cards} state={state} size={size} />
+        <DeckOfCards2
+          cards={cards}
+          state={state}
+          size={size}
+          extraDelay={index * 0.6 * cards.length}
+        />
         <div
           className="flex xl:space-x-2 xl:flex-row absolute bottom-0 flex-col space-y-2 xl:space-y-0 items-center"
           style={{

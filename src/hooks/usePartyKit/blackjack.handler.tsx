@@ -1,7 +1,7 @@
-import { setGameStateAtom } from "@/atoms/blackjack.atom";
-import { timeStateAtom } from "@/atoms/time.atom";
-import { useSetAtom } from "jotai";
-import type { TPartyKitServerMessage } from "../../../party";
+import { setGameStateAtom } from '@/atoms/blackjack.atom';
+import { timeStateAtom } from '@/atoms/time.atom';
+import { useSetAtom } from 'jotai';
+import type { TPartyKitServerMessage } from '../../../party';
 
 export const useBlackjackHandler = () => {
   const setGameState = useSetAtom(setGameStateAtom);
@@ -9,27 +9,27 @@ export const useBlackjackHandler = () => {
   const blackjackHandler = (message: TPartyKitServerMessage) => {
     const { room, type, data } = message;
 
-    if (room === "blackjack") {
-      if (type === "stateUpdate") {
+    if (room === 'blackjack') {
+      if (type === 'stateUpdate') {
         setGameState(data.state);
-      } else if (type === "betTimerStart") {
-        setTimeState({ startedAt: data.startedAt, state: "betTimerStart" });
-        console.log("bet timer start");
-      } else if (type === "betTimerEnd") {
+      } else if (type === 'betTimerStart') {
+        setTimeState({ startedAt: data.startedAt, state: 'betTimerStart' });
+        console.log('bet timer start');
+      } else if (type === 'betTimerEnd') {
         // setTimeState({ startedAt: data.endedAt, state: "betTimerEnd" });
-        console.log("bet timer end");
-      } else if (type === "playerTimerStart") {
+        console.log('bet timer end');
+      } else if (type === 'playerTimerStart') {
         setTimeState({
           startedAt: data.startedAt,
-          state: "playerTimerStart",
+          state: 'playerTimerStart',
           userId: data.userId,
         });
-        console.log("player turn start", data);
-      } else if (type === "playerTimerEnd") {
-        console.log("player turn end", data);
+        console.log('player turn start', data);
+      } else if (type === 'playerTimerEnd') {
+        console.log('player turn end', data);
         setTimeState({
           startedAt: data.endedAt,
-          state: "idle",
+          state: 'idle',
           userId: undefined,
         });
       }
