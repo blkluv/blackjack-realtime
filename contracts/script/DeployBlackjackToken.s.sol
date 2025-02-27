@@ -6,14 +6,21 @@ import "../src/BlackjackToken.sol";
 
 contract DeployBlackjackToken is Script {
     function run() external returns (BlackjackToken) {
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address initialHolder = vm.envAddress("INITIAL_HOLDER");
 
-        // Deployment parameters - Customize these as needed
+        // If INITIAL_HOLDER isn't set, use the deployer address
+        if (initialHolder == address(0)) {
+            initialHolder = vm.addr(deployerPrivateKey);
+        }
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deployment parameters
         string memory tokenName = "Blackjack Token";
         string memory tokenSymbol = "BJT";
         uint8 tokenDecimals = 18;
-        uint256 initialSupply = 1000000; // Example: 1 Million initial supply
-        address initialHolder = vm.addr(1); // Example: Deployer address as initial holder
+        uint256 initialSupply = 1000000; // 1 Million
 
         BlackjackToken blackjackToken = new BlackjackToken(
             tokenName,
@@ -25,8 +32,8 @@ contract DeployBlackjackToken is Script {
 
         vm.stopBroadcast();
 
-        // Optional: Print the deployed contract address
         console.log("BlackjackToken deployed to:", address(blackjackToken));
+        console.log("Initial tokens sent to:", initialHolder);
 
         return blackjackToken;
     }

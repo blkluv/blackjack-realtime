@@ -1,9 +1,10 @@
 import { client } from '@/lib/client';
-import { useAppKitAccount } from '@reown/appkit/react';
+import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { huddle01Testnet } from 'viem/chains';
 
 type User = {
   walletAddress?: string;
@@ -24,9 +25,9 @@ const setUserAtom = atom(null, (get, set, user: User) => {
 // set/update single entry in map
 export const useUser = () => {
   const { status, address } = useAppKitAccount();
+  const { switchNetwork } = useAppKitNetwork();
   const { data: session } = useSession();
   const user = useAtomValue(userAtom);
-
   const updateUser = useSetAtom(setUserAtom);
 
   const fetchWsToken = async () => {
@@ -54,6 +55,8 @@ export const useUser = () => {
   };
 
   useEffect(() => {
+    switchNetwork(huddle01Testnet);
+
     if (!user.isAuthenticated && status === 'connected' && session?.address) {
       fetchWsToken()
         .then((token) => {

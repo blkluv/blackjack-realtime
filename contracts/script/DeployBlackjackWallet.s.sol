@@ -10,12 +10,12 @@ contract DeployBlackjackWallet is Script {
         vm.startBroadcast();
 
         // Deploy BlackjackToken first (if you haven't already)
-        DeployBlackjackToken deployTokenScript = new DeployBlackjackToken();
-        BlackjackToken gameToken = deployTokenScript.run();
-        address tokenAddress = address(gameToken); // Get the deployed token address
+        // DeployBlackjackToken deployTokenScript = new DeployBlackjackToken();
+        // BlackjackToken gameToken = deployTokenScript.run();
+        address tokenAddress = vm.envAddress("TOKEN_ADDRESS");
 
         // Deployment parameters for BlackjackWallet - Customize these as needed
-        address gameOperatorAddress = vm.addr(2); // Example: Use a different address for game operator
+        address gameOperatorAddress = vm.envAddress("GAME_OPERATOR_ADDRESS"); // Example: Use a different address for game operator
 
         BlackjackWallet blackjackWallet = new BlackjackWallet(
             tokenAddress,

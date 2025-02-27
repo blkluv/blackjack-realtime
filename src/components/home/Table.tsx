@@ -282,7 +282,6 @@ const EmtpyDeck = () => {
 const Dealer = () => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
-  console.log(gameState.playerOrder);
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
       <EmtpyDeck />

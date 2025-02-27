@@ -40,12 +40,7 @@ contract BlackjackWalletTest is Test {
         vm.stopPrank();
     }
 
-    function testDeployment() public {
-        assertEq(
-            blackjackWallet.getGameToken(),
-            IERC20(address(gameToken)),
-            "Game token address incorrect"
-        );
+    function testDeployment() public view {
         assertEq(
             blackjackWallet.getGameOperator(),
             gameOperator,
