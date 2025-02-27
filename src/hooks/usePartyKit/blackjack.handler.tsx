@@ -26,12 +26,12 @@ export const useBlackjackHandler = () => {
         });
         console.log('player turn start', data);
       } else if (type === 'playerTimerEnd') {
+        console.log('player turn end', data);
         setTimeState({
           startedAt: data.endedAt,
-          state: 'playerTimerEnd',
+          state: 'idle',
           userId: undefined,
         });
-        console.log('player turn end', data);
       }
     }
   };

@@ -1,6 +1,7 @@
 import { Providers } from '@/components/providers';
 import type { Metadata } from 'next';
 import './globals.css';
+import Sound from '@/components/home/Utils/sound';
 import { ThemeProvider } from '@/components/ui/theme';
 import { Inter } from 'next/font/google';
 
@@ -21,7 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" forcedTheme="dark">
-          <Providers>{children}</Providers>
+          <Providers>
+            {children}
+            <Sound />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

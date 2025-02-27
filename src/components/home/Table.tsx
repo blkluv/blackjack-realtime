@@ -1,23 +1,86 @@
+import { deckPositionAtom } from '@/atoms/deck.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import PlayerDeck from '@/components/home/PlayerDeck';
-import PlayingCard from '@/components/home/PlayingCard';
+import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
+import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
 import { cn, truncateAddress } from '@/lib/utils';
-import { useAtomValue } from 'jotai';
-import { LogOut } from 'lucide-react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { DoorOpen } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import type { PlayerState } from '../../../party/blackjack/blackjack.types';
+import type {
+  PlayerState,
+  RoundResultState,
+} from '../../../party/blackjack/blackjack.types';
 
 const FiveIconMap = [
-  { src: 'fire.png', border: 'border-[#FF6C0A]', text: 'text-[#FF6C0A]' },
-  { src: 'water.png', border: 'border-[#0593FF]', text: 'text-[#0593FF]' },
-  { src: 'wind.png', border: 'border-[#00FFD5]', text: 'text-[#00FFD5]' },
-  { src: 'lightning.png', border: 'border-[#EFFF00]', text: 'text-[#EFFF00]' },
-  { src: 'leaf.png', border: 'border-[#41A851]', text: 'text-[#41A851]' },
+  {
+    src: 'fire.png',
+    border: 'border-[#FF6C0A]',
+    text: 'text-[#FF6C0A]',
+    bg: 'bg-[#FF6C0A]',
+  },
+  {
+    src: 'water.png',
+    border: 'border-[#0593FF]',
+    text: 'text-[#0593FF]',
+    bg: 'bg-[#0593FF]',
+  },
+  {
+    src: 'wind.png',
+    border: 'border-[#00FFD5]',
+    text: 'text-[#00FFD5]',
+    bg: 'bg-[#00FFD5]',
+  },
+  {
+    src: 'lightning.png',
+    border: 'border-[#EFFF00]',
+    text: 'text-[#EFFF00]',
+    bg: 'bg-[#EFFF00]',
+  },
+  {
+    src: 'leaf.png',
+    border: 'border-[#41A851]',
+    text: 'text-[#41A851]',
+    bg: 'bg-[#41A851]',
+  },
+];
+
+const GodsMap = [
+  {
+    src: '/images/gods/1.png',
+    border: 'border-[#C63F3D]',
+    text: 'text-[#C63F3D]',
+    bg: 'bg-[#C63F3D]',
+  },
+  {
+    src: '/images/gods/2.png',
+    border: 'border-[#3CA89C]',
+    text: 'text-[#3CA89C]',
+    bg: 'bg-[#3CA89C]',
+  },
+  {
+    src: '/images/gods/3.png',
+    border: 'border-[#6251C8]',
+    text: 'text-[#6251C8]',
+    bg: 'bg-[#6251C8]',
+  },
+  {
+    src: '/images/gods/4.png',
+    border: 'border-[#CE4471]',
+    text: 'text-[#CE4471]',
+    bg: 'bg-[#CE4471]',
+  },
+  {
+    src: '/images/gods/5.png',
+    border: 'border-[#FD994E]',
+    text: 'text-[#FD994E]',
+    bg: 'bg-[#FD994E]',
+  },
 ];
 
 const Table = () => {
@@ -64,7 +127,7 @@ const Table = () => {
       />
       <div
         ref={containerRef}
-        className="w-full h-full bg-zinc-950 outline-4 outline-amber-800 flex items-center justify-center rounded-full border border-zinc-800 relative"
+        className="w-full h-full bg-zinc-950 outline-4 outline-amber-900 flex items-center justify-center rounded-full border border-zinc-800 relative"
       >
         <Image
           src={'/bg.png'}
@@ -105,8 +168,24 @@ const Table = () => {
           //     gameState.playerOrder[gameState.currentPlayerIndex];
           const isCurrentTurn =
             state === 'playerTimerStart' && userId === player?.userId;
+          // console.log(state, userId, player?.userId);
           const cards = player?.hand;
           const isJoinGame = mySeat === -1 && !player;
+          const result = player?.roundResult?.state;
+
+          const getResultColor = (): string => {
+            if (!result) return '';
+            switch (result) {
+              case 'win':
+                return 'border-green-500 animate-none';
+              case 'loss':
+                return 'border-red-500 animate-none';
+              case 'blackjack':
+                return 'border-yellow-500 animate-none';
+              default:
+                return '';
+            }
+          };
 
           return (
             <div
@@ -126,14 +205,14 @@ const Table = () => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-6 border-dashed border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square',
+                    'lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square',
                     // `${FiveColorMap[index]}`,
-                    player &&
-                      `border-6 ${FiveIconMap[index]?.border} border-dashed`,
-                    isCurrentTurn &&
-                      `border-6 ${FiveIconMap[index]?.border} border-dashed animate-pulse`,
+                    player && 'border-4 border-zinc-100 border-dotted',
+                    isCurrentTurn && 'animate-pulse',
+                    getResultColor(),
                   )}
                 >
+                  {/* <div className="fixed w-full h-full top-0 left-0"> */}
                   {isJoinGame ? (
                     <JoinGame index={index} />
                   ) : (
@@ -142,8 +221,10 @@ const Table = () => {
                       player={player}
                       cards={cards}
                       isMe={isMe}
+                      state={result}
                     />
                   )}
+                  {/* </div> */}
                 </div>
               </span>
             </div>
@@ -157,16 +238,43 @@ const Table = () => {
 export default Table;
 
 const EmtpyDeck = () => {
-  const { width } = useWindowSize();
-  // const size: TPlayingCardSize = width < 1280 ? "sm" : "md";
+  const { width, height } = useWindowSize();
+  const setPosition = useSetAtom(deckPositionAtom);
+  const divRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Function to update position
+    const updatePosition = () => {
+      if (divRef.current) {
+        const rect = divRef.current.getBoundingClientRect();
+        setPosition({
+          x: rect.left,
+          y: rect.top,
+          viewportX: rect.left / window.innerWidth,
+          viewportY: rect.top / window.innerHeight,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    };
+
+    // Update position initially
+    updatePosition();
+
+    // Update position on scroll and resize
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [setPosition]);
+
   return (
-    <div className="flex rotate-90 flex-col">
+    <div ref={divRef}>
       <PlayingCard card="**" size={width > 1280 ? 'md' : 'sm'} />
-      <PlayingCard
-        card="**"
-        size={width > 1280 ? 'md' : 'sm'}
-        className="absolute bottom-4 left-4 hidden xl:bloc"
-      />
     </div>
   );
 };
@@ -174,13 +282,18 @@ const EmtpyDeck = () => {
 const Dealer = () => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
-  // const cards = ["Tc", "2d"];
+  console.log(gameState.playerOrder);
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
       <EmtpyDeck />
       {cards.length > 0 && (
         <div className="relative left-1 xl:left-5 bottom-[4dvh] xl:top-[dvh]">
-          <PlayerDeck cards={cards} walletAddress="0xGawkGawk" dealer />
+          <PlayerDeck
+            cards={cards}
+            walletAddress="0xGawkGawk"
+            dealer
+            index={gameState.playerOrder.length + 1}
+          />
         </div>
       )}
     </div>
@@ -190,39 +303,49 @@ const Dealer = () => {
 const JoinGame = ({ index }: { index: number }) => {
   const [isHovering, setIsHovering] = useState(false);
   const { mySeat, blackjackSend, gameState } = useBlackjack();
+  const { width } = useWindowSize();
+  const getSize = () => {
+    if (width > XL_VIEWPORT) {
+      if (isHovering) return '8rem';
+      return '16rem';
+    }
+    if (width > LG_VIEWPORT) {
+      if (isHovering) return '5rem';
+      return '12rem';
+    }
+  };
+  const joinGame = () => {
+    console.log('joining game');
+    blackjackSend({
+      type: 'playerJoin',
+      data: {
+        seat: index + 1,
+      },
+    });
+  };
   return (
     <motion.div
-      whileTap={{ scale: 0.95, backdropFilter: 'brightness(0.50)' }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
-      onClick={() => {
-        console.log('joining game');
-        blackjackSend({
-          type: 'playerJoin',
-          data: {
-            seat: index + 1,
-          },
-        });
-      }}
-      className="w-full rounded-full space-x-2 transition duration-300 hover:backdrop-brightness-75 cursor-pointer h-full flex items-center justify-center"
+      onClick={joinGame}
+      className={cn(
+        'w-full h-full rounded-full cursor-pointer space-y-2 flex flex-col items-center justify-center overflow-hidden',
+        GodsMap[index]?.bg,
+      )}
     >
       <motion.div
-        layout
-        initial={{
-          width: '6rem',
-        }}
         animate={{
-          scale: 1,
-          width: isHovering ? '3rem' : '6rem',
+          width: getSize(),
+          height: getSize(),
         }}
-        // className="grayscale-100"
+        className="rounded-full"
       >
         <Image
-          src={`/${FiveIconMap[index]?.src}`}
+          src={GodsMap[index]?.src || ''}
           alt=""
           height={500}
           width={500}
-          className="size-full grayscale-100"
+          className={cn('size-full rounded-full')}
         />
       </motion.div>
       <AnimatePresence mode="popLayout">
@@ -231,18 +354,18 @@ const JoinGame = ({ index }: { index: number }) => {
             layout
             key={'join'}
             initial={{
-              x: 30,
+              y: 30,
             }}
             animate={{
-              x: 0,
+              y: 0,
             }}
             exit={{
-              x: 30,
+              y: 30,
               opacity: 0,
             }}
-            className="origin-left"
+            className="origin-left whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
           >
-            Join Game
+            Join game
           </motion.div>
         )}
       </AnimatePresence>
@@ -255,100 +378,110 @@ const InGame = ({
   player,
   cards,
   isMe,
+  state,
 }: {
   index: number;
   player?: PlayerState;
   cards?: string[];
   isMe: boolean;
+  state?: RoundResultState;
 }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const { blackjackSend } = useBlackjack();
+  const { blackjackSend, gameState } = useBlackjack();
 
   const handleExit = () => {
     blackjackSend({ type: 'leave', data: {} });
     console.log('closing');
+  };
+
+  const getState = (): EPlayingCardState => {
+    switch (state) {
+      case 'win':
+        return EPlayingCardState.winner;
+      case 'loss':
+        return EPlayingCardState.loser;
+      case 'blackjack':
+        return EPlayingCardState.blackjack;
+      default:
+        return EPlayingCardState.default;
+    }
   };
   return (
     <motion.div
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
       className={cn(
-        'w-full relative rounded-full space-x-2 h-full flex items-center justify-center',
+        'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
+        GodsMap[index]?.bg,
       )}
     >
-      <div className="lg:w-16 xl:w-24 flex flex-col space-y-3 w-full">
-        <div className="flex space-x-2 w-full">
-          <AnimatePresence mode="popLayout">
-            {(!isHovering || !isMe) && (
-              <motion.div
-                key="icons"
-                initial={{
-                  x: 0,
-                }}
-                animate={{
-                  x: 0,
-                }}
-                exit={{
-                  x: isMe ? -30 : 0,
-                  opacity: isMe ? 0 : 1,
-                }}
-                // transition={{
-                //   duration: 0.6,
-                // }}
-              >
+      <div className="flex">
+        <AnimatePresence mode="popLayout">
+          {(!isHovering || !isMe) && (
+            <motion.div
+              initial={{
+                x: 0,
+              }}
+              animate={{
+                x: 0,
+              }}
+              exit={{
+                x: isMe ? -30 : 0,
+                opacity: isMe ? 0 : 1,
+              }}
+              className={cn(
+                'rounded-full lg:size-24 xl:size-32',
+                !player && 'lg:size-48 xl:size-64 -mb-2',
+              )}
+            >
+              {!(player && cards && cards.length > 0) && (
                 <Image
-                  src={`/${FiveIconMap[index]?.src}`}
+                  src={GodsMap[index]?.src || ''}
                   alt=""
                   height={500}
                   width={500}
-                  className={cn('size-full', {
-                    'grayscale-100': !player,
-                  })}
+                  className={cn('size-full rounded-full')}
                 />
-              </motion.div>
-            )}
-
-            {isHovering && isMe && (
-              <motion.div
-                layout
-                key={'join'}
-                initial={{
-                  x: 30,
-                }}
-                animate={{
-                  x: 0,
-                }}
-                exit={{
-                  x: 30,
-                  opacity: 0,
-                }}
-                onClick={handleExit}
-                className="flex space-x-2 cursor-pointer justify-center w-full lg:my-4 xl:my-5.5 items-center"
-              >
-                {/* <div className="whitespace-nowrap text-center">Leave</div> */}
-                <LogOut
-                  className={cn(
-                    FiveIconMap[index]?.text,
-                    'lg:size-8 xl:size-13',
-                  )}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {player && cards?.length === 0 && (
-          <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-            {isMe ? 'You' : truncateAddress(player.userId)}
-          </div>
-        )}
+              )}
+            </motion.div>
+          )}
+          {isHovering && isMe && !(player && cards && cards.length > 0) && (
+            <motion.div
+              layout
+              key={'join'}
+              initial={{
+                x: 30,
+              }}
+              animate={{
+                x: 0,
+              }}
+              exit={{
+                x: 30,
+                opacity: 0,
+              }}
+              onClick={handleExit}
+              className="flex space-x-2 cursor-pointer justify-center w-full lg:my-5 xl:my-6 items-center"
+            >
+              {/* <div className="whitespace-nowrap text-center">Leave</div> */}
+              <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {player && cards?.length === 0 && (
+        <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+          {isMe ? 'You' : truncateAddress(player.userId)}
+        </div>
+      )}
       <div className="lg:absolute top-0 left-0 w-full">
         {player && cards && cards.length > 0 && (
           <PlayerDeck
+            index={gameState.playerOrder.indexOf(player.userId)}
             cards={cards}
             bet={player.bet}
             walletAddress={player.userId}
+            state={getState()}
           />
         )}
       </div>

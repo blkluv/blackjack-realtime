@@ -1,14 +1,16 @@
+import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useUser } from '@/hooks/useUser';
 import { cn } from '@/lib/utils';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { motion } from 'motion/react';
 import { type FC, useEffect, useState } from 'react';
 import type { PlayerState } from '../../../../party/blackjack/blackjack.types';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
+import { SoundType } from '../Utils/sound';
 // import { cn } from "@/lib/utils";
 // import { useTimeState } from "@/atoms/time.atom";
 // import { PlayerState } from "../../../../party/blackjack/blackjack.types";
@@ -19,7 +21,7 @@ const ControlCentre = () => {
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
-
+  const playSound = useSetAtom(soundAtom);
   // const player = getCurrentPlayer();
 
   const isCurrentTurn =
@@ -31,6 +33,7 @@ const ControlCentre = () => {
   const isBet =
     player &&
     (gameState.status === 'betting' || gameState.status === 'waiting');
+
   useEffect(() => {
     const getCurrentPlayer = () => {
       if (!user.walletAddress) return;
@@ -74,6 +77,7 @@ const ControlCentre = () => {
           className="bg-emerald-900 text-zinc-100"
           icon={<HandHelping />}
           onClick={() => {
+            // playSound(SoundType.DEAL);
             blackjackSend({
               type: 'hit',
               data: {},
@@ -100,6 +104,7 @@ const ControlCentre = () => {
           icon={<Hand />}
           className="bg-red-900 text-zinc-100"
           onClick={() => {
+            // playSound(SoundType.);
             blackjackSend({
               type: 'stand',
               data: {},
@@ -123,13 +128,14 @@ const ControlCentre = () => {
       <div className="px-4">
         <BatteryButton
           text="Bet"
-          disabled={!isBet || !(Number(betAmount) > 0)}
+          disabled={!isBet || !(Number(betAmount) > 0) || player?.bet !== 0}
           icon={<HandCoins />}
           animate={isBet}
           className="text-zinc-900"
           onClick={() => {
             if (!player || player.bet !== 0) return;
             if (Number(betAmount) > 0) {
+              playSound(SoundType.BET);
               blackjackSend({
                 type: 'placeBet',
                 data: {
