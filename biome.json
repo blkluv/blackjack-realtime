@@ -29,7 +29,14 @@
     "enabled": true
   },
   "files": {
-    "ignore": ["node_modules", ".next", "dist", ".wrangler", ".partykit"]
+    "ignore": [
+      "node_modules",
+      ".next",
+      "dist",
+      ".wrangler",
+      ".partykit",
+      "contracts"
+    ]
   },
   "javascript": {
     "formatter": {

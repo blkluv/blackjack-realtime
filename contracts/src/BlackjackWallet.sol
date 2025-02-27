@@ -114,6 +114,14 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
         return balances[_player];
     }
 
+    function getGameToken() public view returns (IERC20) {
+        return gameToken;
+    }
+
+    function getGameOperator() public view returns (address) {
+        return gameOperator;
+    }
+
     // Emergency token recovery in case tokens are sent directly to contract
     function recoverERC20(
         address _tokenAddress,
