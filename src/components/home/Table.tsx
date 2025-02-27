@@ -1,3 +1,4 @@
+import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
 import { deckPositionAtom } from '@/atoms/deck.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import PlayerDeck from '@/components/home/PlayerDeck';
@@ -6,12 +7,12 @@ import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
 import { cn, truncateAddress } from '@/lib/utils';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { DoorOpen } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   PlayerState,
   RoundResultState,
@@ -83,13 +84,14 @@ const GodsMap = [
   },
 ];
 
-const Table = () => {
+const Table = memo(() => {
   const length = 5;
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const { width } = useWindowSize();
   const { mySeat, gameState } = useBlackjack();
   const { state, userId } = useAtomValue(timeStateAtom);
+  // console.log("state in Table: ");
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -233,7 +235,7 @@ const Table = () => {
       </div>
     </div>
   );
-};
+});
 
 export default Table;
 
@@ -279,28 +281,59 @@ const EmtpyDeck = () => {
   );
 };
 
-const Dealer = () => {
+const Dealer = memo(() => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
-  console.log(gameState.playerOrder);
+  const [dealerPrevCards, setDealerPrevCards] = useAtom(dealerCardsAtom);
+  const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!cards || cards.length === 0) {
+      setDealerPrevCards([]);
+      setCardsToAnimate(new Set());
+      return;
+    }
+
+    const newCards = cards.filter((card) => !dealerPrevCards.includes(card));
+
+    if (newCards.length > 0) {
+      setCardsToAnimate(new Set(newCards));
+    } else {
+      setCardsToAnimate(new Set());
+    }
+
+    setDealerPrevCards([...cards]);
+  }, [cards, setDealerPrevCards]);
+
+  useEffect(() => {
+    if (cardsToAnimate.size > 0) {
+      const timer = setTimeout(() => {
+        setCardsToAnimate(new Set());
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [cardsToAnimate]);
+
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
       <EmtpyDeck />
-      {cards.length > 0 && (
+      {cards.length > 0 && gameState.playerOrder.length > 0 && (
         <div className="relative left-1 xl:left-5 bottom-[4dvh] xl:top-[dvh]">
           <PlayerDeck
             cards={cards}
             walletAddress="0xGawkGawk"
             dealer
             index={gameState.playerOrder.length + 1}
+            animateCards={cardsToAnimate}
           />
         </div>
       )}
     </div>
   );
-};
+});
 
-const JoinGame = ({ index }: { index: number }) => {
+const JoinGame = memo(({ index }: { index: number }) => {
   const [isHovering, setIsHovering] = useState(false);
   const { mySeat, blackjackSend, gameState } = useBlackjack();
   const { width } = useWindowSize();
@@ -371,120 +404,173 @@ const JoinGame = ({ index }: { index: number }) => {
       </AnimatePresence>
     </motion.div>
   );
-};
+});
 
-const InGame = ({
-  index,
-  player,
-  cards,
-  isMe,
-  state,
-}: {
-  index: number;
-  player?: PlayerState;
-  cards?: string[];
-  isMe: boolean;
-  state?: RoundResultState;
-}) => {
-  const [isHovering, setIsHovering] = useState(false);
-  const { blackjackSend, gameState } = useBlackjack();
+const InGame = memo(
+  ({
+    index,
+    player,
+    cards,
+    isMe,
+    state,
+  }: {
+    index: number;
+    player?: PlayerState;
+    cards?: string[];
+    isMe: boolean;
+    state?: RoundResultState;
+  }) => {
+    const [isHovering, setIsHovering] = useState(false);
+    const { blackjackSend, gameState } = useBlackjack();
+    const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
+    const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
+      new Set(),
+    );
 
-  const handleExit = () => {
-    blackjackSend({ type: 'leave', data: {} });
-    console.log('closing');
-  };
+    useEffect(() => {
+      if (!player) return;
 
-  const getState = (): EPlayingCardState => {
-    switch (state) {
-      case 'win':
-        return EPlayingCardState.winner;
-      case 'loss':
-        return EPlayingCardState.loser;
-      case 'blackjack':
-        return EPlayingCardState.blackjack;
-      default:
-        return EPlayingCardState.default;
-    }
-  };
-  return (
-    <motion.div
-      onHoverStart={() => setIsHovering(true)}
-      onHoverEnd={() => setIsHovering(false)}
-      className={cn(
-        'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
-        GodsMap[index]?.bg,
-      )}
-    >
-      <div className="flex">
-        <AnimatePresence mode="popLayout">
-          {(!isHovering || !isMe) && (
-            <motion.div
-              initial={{
-                x: 0,
-              }}
-              animate={{
-                x: 0,
-              }}
-              exit={{
-                x: isMe ? -30 : 0,
-                opacity: isMe ? 0 : 1,
-              }}
-              className={cn(
-                'rounded-full lg:size-24 xl:size-32',
-                !player && 'lg:size-48 xl:size-64 -mb-2',
-              )}
-            >
-              {!(player && cards && cards.length > 0) && (
-                <Image
-                  src={GodsMap[index]?.src || ''}
-                  alt=""
-                  height={500}
-                  width={500}
-                  className={cn('size-full rounded-full')}
-                />
-              )}
-            </motion.div>
-          )}
-          {isHovering && isMe && !(player && cards && cards.length > 0) && (
-            <motion.div
-              layout
-              key={'join'}
-              initial={{
-                x: 30,
-              }}
-              animate={{
-                x: 0,
-              }}
-              exit={{
-                x: 30,
-                opacity: 0,
-              }}
-              onClick={handleExit}
-              className="flex space-x-2 cursor-pointer justify-center w-full lg:my-5 xl:my-6 items-center"
-            >
-              {/* <div className="whitespace-nowrap text-center">Leave</div> */}
-              <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      const userId = player.userId;
+      const prevCards = playerCardStates[userId] || [];
 
-      {player && cards?.length === 0 && (
-        <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-          {isMe ? 'You' : truncateAddress(player.userId)}
-        </div>
-      )}
-      <div className="lg:absolute top-0 left-0 w-full">
-        {player && cards && cards.length > 0 && (
+      if (!cards || cards.length === 0) {
+        setPlayerCardStates((prev) => ({ ...prev, [userId]: [] }));
+        setCardsToAnimate(new Set());
+        return;
+      }
+
+      const newCards = cards.filter((card) => !prevCards.includes(card));
+
+      if (newCards.length > 0) {
+        setCardsToAnimate(new Set(newCards));
+      } else {
+        setCardsToAnimate(new Set());
+      }
+
+      setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
+    }, [cards, player, setPlayerCardStates]);
+
+    useEffect(() => {
+      if (cardsToAnimate.size > 0) {
+        const timer = setTimeout(() => {
+          setCardsToAnimate(new Set());
+        }, 2000);
+
+        return () => clearTimeout(timer);
+      }
+    }, [cardsToAnimate]);
+
+    const handleExit = () => {
+      blackjackSend({ type: 'leave', data: {} });
+      console.log('closing');
+    };
+
+    const getState = (): EPlayingCardState => {
+      switch (state) {
+        case 'win':
+          return EPlayingCardState.winner;
+        case 'loss':
+          return EPlayingCardState.loser;
+        case 'blackjack':
+          return EPlayingCardState.blackjack;
+        default:
+          return EPlayingCardState.default;
+      }
+    };
+
+    const memoizedPlayerDeck = useMemo(() => {
+      if (!player) return null;
+      console.log('old: ', cards);
+      console.log('new ', cardsToAnimate);
+      return (
+        cards &&
+        cards.length > 0 && (
           <PlayerDeck
             index={gameState.playerOrder.indexOf(player.userId)}
             cards={cards}
             bet={player.bet}
             walletAddress={player.userId}
             state={getState()}
+            animateCards={cardsToAnimate}
           />
+        )
+      );
+    }, [cards, player, gameState, cardsToAnimate, state]);
+
+    return (
+      <motion.div
+        onHoverStart={() => setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        className={cn(
+          'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
+          GodsMap[index]?.bg,
         )}
-      </div>
-    </motion.div>
-  );
-};
+      >
+        <div className="flex">
+          <AnimatePresence mode="popLayout">
+            {(!isHovering || !isMe) && (
+              <motion.div
+                initial={{
+                  x: 0,
+                }}
+                animate={{
+                  x: 0,
+                }}
+                exit={{
+                  x: isMe ? -30 : 0,
+                  opacity: isMe ? 0 : 1,
+                }}
+                className={cn(
+                  'rounded-full lg:size-24 xl:size-32',
+                  !player && 'lg:size-48 xl:size-64 -mb-2',
+                )}
+              >
+                {!(player && cards && cards.length > 0) && (
+                  <Image
+                    src={GodsMap[index]?.src || ''}
+                    alt=""
+                    height={500}
+                    width={500}
+                    className={cn('size-full rounded-full')}
+                  />
+                )}
+              </motion.div>
+            )}
+            {isHovering && isMe && !(player && cards && cards.length > 0) && (
+              <motion.div
+                layout
+                key={'join'}
+                initial={{
+                  x: 30,
+                }}
+                animate={{
+                  x: 0,
+                }}
+                exit={{
+                  x: 30,
+                  opacity: 0,
+                }}
+                onClick={handleExit}
+                className="flex space-x-2 cursor-pointer justify-center w-full lg:my-5 xl:my-6 items-center"
+              >
+                {/* <div className="whitespace-nowrap text-center">Leave</div> */}
+                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {player && cards?.length === 0 && (
+          <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+            {isMe ? 'You' : truncateAddress(player.userId)}
+          </div>
+        )}
+        {player && (
+          <div className="lg:absolute top-0 left-0 w-full">
+            {memoizedPlayerDeck}
+          </div>
+        )}
+      </motion.div>
+    );
+  },
+);

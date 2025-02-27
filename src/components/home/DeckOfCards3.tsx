@@ -5,7 +5,7 @@ import { soundAtom } from '@/atoms/sound.atom';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { motion } from 'motion/react';
 import { nanoid } from 'nanoid';
-import { type FC, useLayoutEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PlayingCard, {
   type TPlayingCardSize,
   type EPlayingCardState,
@@ -19,12 +19,39 @@ type TDeckOfCardsProps = {
   extraDelay?: number;
 };
 
-const DeckOfCards2: FC<TDeckOfCardsProps> = ({
+const DeckOfCards3: FC<TDeckOfCardsProps> = ({
   cards,
   state,
   size = 'sm',
   extraDelay = 0,
 }) => {
+  useEffect(() => {
+    console.log('Cards length changed:', cards.length);
+    console.log('Current card IDs:', cardIdsRef.current);
+    console.log('Animated card IDs:', [...animatedCardIdsRef.current]);
+  }, [cards.length]);
+
+  // Create a ref to track card IDs
+  const cardIdsRef = useRef<string[]>([]);
+
+  // Track which cards have been animated
+  const animatedCardIdsRef = useRef<Set<string>>(new Set());
+
+  // Update cardIds when cards change
+  useEffect(() => {
+    // Extend cardIds array if we have more cards than before
+    if (cards.length > cardIdsRef.current.length) {
+      const newIds = Array(cards.length - cardIdsRef.current.length)
+        .fill(0)
+        .map(() => nanoid());
+      cardIdsRef.current = [...cardIdsRef.current, ...newIds];
+    }
+    // Trim if we have fewer cards
+    else if (cards.length < cardIdsRef.current.length) {
+      cardIdsRef.current = cardIdsRef.current.slice(0, cards.length);
+    }
+  }, [cards.length]);
+
   const { value, extra } = getDeckValue(cards);
   const cardSizeMap: { [key in TPlayingCardSize]: number } = {
     sm: 0.8,
@@ -78,44 +105,83 @@ const DeckOfCards2: FC<TDeckOfCardsProps> = ({
       }}
       ref={containerRef}
     >
-      {cards.map((card, i) => (
-        <motion.div
-          key={`card-${i}-${nanoid()}`}
-          ref={(el) => {
-            cardRefs.current[i] = el;
-          }}
-          initial={{
-            x: cardPositions[i]?.x ?? 0,
-            y: cardPositions[i]?.y ?? 0,
-          }}
-          onClick={() => {
-            playSound(SoundType.DEAL);
-          }}
-          onLayoutAnimationStart={() => {
-            playSound(SoundType.DEAL);
-          }}
-          animate={{
-            y: 0,
-            x: 0,
-          }}
-          transition={{
-            delay: extraDelay + i * 0.6,
-            duration: 0.6,
-          }}
-          style={{
-            position: i > 0 ? 'absolute' : 'relative',
-            left: `${i * 40 * cardSize}px`,
-            top: `${i * 12 * cardSize}px`,
-          }}
-        >
-          <PlayingCard
-            card={card}
-            // flipped={i === cards.length - 1 ? flipped : false}
-            state={state}
-            size={size}
-          />
-        </motion.div>
-      ))}
+      {cards.map((card, i) => {
+        // Make sure we have an ID for this position
+        if (!cardIdsRef.current[i]) {
+          cardIdsRef.current[i] = nanoid();
+          console.log(
+            `Generated new ID for card ${i}: ${cardIdsRef.current[i]}`,
+          );
+        }
+
+        // Check if this card position has been animated before
+        const cardId = cardIdsRef.current[i];
+        const isNewCard = !animatedCardIdsRef.current.has(cardId);
+
+        console.log(`Card ${i}: ID=${cardId}, isNewCard=${isNewCard}`);
+
+        // Mark this card as animated
+        if (isNewCard) {
+          console.log(`Marking card ${i} (${cardId}) as animated`);
+          animatedCardIdsRef.current.add(cardId);
+        }
+
+        return (
+          <motion.div
+            key={cardId}
+            ref={(el) => {
+              cardRefs.current[i] = el;
+            }}
+            // Log animation status
+            onLayoutAnimationComplete={() => {
+              console.log(`Animation completed for card ${i} (${cardId})`);
+            }}
+            // Only use initial animation for new cards
+            // initial={
+            //   isNewCard
+            //     ? {
+            //         y: cardPositions[i]?.y ?? 100,
+            //         x: cardPositions[i]?.x ?? 0,
+            //       }
+            //     : false
+            // }
+            initial={{
+              x: 50,
+              y: 50,
+            }}
+            animate={{
+              y: 0,
+              x: 0,
+            }}
+            transition={{
+              delay: isNewCard ? extraDelay + i * 0.6 : 0,
+              duration: isNewCard ? 0.6 : 0,
+            }}
+            onAnimationStart={() => {
+              if (isNewCard) {
+                console.log(`Starting animation for card ${i} (${cardId})`);
+                playSound(SoundType.DEAL);
+              } else {
+                console.log(
+                  `Skipping animation for card ${i} (${cardId}) - already animated`,
+                );
+              }
+            }}
+            style={{
+              position: i > 0 ? 'absolute' : 'relative',
+              left: `${i * 40 * cardSize}px`,
+              top: `${i * 12 * cardSize}px`,
+            }}
+          >
+            <PlayingCard
+              card={card}
+              // flipped={i === cards.length - 1 ? flipped : false}
+              state={state}
+              size={size}
+            />
+          </motion.div>
+        );
+      })}
       <div
         className="absolute text-[10px] bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-200"
         style={{
@@ -133,7 +199,7 @@ const DeckOfCards2: FC<TDeckOfCardsProps> = ({
   );
 };
 
-export default DeckOfCards2;
+export default DeckOfCards3;
 
 const getDeckValue = (
   cards: string[],
