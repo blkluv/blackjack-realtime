@@ -556,7 +556,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.clearPlayerTimer();
 
     const previousPlayerId =
-      this.state.playerOrder[this.state.currentPlayerIndex - 1];
+      this.state.playerOrder[this.state.currentPlayerIndex];
     if (previousPlayerId) {
       this.broadcast({
         room: 'blackjack',
