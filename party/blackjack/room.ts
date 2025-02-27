@@ -19,7 +19,7 @@ import { generateRandomString } from '@/atoms/atom';
 import { TableRounds, UserRounds } from '@/server/db/schema';
 import type { ConnectionState, TDatabase } from '..';
 import { EnhancedEventEmitter } from '../EnhancedEventEmitter';
-import { createDeck, getCardName, handValue } from './blackjack.utils';
+import { createDeck, handValue } from './blackjack.utils';
 
 type BlackjackRoomEvents = {
   'game-log': [log: string];
@@ -125,7 +125,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         });
 
         player.online = true;
-        this.emit('game-log', `Player ${userId} Reconnected`);
+        // this.emit('game-log', `Player ${userId} Reconnected`);
         player.connectionId = connection.id;
         this.sendGameState('broadcast');
       }
@@ -145,6 +145,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       if (player) {
         if (this.state.status === 'playing') {
           player.online = false;
+          this.emit('game-log', `Player ${userId} Disconnected`);
         } else {
           connection.setState({
             userId: userId,
@@ -157,7 +158,6 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           delete this.state.players[player.seat];
         }
 
-        this.emit('game-log', `Player ${userId} Disconnected`);
         this.sendGameState('broadcast');
       }
     }
@@ -306,7 +306,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     if (this.state.status === 'playing' && this.state.players[seat]) {
       this.state.players[seat].online = false;
-      this.emit('game-log', `Player ${userId} left the Table`);
+      // this.emit('game-log', `Player ${userId} left the Table`);
       this.sendGameState('broadcast');
       return;
     }
@@ -317,7 +317,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
 
-    this.emit('game-log', `Player ${userId} left the Table`);
+    // this.emit('game-log', `Player ${userId} left the Table`);
 
     this.sendGameState('broadcast');
   }
@@ -396,7 +396,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       this.timers.betTimerStart = null;
     }
 
-    this.emit('game-log', 'Betting Period has Ended');
+    // this.emit('game-log', 'Betting Period has Ended');
     // Notify players that the bet timer has ended
     this.broadcast({
       room: 'blackjack',
@@ -455,10 +455,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.state.roundId = generateRandomString(9);
     this.state.currentPlayerIndex = 0;
 
-    this.emit(
-      'game-log',
-      'Game has Started, Dealer has dealt two cards to each player',
-    );
+    // this.emit(
+    //   'game-log',
+    //   'Game has Started, Dealer has dealt two cards to each player',
+    // );
 
     this.sendGameState('broadcast');
 
@@ -483,9 +483,9 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     const card = this.state.deck.pop();
     if (!card) throw new Error('Deck is empty');
     p.hand.push(card);
-    this.emit('game-log', `${p.userId} has hit with ${getCardName(card)}`);
+    // this.emit('game-log', `${p.userId} has hit with ${getCardName(card)}`);
     if (handValue(p.hand).value > 21) {
-      this.emit('game-log', `${p.userId} has busted`);
+      // this.emit('game-log', `${p.userId} has busted`);
       p.hasBusted = true;
       p.done = true;
       this.clearPlayerTimer();
@@ -506,7 +506,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
-    this.emit('game-log', `${p.userId} has chosen to stand`);
+    // this.emit('game-log', `${p.userId} has chosen to stand`);
     this.clearPlayerTimer();
     this.advanceTurn();
     this.sendGameState('broadcast');
@@ -531,7 +531,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       this.advanceTurn();
     }, PLAYER_TURN_PERIOD);
 
-    this.emit('game-log', `${currentPlayerId}'s Turn to Hit or Stand`);
+    // this.emit('game-log', `${currentPlayerId}'s Turn to Hit or Stand`);
 
     // Notify players that the player timer has started
     this.broadcast({
@@ -585,7 +585,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   dealerPlay(): void {
     // All players have been processed; now it's the dealer's turn.
 
-    this.emit('game-log', 'All Players have played, Dealers Turn Begins');
+    // this.emit('game-log', 'All Players have played, Dealers Turn Begins');
     this.state.status = 'dealerTurn';
 
     while (handValue(this.state.dealerHand).value < 17) {
@@ -593,7 +593,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       if (!card) throw new Error('Deck is empty');
 
       this.state.dealerHand.push(card);
-      this.emit('game-log', `Dealer draws ${getCardName(card)}`);
+      // this.emit('game-log', `Dealer draws ${getCardName(card)}`);
     }
 
     this.sendGameState('broadcast');
@@ -638,7 +638,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
       if (p.hasBusted) {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
-        this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
+        // this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
         state = 'loss';
         reward = -p.bet; // Lost
         netDealerReward += p.bet;
@@ -654,20 +654,20 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           console.log(
             `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
           );
-          this.emit(
-            'game-log',
-            `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
-          );
+          // this.emit(
+          //   'game-log',
+          //   `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
+          // );
           state = 'win';
           reward = p.bet; // Win (1x bet)
           netDealerReward -= p.bet;
         }
       } else if (playerScore === dealerScore) {
         console.log(`Player ${pid} draws with ${playerScore} hence loses`);
-        this.emit(
-          'game-log',
-          `Player ${pid} draws with ${playerScore} hence loses`,
-        );
+        // this.emit(
+        //   'game-log',
+        //   `Player ${pid} draws with ${playerScore} hence loses`,
+        // );
         state = 'loss';
         reward = -p.bet; // Draw (hence lost)
         netDealerReward += p.bet;
