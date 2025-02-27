@@ -158,11 +158,20 @@ const getDeckValue = (
     }
   }
 
+  let aceAdjustments = 0;
   // Adjust for Aces if total value is over 21
-  while (value > 21 && aceCount > 0) {
+  while (value > 21 && aceCount > aceAdjustments) {
     value -= 10; // Convert an Ace from 11 to 1
-    aceCount--;
+    aceAdjustments++;
   }
 
-  return { value };
+  let extraValue: number | undefined = undefined;
+  if (aceCount > aceAdjustments && value <= 21) {
+    const potentialExtraValue = value - 10;
+    if (potentialExtraValue <= 21) {
+      extraValue = potentialExtraValue;
+    }
+  }
+
+  return { value, extra: extraValue };
 };
