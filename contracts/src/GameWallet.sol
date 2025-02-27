@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract BlackjackWallet is Ownable, ReentrancyGuard {
     IERC20 public gameToken;
@@ -17,15 +17,28 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
     // Events
     event Deposit(address indexed player, uint256 amount);
     event Withdrawal(address indexed player, uint256 amount);
-    event BalanceUpdated(address indexed player, uint256 newBalance, string reason);
+    event BalanceUpdated(
+        address indexed player,
+        uint256 newBalance,
+        string reason
+    );
 
-    constructor(address _tokenAddress, address _gameOperator) {
+    constructor(
+        address _tokenAddress,
+        address _gameOperator
+    )
+        Ownable(msg.sender) // Call Ownable's constructor
+        ReentrancyGuard() // Call ReentrancyGuard's constructor
+    {
         gameToken = IERC20(_tokenAddress);
         gameOperator = _gameOperator;
     }
 
     modifier onlyOperator() {
-        require(msg.sender == gameOperator || msg.sender == owner(), "Not authorized");
+        require(
+            msg.sender == gameOperator || msg.sender == owner(),
+            "Not authorized"
+        );
         _;
     }
 
@@ -39,7 +52,10 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
         require(_amount > 0, "Amount must be greater than 0");
 
         // Transfer tokens from player to this contract
-        require(gameToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+        require(
+            gameToken.transferFrom(msg.sender, address(this), _amount),
+            "Transfer failed"
+        );
 
         // Update balance
         balances[msg.sender] += _amount;
@@ -62,10 +78,11 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
     }
 
     // Backend updates balance after a game (win/loss)
-    function updatePlayerBalance(address _player, uint256 _newBalance, string calldata _reason)
-        external
-        onlyOperator
-    {
+    function updatePlayerBalance(
+        address _player,
+        uint256 _newBalance,
+        string calldata _reason
+    ) external onlyOperator {
         require(_player != address(0), "Invalid address");
 
         balances[_player] = _newBalance;
@@ -74,10 +91,11 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
     }
 
     // Add/subtract from player balance after a game
-    function adjustPlayerBalance(address _player, int256 _amount, string calldata _reason)
-        external
-        onlyOperator
-    {
+    function adjustPlayerBalance(
+        address _player,
+        int256 _amount,
+        string calldata _reason
+    ) external onlyOperator {
         require(_player != address(0), "Invalid address");
 
         if (_amount > 0) {
@@ -97,7 +115,10 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
     }
 
     // Emergency token recovery in case tokens are sent directly to contract
-    function recoverERC20(address _tokenAddress, uint256 _amount) external onlyOwner {
+    function recoverERC20(
+        address _tokenAddress,
+        uint256 _amount
+    ) external onlyOwner {
         IERC20(_tokenAddress).transfer(owner(), _amount);
     }
 }

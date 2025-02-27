@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -29,13 +29,14 @@ contract BlackjackToken is ERC20Burnable, AccessControl {
         uint8 tokenDecimals,
         uint256 initialSupply,
         address initialHolder
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) AccessControl() {
+        // Call AccessControl constructor
         _decimals = tokenDecimals;
 
-        // Setup roles
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(BURNER_ROLE, msg.sender);
+        // Setup roles using _grantRole
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(BURNER_ROLE, msg.sender);
 
         // Mint initial supply
         if (initialSupply > 0 && initialHolder != address(0)) {
