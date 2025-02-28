@@ -1,6 +1,6 @@
 const RPC_URL = 'https://huddle-testnet.rpc.caldera.xyz/http';
-const VAULT_ADDRESS = '0xB8D81a39CF1402abDbb53a79F249Be4EB4E19d0B';
-const TOKEN_ADDRESS = '0x5c97dadc009dfad50aa7de42d74f5c4a12712a63';
+const VAULT_ADDRESS = '0x60738310baaB38A08dbFB32eDcF732Fc1e008173';
+const TOKEN_ADDRESS = '0xA9dfa8cB3c20f8b14aE5032aC1A4694e50Ad7A75';
 
 const TOKEN_ABI = [
   {

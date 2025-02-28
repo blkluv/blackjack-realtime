@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../src/BlackjackWallet.sol";
+import "../src/BlackjackVault.sol";
 import "../src/BlackjackToken.sol"; // Assuming you want to deploy BlackjackToken first
 
-contract DeployBlackjackWallet is Script {
-    function run() external returns (BlackjackWallet) {
+contract DeployBlackjackVault is Script {
+    function run() external returns (BlackjackVault) {
         vm.startBroadcast();
 
         // Deploy BlackjackToken first (if you haven't already)
@@ -14,10 +14,10 @@ contract DeployBlackjackWallet is Script {
         // BlackjackToken gameToken = deployTokenScript.run();
         address tokenAddress = vm.envAddress("TOKEN_ADDRESS");
 
-        // Deployment parameters for BlackjackWallet - Customize these as needed
+        // Deployment parameters for BlackjackVault - Customize these as needed
         address gameOperatorAddress = vm.envAddress("GAME_OPERATOR_ADDRESS"); // Example: Use a different address for game operator
 
-        BlackjackWallet blackjackWallet = new BlackjackWallet(
+        BlackjackVault blackjackVault = new BlackjackVault(
             tokenAddress,
             gameOperatorAddress
         );
@@ -26,9 +26,9 @@ contract DeployBlackjackWallet is Script {
 
         // Optional: Print the deployed contract addresses
         console.log("BlackjackToken deployed to:", tokenAddress);
-        console.log("BlackjackWallet deployed to:", address(blackjackWallet));
+        console.log("BlackjackVault deployed to:", address(blackjackVault));
 
-        return blackjackWallet;
+        return blackjackVault;
     }
 }
 

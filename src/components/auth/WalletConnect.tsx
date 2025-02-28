@@ -53,6 +53,11 @@ const WalletConnect = () => {
   const handleWithdraw = async () => {
     if (!address || value === undefined || value <= 0) return;
 
+    if (value % 1 !== 0) {
+      console.error('Value must be a whole number');
+      return;
+    }
+
     const withdrawResult = await withdrawTokens(String(value));
     if (!withdrawResult.success) {
       throw new Error(
@@ -65,6 +70,12 @@ const WalletConnect = () => {
   };
   const handleDeposit = async () => {
     if (!address || value === undefined || value <= 0) return;
+
+    // if value is not a whole number, throw an error
+    if (value % 1 !== 0) {
+      console.error('Value must be a whole number');
+      return;
+    }
 
     setLoading(true);
 
@@ -97,7 +108,7 @@ const WalletConnect = () => {
           onClick={() => (!user.isAuthenticated ? open() : null)}
           className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
         >
-          {user.walletAddress ? `Bal: ${bjtBalance}` : 'Connect Wallet'}
+          {user.walletAddress ? `Bal: ${vaultBalance}` : 'Connect Wallet'}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (
@@ -120,7 +131,13 @@ const WalletConnect = () => {
                 type="number"
                 value={value}
                 disabled={loading}
-                onChange={(e) => setValue(Number(e.target.value))}
+                // no decimals allowed
+                onChange={(e) => {
+                  const newValue = Number(e.target.value);
+                  if (newValue >= 0 && newValue % 1 === 0) {
+                    setValue(newValue);
+                  }
+                }}
                 className="w-full bg-zinc-800 rounded-full h-7 px-3 focus:outline-none"
               />
               <button

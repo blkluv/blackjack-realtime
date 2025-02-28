@@ -19,7 +19,7 @@ contract DeployBlackjackToken is Script {
         // Deployment parameters
         string memory tokenName = "Blackjack Token";
         string memory tokenSymbol = "BJT";
-        uint8 tokenDecimals = 18;
+        uint8 tokenDecimals = 2;
         uint256 initialSupply = 1000000; // 1 Million
 
         BlackjackToken blackjackToken = new BlackjackToken(

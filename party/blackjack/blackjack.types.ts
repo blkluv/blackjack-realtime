@@ -120,6 +120,7 @@ type TBlackjackMessageSchema = z.infer<typeof BlackjackMessageSchema>;
 // all server to client messages
 
 type BlackjackRecord = {
+  error: { message: string };
   stateUpdate: { state: ClientSideGameState };
   betTimerStart: { startedAt: number };
   betTimerEnd: { endedAt: number };

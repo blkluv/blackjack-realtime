@@ -2,6 +2,7 @@ import {
   http,
   createPublicClient,
   createWalletClient,
+  custom,
   formatUnits,
   parseUnits,
 } from 'viem';
@@ -23,7 +24,7 @@ const publicClient = createPublicClient({
 const walletClient = createWalletClient({
   chain: huddle01Testnet,
   //@ts-ignore
-  transport: http(), // Using user's wallet provider
+  transport: custom(window.ethereum), // Using user's wallet provider
 });
 
 /**

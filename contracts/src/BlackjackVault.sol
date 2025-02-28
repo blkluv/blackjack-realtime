@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract BlackjackWallet is Ownable, ReentrancyGuard {
+contract BlackjackVault is Ownable, ReentrancyGuard {
     IERC20 public gameToken;
 
     // Player balances
@@ -47,7 +47,7 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
         gameOperator = _newOperator;
     }
 
-    // Deposit tokens into the game wallet
+    // Deposit tokens into the game Vault
     function deposit(uint256 _amount) external nonReentrant {
         require(_amount > 0, "Amount must be greater than 0");
 
@@ -63,11 +63,14 @@ contract BlackjackWallet is Ownable, ReentrancyGuard {
         emit Deposit(msg.sender, _amount);
     }
 
-    // Withdraw tokens from the game wallet
+    // Withdraw tokens from the game Vault
     function withdraw(uint256 _amount) external nonReentrant {
         require(_amount > 0, "Amount must be greater than 0");
         require(balances[msg.sender] >= _amount, "Insufficient balance");
-
+        require(
+            gameToken.balanceOf(address(this)) >= _amount,
+            "Contract has insufficient funds. Please try again later."
+        );
         // Update balance before transfer to prevent reentrancy
         balances[msg.sender] -= _amount;
 

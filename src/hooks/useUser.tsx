@@ -5,7 +5,6 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { huddle01Testnet } from 'viem/chains';
-
 type User = {
   walletAddress?: string;
   wsToken?: string;

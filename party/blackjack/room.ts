@@ -21,6 +21,23 @@ import type { ConnectionState, TDatabase } from '..';
 import { EnhancedEventEmitter } from '../EnhancedEventEmitter';
 import { createDeck, handValue } from './blackjack.utils';
 
+import { env } from '@/env.mjs';
+import {
+  TOKEN_ABI,
+  TOKEN_ADDRESS,
+  VAULT_ABI,
+  VAULT_ADDRESS,
+} from '@/web3/constants';
+import {
+  http,
+  createPublicClient,
+  createWalletClient,
+  formatUnits,
+  parseUnits,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { huddle01Testnet } from 'viem/chains';
+
 type BlackjackRoomEvents = {
   'game-log': [log: string];
 };
@@ -36,7 +53,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   state: GameState;
   timers: Timers;
   db: TDatabase;
-
+  private operatorPrivateKey: string; // Server's private key for operator
+  private operatorAccount: ReturnType<typeof privateKeyToAccount>;
+  private walletClient: ReturnType<typeof createWalletClient>;
+  private publicClient: ReturnType<typeof createPublicClient>;
   constructor(id: string, room: Party.Room, db: TDatabase) {
     super();
     this.id = id;
@@ -59,6 +79,26 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       playerTimer: null,
       roundEndTimer: null,
     };
+
+    // Initialize blockchain clients
+    this.operatorPrivateKey = env.OPERATOR_PRIVATE_KEY;
+    if (this.operatorPrivateKey === '') {
+      throw new Error('Operator private key is empty, Set ENV Vars');
+    }
+    this.operatorAccount = privateKeyToAccount(
+      this.operatorPrivateKey as `0x${string}`,
+    );
+
+    this.publicClient = createPublicClient({
+      chain: huddle01Testnet, // Use your chain configuration
+      transport: http(),
+    });
+
+    this.walletClient = createWalletClient({
+      chain: huddle01Testnet, // Use your chain configuration
+      transport: http(),
+      account: this.operatorAccount,
+    });
   }
 
   broadcast<T extends keyof BlackjackRecord>(
@@ -322,36 +362,82 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.sendGameState('broadcast');
   }
 
-  placeBet(connectionId: string, userId: `0x${string}`, bet: number): void {
+  async placeBet(
+    connectionId: string,
+    userId: `0x${string}`,
+    bet: number,
+  ): Promise<void> {
     if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
 
+    // Check if player has enough balance
+    const hasSufficientBalance = await this.checkPlayerBalance(userId, bet);
+
+    if (!hasSufficientBalance) {
+      // Send error message to player
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'error',
+        data: { message: 'Insufficient balance to place bet' },
+      });
+      return;
+    }
+    console.log(
+      'Player',
+      userId,
+      ' hasSufficientBalance',
+      hasSufficientBalance,
+    );
     const seat = this.getSeat(userId);
     if (!seat) return;
 
     const p = this.state.players[seat];
     if (!p) return;
 
-    p.bet = bet;
+    try {
+      // Use a negative amount to deduct funds
+      const success = await this.updatePlayerBalance(
+        userId,
+        -bet, // Negative value to deduct the bet amount
+        `Blackjack bet placed in round ${this.state.roundId || 'new round'}`,
+      );
 
-    this.state.status = 'betting';
+      if (!success) {
+        this.send(connectionId, {
+          room: 'blackjack',
+          type: 'error',
+          data: { message: 'Failed to process bet. Please try again.' },
+        });
+        return;
+      }
+      p.bet = bet;
 
-    this.state.playerOrder = Object.values(this.state.players)
-      .filter((player) => player.bet > 0)
-      .sort((a, b) => {
-        const seatA = a.seat;
-        const seatB = b.seat;
-        return seatA - seatB;
-      })
-      .map((player) => player.userId);
+      this.state.status = 'betting';
 
-    this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
+      this.state.playerOrder = Object.values(this.state.players)
+        .filter((player) => player.bet > 0)
+        .sort((a, b) => {
+          const seatA = a.seat;
+          const seatB = b.seat;
+          return seatA - seatB;
+        })
+        .map((player) => player.userId);
 
-    this.sendGameState('broadcast');
+      this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
 
-    if (!this.timers.betTimer) {
-      this.startBetTimer();
+      this.sendGameState('broadcast');
+
+      if (!this.timers.betTimer) {
+        this.startBetTimer();
+      }
+    } catch (error) {
+      console.error(`Error processing bet for ${userId}:`, error);
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'error',
+        data: { message: 'Failed to process bet. Please try again.' },
+      });
     }
   }
 
@@ -624,6 +710,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
     let netDealerReward = 0;
     const userRoundObj: UserRoundObj[] = [];
+    const balanceUpdates: Promise<boolean>[] = [];
 
     for (const pid of this.state.playerOrder) {
       const seat = this.getSeat(pid);
@@ -640,16 +727,16 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
         // this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
         state = 'loss';
-        reward = -p.bet; // Lost
+        reward = 0; // Lost
         netDealerReward += p.bet;
       } else if (dealerScore > 21 || playerScore > dealerScore) {
         // Check for Blackjack (example condition - adjust as needed)
         if (playerScore === 21 && p.hand.length === 2) {
           state = 'blackjack';
-          reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
+          reward = Math.floor(2.5 * p.bet); // Blackjack (1.5x bet - adjust as needed)
           console.log(`Player ${pid} wins with Blackjack!`);
           this.emit('game-log', `Player ${pid} wins with Blackjack!`);
-          netDealerReward -= 1.5 * p.bet;
+          netDealerReward -= Math.floor(1.5 * p.bet);
         } else {
           console.log(
             `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
@@ -659,7 +746,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           //   `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
           // );
           state = 'win';
-          reward = p.bet; // Win (1x bet)
+          reward = 2 * p.bet; // Win (1x bet)
           netDealerReward -= p.bet;
         }
       } else if (playerScore === dealerScore) {
@@ -669,14 +756,14 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         //   `Player ${pid} draws with ${playerScore} hence loses`,
         // );
         state = 'loss';
-        reward = -p.bet; // Draw (hence lost)
+        reward = 0; // Draw (hence lost)
         netDealerReward += p.bet;
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
         state = 'loss';
-        reward = -p.bet; // Lost
+        reward = 0; // Lost
         netDealerReward += p.bet;
       }
       // Update the player's state with the round result
@@ -691,6 +778,16 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         handArray: p.hand.toString(),
         reward: reward,
       });
+
+      // Only send rewards for wins - losses were already deducted
+      if (reward > 0) {
+        const updatePromise = this.updatePlayerBalance(
+          p.userId,
+          reward, // Only positive values for winnings
+          `Blackjack round ${roundId}: ${state}`,
+        );
+        balanceUpdates.push(updatePromise);
+      }
     }
 
     this.db
@@ -760,5 +857,81 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     this.emit('game-log', 'Table is ready for a new game');
     this.sendGameState('broadcast');
+  }
+
+  // wallet functions
+  async getTokenDecimals(): Promise<number> {
+    try {
+      const decimals = await this.publicClient.readContract({
+        address: TOKEN_ADDRESS,
+        abi: TOKEN_ABI,
+        functionName: 'decimals',
+      });
+      return decimals;
+    } catch (error) {
+      console.error('Error getting token decimals:', error);
+      return 18; // Default to 18 if we can't get the value
+    }
+  }
+  /**
+   * Checks if a player has sufficient balance in the vault contract
+   */
+  async checkPlayerBalance(
+    userId: `0x${string}`,
+    betAmount: number,
+  ): Promise<boolean> {
+    try {
+      const balance = await this.publicClient.readContract({
+        address: VAULT_ADDRESS,
+        abi: VAULT_ABI,
+        functionName: 'getBalance',
+        args: [userId],
+      });
+
+      // floor the balance to 2 decimal places
+      const decimals = await this.getTokenDecimals();
+
+      const formattedBalance = formatUnits(balance, decimals);
+
+      console.log('Player', userId, 'has balance :', formattedBalance);
+
+      return BigInt(formattedBalance) >= BigInt(betAmount);
+    } catch (error) {
+      console.error('Error checking player balance:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Updates player balance in the vault contract
+   */
+  async updatePlayerBalance(
+    userId: `0x${string}`,
+    amount: number,
+    reason: string,
+  ): Promise<boolean> {
+    try {
+      const decimals = await this.getTokenDecimals();
+
+      const formattedAmount = parseUnits(amount.toString(), decimals);
+
+      // Call the adjustPlayerBalance function
+      const hash = await this.walletClient.writeContract({
+        address: VAULT_ADDRESS,
+        abi: VAULT_ABI,
+        functionName: 'adjustPlayerBalance',
+        args: [userId, formattedAmount, reason],
+        account: this.operatorAccount,
+        chain: huddle01Testnet,
+      });
+
+      // Wait for transaction to be confirmed
+      await this.publicClient.waitForTransactionReceipt({ hash });
+
+      return true;
+    } catch (error) {
+      console.error(`Error updating balance for ${userId}:`, error);
+      return false;
+    }
   }
 }

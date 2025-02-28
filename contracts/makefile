@@ -3,10 +3,10 @@
 
 deploy-token:
 	@echo "Deploying BlackjackToken..."
-	@forge script script/DeployBlackjackToken.s.sol -g 50000 --private-key $(PRIVATE_KEY) --rpc-url $(RPC_URL) --broadcast
+	@forge script script/DeployBlackjackToken.s.sol -g 90000 --private-key $(PRIVATE_KEY) --rpc-url $(RPC_URL) --broadcast
 
-deploy-wallet:
-	@echo "Deploying BlackjackWallet..."
-	@forge script script/DeployBlackjackWallet.s.sol -g 50000 --private-key $(PRIVATE_KEY) --rpc-url $(RPC_URL) --broadcast
+deploy-vault:
+	@echo "Deploying BlackjackVault..."
+	@forge script script/DeployBlackjackVault.s.sol -g 50000 --private-key $(PRIVATE_KEY) --rpc-url $(RPC_URL) --broadcast
 
-.PHONY: deploy-token deploy-wallet
+.PHONY: deploy-token deploy-vault
