@@ -30,7 +30,10 @@ const ControlCentre = () => {
   console.log("isCurrentTurn", userId, player);
 
   const isHitOrStand =
-    !!player && gameState.status === "playing" && player.bet > 0;
+    !!player &&
+    gameState.status === "playing" &&
+    player.bet > 0 &&
+    isCurrentTurn;
 
   const isBet =
     !!player &&
@@ -102,7 +105,7 @@ const ControlCentre = () => {
         <BatteryButton
           text="Stand"
           disabled={!isHitOrStand}
-          animate={isHitOrStand && isCurrentTurn}
+          animate={isHitOrStand}
           icon={<Hand />}
           className="bg-red-900 text-zinc-100"
           onClick={() => {
