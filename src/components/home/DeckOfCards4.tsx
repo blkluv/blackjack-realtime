@@ -91,9 +91,13 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
           x: shouldAnimate && cardPositions[i] ? cardPositions[i].x : 0,
           y: shouldAnimate && cardPositions[i] ? cardPositions[i].y : 0,
         };
-
-        console.log(initial, shouldAnimate);
-
+        let animationDelay = 0;
+        if (shouldAnimate && animateCards) {
+          // Check if animateCards exists.
+          const animateCardsArray = Array.from(animateCards);
+          const cardIndexInAnimate = animateCardsArray.indexOf(card);
+          animationDelay = extraDelay + cardIndexInAnimate * 0.6;
+        }
         return (
           <motion.div
             key={`card-${i}-${card}-${shouldAnimate ? "animate" : "static"}`}
@@ -111,7 +115,7 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
             //     : {}
             // }
             transition={{
-              delay: shouldAnimate ? extraDelay + i * 0.6 : 0,
+              delay: shouldAnimate ? animationDelay : 0,
               duration: shouldAnimate ? 0.6 : 0,
             }}
             style={{

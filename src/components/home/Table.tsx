@@ -179,11 +179,11 @@ const Table = memo(() => {
             if (!result) return "";
             switch (result) {
               case "win":
-                return "border-green-500 animate-none";
+                return " animate-none outline-green-500";
               case "loss":
-                return "border-red-500 animate-none";
+                return " animate-none outline-red-500";
               case "blackjack":
-                return "border-yellow-500 animate-none";
+                return "outline-yellow-500 animate-none";
               default:
                 return "";
             }
@@ -207,10 +207,12 @@ const Table = memo(() => {
               >
                 <div
                   className={cn(
-                    "lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square",
+                    "lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-60 rounded-full aspect-square",
                     // `${FiveColorMap[index]}`,
-                    player && "border-4 border-zinc-100 border-dotted",
-                    isCurrentTurn && "animate-pulse",
+                    player &&
+                      "border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300",
+                    isCurrentTurn &&
+                      "animate-pulse border-sky-400 outline-sky-400",
                     getResultColor()
                   )}
                 >
@@ -281,6 +283,7 @@ const EmtpyDeck = () => {
   );
 };
 
+
 const Dealer = memo(() => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
@@ -294,7 +297,12 @@ const Dealer = memo(() => {
       return;
     }
 
-    const newCards = cards.filter((card) => !dealerPrevCards.includes(card));
+    const newCards = cards.filter((card, index) => {
+      if (index === 1 && dealerPrevCards[1] === "**") {
+        return card !== "**";
+      }
+      return !dealerPrevCards.includes(card);
+    });
 
     if (newCards.length > 0) {
       setCardsToAnimate(new Set(newCards));
@@ -305,20 +313,23 @@ const Dealer = memo(() => {
     setDealerPrevCards([...cards]);
   }, [cards, setDealerPrevCards]);
 
+  const calculateDealerDelay = () => {
+    const playerCount = gameState.playerOrder.length;
+    return playerCount * 0.8; // 0.8
+  };
+
   useEffect(() => {
     if (cardsToAnimate.size > 0) {
       const timer = setTimeout(() => {
         setCardsToAnimate(new Set());
-      }, 3000);
+      }, calculateDealerDelay() * 3000);
 
       return () => clearTimeout(timer);
     }
   }, [cardsToAnimate]);
 
-  const calculateDealerDelay = () => {
-    const playerCount = gameState.playerOrder.length;
-    return playerCount * 0.8; // 0.8
-  };
+  console.log("old dealer: ", cards);
+  console.log("new dealer: ", cardsToAnimate);
 
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
@@ -456,15 +467,15 @@ const InGame = memo(
       setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
     }, [cards, player, setPlayerCardStates]);
 
-    useEffect(() => {
-      if (cardsToAnimate.size > 0) {
-        const timer = setTimeout(() => {
-          setCardsToAnimate(new Set());
-        }, 3000);
+    // useEffect(() => {
+    //   if (cardsToAnimate.size > 0) {
+    //     const timer = setTimeout(() => {
+    //       setCardsToAnimate(new Set());
+    //     }, 3000);
 
-        return () => clearTimeout(timer);
-      }
-    }, [cardsToAnimate]);
+    //     return () => clearTimeout(timer);
+    //   }
+    // }, [cardsToAnimate]);
 
     const handleExit = () => {
       blackjackSend({ type: "leave", data: {} });
@@ -486,8 +497,8 @@ const InGame = memo(
 
     const memoizedPlayerDeck = useMemo(() => {
       if (!player) return null;
-      console.log("old: ", cards);
-      console.log("new ", cardsToAnimate);
+      // console.log("old: ", cards);
+      // console.log("new ", cardsToAnimate);
       return (
         cards &&
         cards.length > 0 && (

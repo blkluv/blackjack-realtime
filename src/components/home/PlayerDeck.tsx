@@ -63,7 +63,7 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
             cards={cards}
             state={state}
             size={size}
-            extraDelay={index * 0.6 * animateCards.size}
+            extraDelay={dealer ? 0 : index * 0.6 * animateCards.size} //if the player is dealer, then extra delay is zero.
             animateCards={animateCards}
           />
           <div
