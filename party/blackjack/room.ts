@@ -53,7 +53,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   state: GameState;
   timers: Timers;
   db: TDatabase;
-
+  decimals: number | null;
   betPromises: Promise<void>[];
 
   private operatorPrivateKey: string; // Server's private key for operator
@@ -69,7 +69,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.id = id;
     this.room = room;
     this.db = db;
-
+    this.decimals = null;
     this.betPromises = [];
 
     this.state = {
@@ -465,6 +465,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         userId,
         -bet, // Negative value to deduct the bet amount
         `Blackjack bet placed in round ${this.state.roundId || 'new round'}`,
+        1,
       );
 
       if (!success) {
@@ -882,6 +883,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           p.userId,
           reward, // Only positive values for winnings
           `Blackjack round ${roundId}: ${state}`,
+          3,
         );
         balanceUpdates.push(updatePromise);
       }
@@ -961,11 +963,17 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   // wallet functions
   async getTokenDecimals(): Promise<number> {
     try {
+      if (this.decimals !== null) {
+        return this.decimals;
+      }
+
       const decimals = await this.publicClient.readContract({
         address: TOKEN_ADDRESS,
         abi: TOKEN_ABI,
         functionName: 'decimals',
       });
+
+      this.decimals = decimals;
       return decimals;
     } catch (error) {
       console.error('Error getting token decimals:', error);
@@ -1008,28 +1016,58 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     userId: `0x${string}`,
     amount: number,
     reason: string,
+    maxRetries = 0, // Default to 0 retries (single attempt)
   ): Promise<boolean> {
+    const totalAttempts = maxRetries + 1; // Initial attempt + retries
+
     try {
       const decimals = await this.getTokenDecimals();
-
       const formattedAmount = parseUnits(amount.toString(), decimals);
 
-      // Call the adjustPlayerBalance function
-      const hash = await this.walletClient.writeContract({
-        address: VAULT_ADDRESS,
-        abi: VAULT_ABI,
-        functionName: 'adjustPlayerBalance',
-        args: [userId, formattedAmount, reason],
-        account: this.operatorAccount,
-        chain: huddle01Testnet,
-      });
+      for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+        try {
+          // Call the adjustPlayerBalance function
+          const hash = await this.walletClient.writeContract({
+            address: VAULT_ADDRESS,
+            abi: VAULT_ABI,
+            functionName: 'adjustPlayerBalance',
+            args: [userId, formattedAmount, reason],
+            account: this.operatorAccount,
+            chain: huddle01Testnet,
+          });
 
-      // Wait for transaction to be confirmed
-      await this.publicClient.waitForTransactionReceipt({ hash });
+          // Wait for transaction to be confirmed
+          await this.publicClient.waitForTransactionReceipt({ hash });
 
-      return true;
+          // If it wasn't the first attempt, log success after retry
+          if (attempt > 1) {
+            console.log(
+              `Balance update for ${userId} succeeded on attempt ${attempt}/${totalAttempts}`,
+            );
+          }
+
+          // Success - return true
+          return true;
+        } catch (error) {
+          // On final attempt, just throw to outer catch
+          if (attempt === totalAttempts) {
+            throw error;
+          }
+
+          // Otherwise, log and retry immediately
+          console.log(
+            `Attempt ${attempt}/${totalAttempts} failed for ${userId}. Retrying immediately...`,
+          );
+          // No delay - continue directly to the next iteration
+        }
+      }
+
+      return false; // Should never reach here
     } catch (error) {
-      console.error(`Error updating balance for ${userId}:`, error);
+      console.error(
+        `Error updating balance for ${userId} after ${totalAttempts} attempts:`,
+        error,
+      );
       return false;
     }
   }
