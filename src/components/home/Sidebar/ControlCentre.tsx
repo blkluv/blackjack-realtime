@@ -1,16 +1,16 @@
-import { soundAtom } from '@/atoms/sound.atom';
-import { timeStateAtom } from '@/atoms/time.atom';
-import { useBlackjack } from '@/hooks/useBlackjack';
-import { useUser } from '@/hooks/useUser';
-import { cn } from '@/lib/utils';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { Hand, HandCoins, HandHelping } from 'lucide-react';
-import { motion } from 'motion/react';
-import { type FC, useEffect, useState } from 'react';
-import type { PlayerState } from '../../../../party/blackjack/blackjack.types';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { SoundType } from '../Utils/sound';
+import { soundAtom } from "@/atoms/sound.atom";
+import { timeStateAtom } from "@/atoms/time.atom";
+import { useBlackjack } from "@/hooks/useBlackjack";
+import { useUser } from "@/hooks/useUser";
+import { cn } from "@/lib/utils";
+import { useAtomValue, useSetAtom } from "jotai";
+import { Hand, HandCoins, HandHelping } from "lucide-react";
+import { motion } from "motion/react";
+import { type FC, useEffect, useState } from "react";
+import type { PlayerState } from "../../../../party/blackjack/blackjack.types";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { SoundType } from "../Utils/sound";
 // import { cn } from "@/lib/utils";
 // import { useTimeState } from "@/atoms/time.atom";
 // import { PlayerState } from "../../../../party/blackjack/blackjack.types";
@@ -18,21 +18,23 @@ import { SoundType } from '../Utils/sound';
 const ControlCentre = () => {
   const { user } = useUser();
   const { blackjackSend, gameState } = useBlackjack();
-  const [betAmount, setBetAmount] = useState('');
+  const [betAmount, setBetAmount] = useState("");
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
   const playSound = useSetAtom(soundAtom);
   // const player = getCurrentPlayer();
 
   const isCurrentTurn =
-    state === 'playerTimerStart' && userId === player?.userId;
+    state === "playerTimerStart" && !!player && userId === player.userId;
+
+  console.log("isCurrentTurn", userId, player);
 
   const isHitOrStand =
-    player && gameState.status === 'playing' && player.bet > 0;
+    !!player && gameState.status === "playing" && player.bet > 0;
 
   const isBet =
-    player &&
-    (gameState.status === 'betting' || gameState.status === 'waiting');
+    !!player &&
+    (gameState.status === "betting" || gameState.status === "waiting");
 
   useEffect(() => {
     const getCurrentPlayer = () => {
@@ -79,7 +81,7 @@ const ControlCentre = () => {
           onClick={() => {
             // playSound(SoundType.DEAL);
             blackjackSend({
-              type: 'hit',
+              type: "hit",
               data: {},
             });
           }}
@@ -106,7 +108,7 @@ const ControlCentre = () => {
           onClick={() => {
             // playSound(SoundType.);
             blackjackSend({
-              type: 'stand',
+              type: "stand",
               data: {},
             });
           }}
@@ -137,13 +139,13 @@ const ControlCentre = () => {
             if (Number(betAmount) > 0) {
               playSound(SoundType.BET);
               blackjackSend({
-                type: 'placeBet',
+                type: "placeBet",
                 data: {
                   bet: Number(betAmount),
                 },
               });
             } else {
-              console.log('Enter amount > 0');
+              console.log("Enter amount > 0");
             }
           }}
         />
@@ -201,16 +203,16 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
     <div className="relative w-full">
       <div
         className={cn(
-          'w-full h-9 bg-zinc-200 rounded-full relative overflow-hidden',
-          disabled && 'cursor-not-allowed bg-zinc-400',
-          className,
+          "w-full h-9 bg-zinc-200 rounded-full relative overflow-hidden",
+          disabled && "cursor-not-allowed bg-zinc-400",
+          className
         )}
       >
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: progress }}
           transition={{
-            ease: 'linear',
+            ease: "linear",
           }}
           className="w-full h-full origin-left bg-yellow-500"
         />
@@ -221,9 +223,9 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
         disabled={disabled}
         onClick={onClick}
         className={cn(
-          'cursor-pointer z-10 left-0 absolute top-0 space-x-0 w-full rounded-full',
+          "cursor-pointer z-10 left-0 absolute top-0 space-x-0 w-full rounded-full",
           className,
-          'bg-transparent',
+          "bg-transparent"
         )}
       >
         <div className="font-semibold">{text}</div>
