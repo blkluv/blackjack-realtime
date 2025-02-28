@@ -35,7 +35,7 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { nonceManager, privateKeyToAccount } from 'viem/accounts';
 import { huddle01Testnet } from 'viem/chains';
 
 type BlackjackRoomEvents = {
@@ -96,6 +96,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
     this.operatorAccount = privateKeyToAccount(
       this.operatorPrivateKey as `0x${string}`,
+      { nonceManager: nonceManager },
     );
 
     this.publicClient = createPublicClient({

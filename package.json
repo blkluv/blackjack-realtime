@@ -22,6 +22,7 @@
     "party:dev": "partykit dev",
     "party:deploy": "dotenv -- partykit deploy --with-vars",
     "party:env": "dotenv -- partykit env",
+    "party:tail": "dotenv -- partykit tail",
     "fix": "biome check --write ./",
     "taze": "taze -r -I",
     "start": "next start"
