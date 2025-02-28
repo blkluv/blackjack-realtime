@@ -2,14 +2,14 @@ import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { truncateAddress } from '@/lib/utils';
-import { useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { nanoid } from 'nanoid';
 import { useState } from 'react';
 import { Button } from '../../ui/button';
 import { DeckOfCards } from '../DeckOfCards';
 
 const MobileLayout = () => {
-  const user = useSetAtom(userAtom);
+  const user = useAtomValue(userAtom);
   const { q, width } = useWindowSize();
   const { mySeat, blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState(0);
@@ -49,7 +49,7 @@ const MobileLayout = () => {
             )}
             {isMe && (
               <Button
-                onClick={() => {}}
+                onClick={() => { }}
                 size="sm"
                 className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
               >
