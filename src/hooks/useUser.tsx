@@ -16,7 +16,9 @@ export const useUser = () => {
 
   const fetchWsToken = async () => {
     if (!address) return;
-    const response = await client.token.getPlayerToken.$get();
+    const response = await client.token.getPlayerToken.$get({
+      walletAddress: address,
+    });
     const { token } = await response.json();
 
     return token;
