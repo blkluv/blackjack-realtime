@@ -51,23 +51,32 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
 
+    const topOffset = -85;
+    const leftOffset = 25;
+
     const newPositions = cards.map((_, index) => {
-      if (cardRefs.current[index]) {
-        const cardRect = cardRefs.current[index]?.getBoundingClientRect();
-        if (cardRect) {
-          return {
-            x: deckPosition.x - cardRect.left,
-            y: deckPosition.y - cardRect.top,
-          };
-        }
+      const cardRect = cardRefs.current[index]?.getBoundingClientRect();
+      if (cardRect) {
+        return {
+          x: deckPosition.x - cardRect.left + leftOffset,
+          y: deckPosition.y - cardRect.top + topOffset,
+        };
       }
 
-      const estimatedCardLeft = containerRect.left + index * 40 * cardSize;
-      const estimatedCardTop = containerRect.top + index * 12 * cardSize;
+      const emptyDeckCenterX = deckPosition.x + deckPosition.width / 2;
+      const emptyDeckCenterY = deckPosition.y + deckPosition.height / 2;
 
       return {
-        x: deckPosition.x - estimatedCardLeft,
-        y: deckPosition.y - estimatedCardTop,
+        x:
+          emptyDeckCenterX -
+          containerRect.left -
+          40 * cardSize * index +
+          leftOffset,
+        y:
+          emptyDeckCenterY -
+          containerRect.top -
+          12 * cardSize * index +
+          topOffset,
       };
     });
 
@@ -90,10 +99,11 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
         const initial = {
           x: shouldAnimate && cardPositions[i] ? cardPositions[i].x : 0,
           y: shouldAnimate && cardPositions[i] ? cardPositions[i].y : 0,
+          rotate: shouldAnimate ? 90 : 0,
         };
         let animationDelay = 0;
         if (shouldAnimate && animateCards) {
-          // Check if animateCards exists.
+   
           const animateCardsArray = Array.from(animateCards);
           const cardIndexInAnimate = animateCardsArray.indexOf(card);
           animationDelay = extraDelay + cardIndexInAnimate * 0.6;
@@ -105,7 +115,7 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
               cardRefs.current[i] = el;
             }}
             initial={initial}
-            animate={{ x: 0, y: 0 }}
+            animate={{ x: 0, y: 0, rotate: 0 }}
             layout
             // initial={{ y: 100 }}
             // animate={{ y: 0 }}
