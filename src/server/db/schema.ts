@@ -15,7 +15,7 @@ export const UserRounds = sqliteTable('userRounds', {
   walletAddress: text('walletAddress').notNull(), // Changed to text
   roundId: text('roundId').notNull(),
   handArray: text('handArray').notNull(),
-  state: text({ enum: ['win', 'loss', 'blackjack'] }).notNull(),
+  state: text({ enum: ['win', 'loss', 'blackjack', 'push'] }).notNull(),
   bet: int('bet').notNull(),
   reward: int('reward').notNull(),
 });

@@ -29,7 +29,7 @@ type Timers = {
   // timer on close will reset the round, timer starts when round ends
   roundEndTimer: NodeJS.Timeout | null;
 };
-type RoundResultState = 'win' | 'loss' | 'blackjack';
+type RoundResultState = 'win' | 'loss' | 'blackjack' | 'push';
 
 type PlayerState = {
   // this is the partykit connection id of the player

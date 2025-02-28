@@ -831,14 +831,29 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           netDealerReward -= p.bet;
         }
       } else if (playerScore === dealerScore) {
-        console.log(`Player ${pid} draws with ${playerScore} hence loses`);
-        // this.emit(
-        //   'game-log',
-        //   `Player ${pid} draws with ${playerScore} hence loses`,
-        // );
-        state = 'loss';
-        reward = 0; // Draw (hence lost)
-        netDealerReward += p.bet;
+        if (
+          playerScore === 21 &&
+          p.hand.length === 2 &&
+          this.state.dealerHand.length === 2
+        ) {
+          state = 'push';
+          reward = p.bet; // Push (return bet)
+        } else if (playerScore === 21 && p.hand.length === 2) {
+          state = 'blackjack';
+          reward = Math.floor(2.5 * p.bet); // Blackjack (1.5x bet - adjust as needed)
+          console.log(`Player ${pid} wins with Blackjack!`);
+          this.emit('game-log', `Player ${pid} wins with Blackjack!`);
+          netDealerReward -= Math.floor(1.5 * p.bet);
+        } else {
+          console.log(`Player ${pid} draws with ${playerScore} hence loses`);
+          // this.emit(
+          //   'game-log',
+          //   `Player ${pid} draws with ${playerScore} hence loses`,
+          // );
+          state = 'loss';
+          reward = 0; // Draw (hence lost)
+          netDealerReward += p.bet;
+        }
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
