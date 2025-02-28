@@ -38,7 +38,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
   try {
     const authHeader = c.req.header('Authorization');
     const cookies = c.req.header('Cookie');
-
+    console.log(c.env);
     if (!authHeader && !cookies) {
       throw new HTTPException(401, { message: 'Unauthorized' });
     }
@@ -78,6 +78,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
       },
     });
   } catch (error) {
+    console.error(error);
     if (error instanceof HTTPException) {
       throw error;
     }
@@ -89,8 +90,8 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
  * Authenticated procedures
  */
 export const authProcedure = j.procedure
-  .use(authMiddleWare)
-  .use(databaseMiddleware);
+  .use(databaseMiddleware)
+  .use(authMiddleWare);
 
 /**
  * Public (unauthenticated) procedures

@@ -16,13 +16,15 @@ export const useUser = () => {
 
   const fetchWsToken = async () => {
     if (!address) return;
-    const response = await client.token.getPlayerToken.$get({
-      walletAddress: address.toLowerCase(),
-    });
+    const response = await client.token.getPlayerToken.$get();
     const { token } = await response.json();
 
     return token;
   };
+
+  useEffect(() => {
+    switchNetwork(huddle01Testnet);
+  }, []);
 
   const logout = async () => {
     try {
@@ -39,8 +41,6 @@ export const useUser = () => {
   };
 
   useEffect(() => {
-    switchNetwork(huddle01Testnet);
-
     if (!user.isAuthenticated && status === 'connected' && session?.address) {
       fetchWsToken()
         .then((token) => {
@@ -56,11 +56,7 @@ export const useUser = () => {
     }
 
     if (user.isAuthenticated && status === 'disconnected') {
-      updateUser({
-        isAuthenticated: false,
-        walletAddress: '',
-        wsToken: '',
-      });
+      logout();
     }
   }, [status, address, session]);
 

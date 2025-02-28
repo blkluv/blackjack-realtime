@@ -1,6 +1,6 @@
 'use client';
 import { env } from '@/env.mjs';
-import { HuddleClient } from '@huddle01/react';
+import { HuddleClient, HuddleProvider } from '@huddle01/react';
 import { createAppKit } from '@reown/appkit/react';
 import { QueryCache } from '@tanstack/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -36,6 +36,7 @@ type Props = {
   children: React.ReactNode;
   cookies?: string;
 };
+
 const huddleClient = new HuddleClient({
   projectId: env.NEXT_PUBLIC_HUDDLE01_PROJECT_ID,
   options: {
@@ -44,6 +45,7 @@ const huddleClient = new HuddleClient({
     },
   },
 });
+
 export const Providers = ({ children, cookies }: Props) => {
   const initialState = cookieToInitialState(
     wagmiAdapter.wagmiConfig as Config,
@@ -69,9 +71,7 @@ export const Providers = ({ children, cookies }: Props) => {
         initialState={initialState}
       >
         <QueryClientProvider client={queryClient}>
-          {/* <HuddleProvider client={huddleClient}> */}
-          {children}
-          {/* </HuddleProvider> */}
+          <HuddleProvider client={huddleClient}>{children}</HuddleProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </SessionProvider>

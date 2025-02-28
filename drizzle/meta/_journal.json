@@ -8,6 +8,13 @@
       "when": 1740392806648,
       "tag": "0000_kind_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1740761062146,
+      "tag": "0001_wise_quicksilver",
+      "breakpoints": true
     }
   ]
 }
