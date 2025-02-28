@@ -283,7 +283,6 @@ const EmtpyDeck = () => {
   );
 };
 
-
 const Dealer = memo(() => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
@@ -315,21 +314,23 @@ const Dealer = memo(() => {
 
   const calculateDealerDelay = () => {
     const playerCount = gameState.playerOrder.length;
-    return playerCount * 0.8; // 0.8
+    return playerCount * 0.6; // 0.6 seconds per card
+  };
+
+  const calculateTotalPlayerDelay = () => {
+    const playerCount = gameState.playerOrder.length;
+    return playerCount * 1.4; // 1.4 seconds per player
   };
 
   useEffect(() => {
     if (cardsToAnimate.size > 0) {
       const timer = setTimeout(() => {
         setCardsToAnimate(new Set());
-      }, calculateDealerDelay() * 3000);
+      }, (calculateDealerDelay() + calculateTotalPlayerDelay()) * 1000);
 
       return () => clearTimeout(timer);
     }
   }, [cardsToAnimate]);
-
-  console.log("old dealer: ", cards);
-  console.log("new dealer: ", cardsToAnimate);
 
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
@@ -342,7 +343,7 @@ const Dealer = memo(() => {
             dealer
             index={gameState.playerOrder.length + 1}
             animateCards={cardsToAnimate}
-            dealerDelay={calculateDealerDelay()}
+            dealerDelay={calculateTotalPlayerDelay()}
           />
         </div>
       )}
