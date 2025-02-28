@@ -5,7 +5,7 @@ import { soundAtom } from "@/atoms/sound.atom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { motion } from "motion/react";
 // import { nanoid } from "nanoid";
-import type { FC } from "react";
+import { useLayoutEffect, useRef, useState, type FC } from "react";
 import PlayingCard, {
   type TPlayingCardSize,
   type EPlayingCardState,
@@ -35,10 +35,44 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
     md: 1,
     lg: 1.2,
   };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [cardPositions, setCardPositions] = useState<
+    Array<{ x: number; y: number }>
+  >(cards.map(() => ({ x: 0, y: 0 })));
 
   const cardSize = cardSizeMap[size];
   const deckPosition = useAtomValue(deckPositionAtom);
   const playSound = useSetAtom(soundAtom);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current || (deckPosition.x === 0 && deckPosition.y === 0))
+      return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    const newPositions = cards.map((_, index) => {
+      if (cardRefs.current[index]) {
+        const cardRect = cardRefs.current[index]?.getBoundingClientRect();
+        if (cardRect) {
+          return {
+            x: deckPosition.x - cardRect.left,
+            y: deckPosition.y - cardRect.top,
+          };
+        }
+      }
+
+      const estimatedCardLeft = containerRect.left + index * 40 * cardSize;
+      const estimatedCardTop = containerRect.top + index * 12 * cardSize;
+
+      return {
+        x: deckPosition.x - estimatedCardLeft,
+        y: deckPosition.y - estimatedCardTop,
+      };
+    });
+
+    setCardPositions(newPositions);
+  }, [deckPosition, cardSize, cards.length]);
 
   return (
     <div
@@ -46,21 +80,28 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
       style={{
         right: cards.length * (16 * cardSize),
       }}
+      ref={containerRef}
     >
       {cards.map((card, i) => {
         const shouldAnimate = animateCards?.has(card);
 
         // const shouldAnimate = true;
 
-        const initial = { y: shouldAnimate ? 100 : 0 };
+        const initial = {
+          x: shouldAnimate && cardPositions[i] ? cardPositions[i].x : 0,
+          y: shouldAnimate && cardPositions[i] ? cardPositions[i].y : 0,
+        };
 
         console.log(initial, shouldAnimate);
 
         return (
           <motion.div
             key={`card-${i}-${card}-${shouldAnimate ? "animate" : "static"}`}
+            ref={(el) => {
+              cardRefs.current[i] = el;
+            }}
             initial={initial}
-            animate={{ y: 0 }}
+            animate={{ x: 0, y: 0 }}
             layout
             // initial={{ y: 100 }}
             // animate={{ y: 0 }}

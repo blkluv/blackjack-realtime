@@ -275,7 +275,7 @@ const EmtpyDeck = () => {
   }, [setPosition]);
 
   return (
-    <div ref={divRef}>
+    <div ref={divRef} className="z-20">
       <PlayingCard card="**" size={width > 1280 ? "md" : "sm"} />
     </div>
   );
