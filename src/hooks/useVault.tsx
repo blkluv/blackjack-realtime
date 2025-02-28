@@ -1,3 +1,5 @@
+import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
+import { useAtomValue } from 'jotai';
 // hooks/useVault.ts
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -59,6 +61,7 @@ export function useVault(): UseVaultReturn {
   // State hooks
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
   const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const triggerBalanceRefresh = useAtomValue(triggerBalanceRefreshAtom);
   const [balances, setBalances] = useState<VaultBalances>({
     tokenBalance: '0',
     vaultBalance: '0',
@@ -96,7 +99,7 @@ export function useVault(): UseVaultReturn {
     if (address) {
       refreshBalances();
     }
-  }, [address]);
+  }, [address, triggerBalanceRefresh]);
 
   // Get token decimals
   const getTokenDecimals = useCallback(async (): Promise<number> => {

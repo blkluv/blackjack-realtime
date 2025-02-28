@@ -21,6 +21,11 @@ const setGameStateAtom = atom(
   },
 );
 
+const triggerBalanceRefreshAtom = atom<number>(0);
+const setTriggerBalanceRefreshAtom = atom(null, (get, set) => {
+  set(triggerBalanceRefreshAtom, get(triggerBalanceRefreshAtom) + 1);
+});
+
 const betStateAtom = atom<BetStatus | null>(null);
 
 const setBetStateAtom = atom(
@@ -38,4 +43,6 @@ export {
   type BlackjackSend,
   setBetStateAtom,
   betStateAtom,
+  triggerBalanceRefreshAtom,
+  setTriggerBalanceRefreshAtom,
 };

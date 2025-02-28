@@ -6,7 +6,6 @@ import { useUser } from './useUser';
 const useBlackjack = () => {
   const { user } = useUser();
   const partyKit = useAtomValue(partyKitAtom);
-
   const blackjackSend: BlackjackSend = (message) => {
     if (!partyKit) return;
     partyKit.send(JSON.stringify({ room: 'blackjack', ...message }));

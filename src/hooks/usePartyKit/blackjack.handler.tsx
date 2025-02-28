@@ -1,4 +1,8 @@
-import { setBetStateAtom, setGameStateAtom } from '@/atoms/blackjack.atom';
+import {
+  setBetStateAtom,
+  setGameStateAtom,
+  setTriggerBalanceRefreshAtom,
+} from '@/atoms/blackjack.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { useSetAtom } from 'jotai';
 import type { TPartyKitServerMessage } from '../../../party';
@@ -7,13 +11,17 @@ export const useBlackjackHandler = () => {
   const setGameState = useSetAtom(setGameStateAtom);
   const setTimeState = useSetAtom(timeStateAtom);
   const setBetState = useSetAtom(setBetStateAtom);
+  const setTriggerBalanceRefresh = useSetAtom(setTriggerBalanceRefreshAtom);
   const blackjackHandler = (message: TPartyKitServerMessage) => {
     const { room, type, data } = message;
 
     if (room === 'blackjack') {
       if (type === 'stateUpdate') {
         setGameState(data.state);
-        if (data.state.status === 'waiting') {
+
+        if (data.state.status === 'roundover') {
+          setTriggerBalanceRefresh();
+        } else if (data.state.status === 'waiting') {
           setBetState(null);
         }
       } else if (type === 'betTimerStart') {
@@ -38,6 +46,9 @@ export const useBlackjackHandler = () => {
         });
       } else if (type === 'bet-log') {
         setBetState(data.status);
+        if (data.status === 'bet-placed') {
+          setTriggerBalanceRefresh();
+        }
       } else if (type === 'error') {
         console.log('error', data);
       }
