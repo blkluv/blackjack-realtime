@@ -3,6 +3,7 @@ import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useUser } from '@/hooks/useUser';
+import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
@@ -22,6 +23,7 @@ const ControlCentre = () => {
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
+  const { balances } = useVault();
   const betState = useAtomValue(betStateAtom);
   const playSound = useSetAtom(soundAtom);
   // const player = getCurrentPlayer();
@@ -67,7 +69,12 @@ const ControlCentre = () => {
             placeholder="Place your bet"
             className="border-zinc-800 bg-zinc-900 rounded-full focus-visible:ring-zinc-700"
           />
-          <Button className="cursor-pointer rounded-full text-zinc-100 bg-zinc-900 border border-zinc-800">
+          <Button
+            className="cursor-pointer rounded-full text-zinc-100 bg-zinc-900 border border-zinc-800"
+            onClick={() => {
+              setBetAmount(balances.vaultBalance);
+            }}
+          >
             All
           </Button>
         </div>

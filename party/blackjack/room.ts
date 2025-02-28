@@ -53,6 +53,9 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   state: GameState;
   timers: Timers;
   db: TDatabase;
+
+  betPromises: Promise<void>[];
+
   private operatorPrivateKey: string; // Server's private key for operator
   private operatorAccount: ReturnType<typeof privateKeyToAccount>;
   private walletClient: ReturnType<typeof createWalletClient>;
@@ -66,6 +69,8 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.id = id;
     this.room = room;
     this.db = db;
+
+    this.betPromises = [];
 
     this.state = {
       players: {},
@@ -399,7 +404,12 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     });
   }
 
-  async placeBet(
+  private placeBet(connectionId: string, userId: `0x${string}`, bet: number) {
+    const promise = this.placeBetPromise(connectionId, userId, bet);
+    this.betPromises.push(promise);
+  }
+
+  private async placeBetPromise(
     connectionId: string,
     userId: `0x${string}`,
     bet: number,
@@ -538,7 +548,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     return Math.max(0, timeRemaining);
   }
 
-  startRound(): void {
+  async startRound(): Promise<void> {
+    await Promise.all(this.betPromises).catch((err) => {
+      console.error('bet promises failed', err);
+    });
+
+    this.betPromises = [];
+
     if (this.timers.betTimer) {
       clearTimeout(this.timers.betTimer);
       this.timers.betTimer = null;
@@ -572,8 +588,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .map((player) => player.userId);
 
     // Replenish deck if needed.
-    if (this.state.deck.length < 15) {
+    if (this.state.deck.length < 52) {
       this.state.deck = createDeck();
+      console.log(
+        'New 4-deck shoe created with',
+        this.state.deck.length,
+        'cards',
+      );
     }
 
     // Reset players' state.

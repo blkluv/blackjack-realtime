@@ -21,9 +21,12 @@ function createDeck(): Card[] {
   ];
   const suits = ['c', 'd', 'h', 's'];
   const deck: Card[] = [];
-  for (const r of ranks) {
-    for (const s of suits) {
-      deck.push(`${r}${s}`);
+
+  for (let d = 0; d < 4; d++) {
+    for (const r of ranks) {
+      for (const s of suits) {
+        deck.push(`${r}${s}`);
+      }
     }
   }
   // Shuffle with Fisher–Yates algorithm.
