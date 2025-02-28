@@ -49,7 +49,7 @@ const MobileLayout = () => {
             )}
             {isMe && (
               <Button
-                onClick={() => { }}
+                onClick={() => {}}
                 size="sm"
                 className="bg-red-400 text-black hover:bg-red-500 cursor-pointer rounded-lg"
               >
