@@ -1,13 +1,14 @@
+import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
-import { useUser } from '@/hooks/useUser';
 import { cn } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
 import { MicIcon, MicOffIcon } from 'lucide-react';
 import { useState } from 'react';
 // import WalletConnect from '../auth/WalletConnect';
 import { Button } from '../ui/button';
 
 const ActionButtons = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
   const getPlayer = (userId: string) => {
     for (const player of Object.values(gameState.players)) {

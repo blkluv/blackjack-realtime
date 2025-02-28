@@ -1,8 +1,8 @@
 import { betStateAtom } from '@/atoms/blackjack.atom';
 import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
+import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
-import { useUser } from '@/hooks/useUser';
 import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -18,7 +18,7 @@ import { SoundType } from '../Utils/sound';
 // import { PlayerState } from "../../../../party/blackjack/blackjack.types";
 
 const ControlCentre = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);

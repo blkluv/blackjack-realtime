@@ -5,19 +5,19 @@ import {
   staticIdAtom,
 } from '@/atoms/atom';
 
+import { userAtom } from '@/atoms/user.atom';
 import { env } from '@/env.mjs';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { usePartySocket } from 'partysocket/react';
 import { useEffect } from 'react';
 import type { TPartyKitServerMessage } from '../../../party';
-import { useUser } from '../useUser';
 import { useBlackjackHandler } from './blackjack.handler';
 import { useChatHandler } from './chat.handler';
 import { useCursorHandler } from './cursor.handler';
 import { useDefaultHandler } from './default.handler';
 
 export const usePartyKit = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const setPartyKit = useSetAtom(setPartyKitAtom);
   const [staticId, setStaticId] = useAtom(staticIdAtom);
 

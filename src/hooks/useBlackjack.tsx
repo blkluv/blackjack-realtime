@@ -1,10 +1,10 @@
 import { partyKitAtom } from '@/atoms/atom';
 import { type BlackjackSend, gameStateAtom } from '@/atoms/blackjack.atom';
+import { userAtom } from '@/atoms/user.atom';
 import { useAtomValue } from 'jotai';
-import { useUser } from './useUser';
 
 const useBlackjack = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const partyKit = useAtomValue(partyKitAtom);
   const blackjackSend: BlackjackSend = (message) => {
     if (!partyKit) return;

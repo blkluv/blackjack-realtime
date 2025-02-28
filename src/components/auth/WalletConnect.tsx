@@ -1,5 +1,4 @@
 'use client';
-
 import {
   Popover,
   PopoverContent,
@@ -18,8 +17,8 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 
 const WalletConnect = () => {
-  const { open } = useAppKit();
   const { user } = useUser();
+  const { open } = useAppKit();
   const { disconnect } = useDisconnect();
   const { address } = useAppKitAccount();
   const { balances, withdraw, deposit, transaction } = useVault();

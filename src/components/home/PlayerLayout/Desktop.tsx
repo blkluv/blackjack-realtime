@@ -1,7 +1,8 @@
+import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
-import { useUser } from '@/hooks/useUser';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { truncateAddress } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
 import { nanoid } from 'nanoid';
 import { useState } from 'react';
 import { handValue } from '../../../../party/blackjack/blackjack.utils';
@@ -9,7 +10,7 @@ import { Button } from '../../ui/button';
 import { DeckOfCards } from '../DeckOfCards';
 
 const DesktopLayout = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const { q } = useWindowSize();
   const { mySeat, blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState(0);
