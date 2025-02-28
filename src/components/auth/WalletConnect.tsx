@@ -22,10 +22,9 @@ const WalletConnect = () => {
   const { user } = useUser();
   const { disconnect } = useDisconnect();
   const { address } = useAppKitAccount();
-  const { balances, withdraw, deposit, transaction } = useVault()
+  const { balances, withdraw, deposit, transaction } = useVault();
 
   const [value, setValue] = useState<number | undefined>(undefined);
-
 
   const handleWithdraw = async () => {
     if (!address || value === undefined || value <= 0) return;
@@ -36,7 +35,6 @@ const WalletConnect = () => {
     }
 
     await withdraw(String(value));
-
   };
   const handleDeposit = async () => {
     if (!address || value === undefined || value <= 0) return;
@@ -51,7 +49,9 @@ const WalletConnect = () => {
           onClick={() => (!user.isAuthenticated ? open() : null)}
           className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
         >
-          {user.walletAddress ? `Bal: ${balances.vaultBalance}` : 'Connect Wallet'}
+          {user.walletAddress
+            ? `Bal: ${balances.vaultBalance}`
+            : 'Connect Wallet'}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (

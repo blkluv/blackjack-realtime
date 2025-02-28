@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const BETTING_PERIOD = 10000;
+const BETTING_PERIOD = 15000;
 const PLAYER_TURN_PERIOD = 10000;
 const ROUND_END_PERIOD = 10000;
 
@@ -118,8 +118,14 @@ const BlackjackMessageSchema = z.union([
 type TBlackjackMessageSchema = z.infer<typeof BlackjackMessageSchema>;
 
 // all server to client messages
-
+type BetStatus =
+  | 'checking-balance'
+  | 'deducting-funds'
+  | 'bet-placed'
+  | 'insufficient-funds'
+  | 'bet-failed';
 type BlackjackRecord = {
+  'bet-log': { status: BetStatus };
   error: { message: string };
   stateUpdate: { state: ClientSideGameState };
   betTimerStart: { startedAt: number };
@@ -146,6 +152,7 @@ export {
   type Card,
   type TStatus,
   type Timers,
+  type BetStatus,
   BETTING_PERIOD,
   PLAYER_TURN_PERIOD,
   ROUND_END_PERIOD,

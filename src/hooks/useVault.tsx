@@ -89,7 +89,6 @@ export function useVault(): UseVaultReturn {
     });
 
     setWalletClient(client);
-
   }, []);
 
   // Fetch balances when address changes
@@ -190,7 +189,7 @@ export function useVault(): UseVaultReturn {
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
           account: address,
-          chain: huddle01Testnet
+          chain: huddle01Testnet,
         });
 
         setTransaction({
@@ -267,8 +266,7 @@ export function useVault(): UseVaultReturn {
           functionName: 'deposit',
           args: [amountInTokenUnits],
           account: address,
-          chain: huddle01Testnet
-
+          chain: huddle01Testnet,
         });
 
         setTransaction({
@@ -351,7 +349,7 @@ export function useVault(): UseVaultReturn {
           functionName: 'withdraw',
           args: [amountInTokenUnits],
           account: address,
-          chain: huddle01Testnet
+          chain: huddle01Testnet,
         });
 
         setTransaction({

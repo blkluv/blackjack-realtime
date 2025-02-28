@@ -1,3 +1,4 @@
+import { betStateAtom } from '@/atoms/blackjack.atom';
 import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
@@ -21,6 +22,7 @@ const ControlCentre = () => {
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
+  const betState = useAtomValue(betStateAtom);
   const playSound = useSetAtom(soundAtom);
   // const player = getCurrentPlayer();
 
@@ -56,7 +58,8 @@ const ControlCentre = () => {
             onChange={(e) => {
               if (
                 Number.isNaN(Number(e.target.value)) ||
-                Number(e.target.value) < 0
+                Number(e.target.value) < 0 ||
+                Number(e.target.value) % 1 !== 0
               )
                 return;
               setBetAmount(e.target.value);
@@ -127,8 +130,12 @@ const ControlCentre = () => {
       </div>
       <div className="px-4">
         <BatteryButton
-          text="Bet"
-          disabled={!isBet || !(Number(betAmount) > 0) || player?.bet !== 0}
+          text={`${betState === null ? 'Bet' : betState}`}
+          disabled={
+            !(isBet && (betState === null || betState === 'bet-placed')) ||
+            !(Number(betAmount) > 0) ||
+            player?.bet !== 0
+          }
           icon={<HandCoins />}
           animate={isBet}
           className="text-zinc-900"

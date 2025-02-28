@@ -57,6 +57,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   private operatorAccount: ReturnType<typeof privateKeyToAccount>;
   private walletClient: ReturnType<typeof createWalletClient>;
   private publicClient: ReturnType<typeof createPublicClient>;
+
+  //Mutex for bet timer
+  private betTimerMutexLocked = false;
+
   constructor(id: string, room: Party.Room, db: TDatabase) {
     super();
     this.id = id;
@@ -362,6 +366,39 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.sendGameState('broadcast');
   }
 
+  /**
+   * Execute a function with timer mutex protection
+   */
+  private async withTimerMutex<T>(fn: () => T): Promise<T> {
+    // Wait until lock is free
+    while (this.betTimerMutexLocked) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    // Acquire lock
+    this.betTimerMutexLocked = true;
+
+    try {
+      // Execute the protected code
+      return fn();
+    } finally {
+      // Release lock
+      this.betTimerMutexLocked = false;
+    }
+  }
+
+  /**
+   * Safe timer check and start if needed
+   */
+  private async ensureBetTimer(): Promise<void> {
+    await this.withTimerMutex(() => {
+      if (!this.timers.betTimer) {
+        this.startBetTimer();
+      }
+      return true;
+    });
+  }
+
   async placeBet(
     connectionId: string,
     userId: `0x${string}`,
@@ -371,11 +408,22 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       return;
     }
 
+    this.send(connectionId, {
+      room: 'blackjack',
+      type: 'bet-log',
+      data: { status: 'checking-balance' },
+    });
+
     // Check if player has enough balance
     const hasSufficientBalance = await this.checkPlayerBalance(userId, bet);
 
     if (!hasSufficientBalance) {
       // Send error message to player
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'insufficient-funds' },
+      });
       this.send(connectionId, {
         room: 'blackjack',
         type: 'error',
@@ -397,6 +445,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     try {
       // Use a negative amount to deduct funds
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'deducting-funds' },
+      });
       const success = await this.updatePlayerBalance(
         userId,
         -bet, // Negative value to deduct the bet amount
@@ -404,6 +457,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       );
 
       if (!success) {
+        this.send(connectionId, {
+          room: 'blackjack',
+          type: 'bet-log',
+          data: { status: 'bet-failed' },
+        });
         this.send(connectionId, {
           room: 'blackjack',
           type: 'error',
@@ -424,13 +482,18 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         })
         .map((player) => player.userId);
 
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'bet-placed' },
+      });
+
       this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
 
       this.sendGameState('broadcast');
 
-      if (!this.timers.betTimer) {
-        this.startBetTimer();
-      }
+      // Use the mutex-protected timer method
+      await this.ensureBetTimer();
     } catch (error) {
       console.error(`Error processing bet for ${userId}:`, error);
       this.send(connectionId, {
@@ -683,10 +746,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
 
     this.sendGameState('broadcast');
-
-    setTimeout(() => {
-      this.endRound();
-    }, 5000);
+    this.endRound();
   }
 
   endRound(): void {
