@@ -749,7 +749,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.endRound();
   }
 
-  endRound(): void {
+  async endRound(): Promise<void> {
     type UserRoundObj = {
       id: string;
       walletAddress: string;
@@ -871,6 +871,8 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .catch((err) => {
         console.error('TableRounds insert failed', err);
       });
+
+    await Promise.all(balanceUpdates);
 
     this.sendGameState('broadcast');
 

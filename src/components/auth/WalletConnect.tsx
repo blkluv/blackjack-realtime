@@ -62,11 +62,11 @@ const WalletConnect = () => {
           <div className="flex flex-col bg-zinc-900 text-yellow-500 text-xs divide-y divide-zinc-800">
             <div className="flex justify-between items-center p-4">
               <div>Wallet Balance:</div>
-              <div>{balances.tokenBalance} ETH</div>
+              <div>{balances.tokenBalance} $BJT</div>
             </div>
             <div className="flex justify-between items-center p-4">
               <div>Vault Balance:</div>
-              <div>{balances.vaultBalance} ETH</div>
+              <div>{balances.vaultBalance} $BJT</div>
             </div>
             <div className="flex justify-between items-center p-4 space-x-4">
               <input
