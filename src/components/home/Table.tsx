@@ -1,86 +1,86 @@
-import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
-import { deckPositionAtom } from '@/atoms/deck.atom';
-import { timeStateAtom } from '@/atoms/time.atom';
-import PlayerDeck from '@/components/home/PlayerDeck';
-import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
-import { useBlackjack } from '@/hooks/useBlackjack';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
-import { cn, truncateAddress } from '@/lib/utils';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { DoorOpen } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { nanoid } from 'nanoid';
-import Image from 'next/image';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { dealerCardsAtom, playerCardsAtom } from "@/atoms/cards.atom";
+import { deckPositionAtom } from "@/atoms/deck.atom";
+import { timeStateAtom } from "@/atoms/time.atom";
+import PlayerDeck from "@/components/home/PlayerDeck";
+import PlayingCard, { EPlayingCardState } from "@/components/home/PlayingCard";
+import { useBlackjack } from "@/hooks/useBlackjack";
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { LG_VIEWPORT, XL_VIEWPORT } from "@/lib/constants";
+import { cn, truncateAddress } from "@/lib/utils";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { DoorOpen } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { nanoid } from "nanoid";
+import Image from "next/image";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type {
   PlayerState,
   RoundResultState,
-} from '../../../party/blackjack/blackjack.types';
+} from "../../../party/blackjack/blackjack.types";
 
 const FiveIconMap = [
   {
-    src: 'fire.png',
-    border: 'border-[#FF6C0A]',
-    text: 'text-[#FF6C0A]',
-    bg: 'bg-[#FF6C0A]',
+    src: "fire.png",
+    border: "border-[#FF6C0A]",
+    text: "text-[#FF6C0A]",
+    bg: "bg-[#FF6C0A]",
   },
   {
-    src: 'water.png',
-    border: 'border-[#0593FF]',
-    text: 'text-[#0593FF]',
-    bg: 'bg-[#0593FF]',
+    src: "water.png",
+    border: "border-[#0593FF]",
+    text: "text-[#0593FF]",
+    bg: "bg-[#0593FF]",
   },
   {
-    src: 'wind.png',
-    border: 'border-[#00FFD5]',
-    text: 'text-[#00FFD5]',
-    bg: 'bg-[#00FFD5]',
+    src: "wind.png",
+    border: "border-[#00FFD5]",
+    text: "text-[#00FFD5]",
+    bg: "bg-[#00FFD5]",
   },
   {
-    src: 'lightning.png',
-    border: 'border-[#EFFF00]',
-    text: 'text-[#EFFF00]',
-    bg: 'bg-[#EFFF00]',
+    src: "lightning.png",
+    border: "border-[#EFFF00]",
+    text: "text-[#EFFF00]",
+    bg: "bg-[#EFFF00]",
   },
   {
-    src: 'leaf.png',
-    border: 'border-[#41A851]',
-    text: 'text-[#41A851]',
-    bg: 'bg-[#41A851]',
+    src: "leaf.png",
+    border: "border-[#41A851]",
+    text: "text-[#41A851]",
+    bg: "bg-[#41A851]",
   },
 ];
 
 const GodsMap = [
   {
-    src: '/images/gods/1.png',
-    border: 'border-[#C63F3D]',
-    text: 'text-[#C63F3D]',
-    bg: 'bg-[#C63F3D]',
+    src: "/images/gods/1.png",
+    border: "border-[#C63F3D]",
+    text: "text-[#C63F3D]",
+    bg: "bg-[#C63F3D]",
   },
   {
-    src: '/images/gods/2.png',
-    border: 'border-[#3CA89C]',
-    text: 'text-[#3CA89C]',
-    bg: 'bg-[#3CA89C]',
+    src: "/images/gods/2.png",
+    border: "border-[#3CA89C]",
+    text: "text-[#3CA89C]",
+    bg: "bg-[#3CA89C]",
   },
   {
-    src: '/images/gods/3.png',
-    border: 'border-[#6251C8]',
-    text: 'text-[#6251C8]',
-    bg: 'bg-[#6251C8]',
+    src: "/images/gods/3.png",
+    border: "border-[#6251C8]",
+    text: "text-[#6251C8]",
+    bg: "bg-[#6251C8]",
   },
   {
-    src: '/images/gods/4.png',
-    border: 'border-[#CE4471]',
-    text: 'text-[#CE4471]',
-    bg: 'bg-[#CE4471]',
+    src: "/images/gods/4.png",
+    border: "border-[#CE4471]",
+    text: "text-[#CE4471]",
+    bg: "bg-[#CE4471]",
   },
   {
-    src: '/images/gods/5.png',
-    border: 'border-[#FD994E]',
-    text: 'text-[#FD994E]',
-    bg: 'bg-[#FD994E]',
+    src: "/images/gods/5.png",
+    border: "border-[#FD994E]",
+    text: "text-[#FD994E]",
+    bg: "bg-[#FD994E]",
   },
 ];
 
@@ -120,7 +120,7 @@ const Table = memo(() => {
   return (
     <div className="h-full w-full outline-4 outline-zinc-950 p-10 rounded-full bg-amber-950 relative">
       <Image
-        src={'/wood.png'}
+        src={"/wood.png"}
         alt=""
         layout="fill"
         objectFit="cover"
@@ -132,7 +132,7 @@ const Table = memo(() => {
         className="w-full h-full bg-zinc-950 outline-4 outline-amber-900 flex items-center justify-center rounded-full border border-zinc-800 relative"
       >
         <Image
-          src={'/bg.png'}
+          src={"/bg.png"}
           alt=""
           width={2000}
           height={2000}
@@ -158,7 +158,7 @@ const Table = memo(() => {
           const tangentAngle =
             Math.atan2(
               radiusX * Math.sin(angleRad),
-              radiusY * Math.cos(angleRad),
+              radiusY * Math.cos(angleRad)
             ) *
             (180 / Math.PI);
 
@@ -169,23 +169,23 @@ const Table = memo(() => {
           //   player?.userId ===
           //     gameState.playerOrder[gameState.currentPlayerIndex];
           const isCurrentTurn =
-            state === 'playerTimerStart' && userId === player?.userId;
+            state === "playerTimerStart" && userId === player?.userId;
           // console.log(state, userId, player?.userId);
           const cards = player?.hand;
           const isJoinGame = mySeat === -1 && !player;
           const result = player?.roundResult?.state;
 
           const getResultColor = (): string => {
-            if (!result) return '';
+            if (!result) return "";
             switch (result) {
-              case 'win':
-                return 'border-green-500 animate-none';
-              case 'loss':
-                return 'border-red-500 animate-none';
-              case 'blackjack':
-                return 'border-yellow-500 animate-none';
+              case "win":
+                return "border-green-500 animate-none";
+              case "loss":
+                return "border-red-500 animate-none";
+              case "blackjack":
+                return "border-yellow-500 animate-none";
               default:
-                return '';
+                return "";
             }
           };
 
@@ -207,11 +207,11 @@ const Table = memo(() => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square',
+                    "lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-64 rounded-full aspect-square",
                     // `${FiveColorMap[index]}`,
-                    player && 'border-4 border-zinc-100 border-dotted',
-                    isCurrentTurn && 'animate-pulse',
-                    getResultColor(),
+                    player && "border-4 border-zinc-100 border-dotted",
+                    isCurrentTurn && "animate-pulse",
+                    getResultColor()
                   )}
                 >
                   {/* <div className="fixed w-full h-full top-0 left-0"> */}
@@ -264,19 +264,19 @@ const EmtpyDeck = () => {
     updatePosition();
 
     // Update position on scroll and resize
-    window.addEventListener('scroll', updatePosition);
-    window.addEventListener('resize', updatePosition);
+    window.addEventListener("scroll", updatePosition);
+    window.addEventListener("resize", updatePosition);
 
     // Clean up
     return () => {
-      window.removeEventListener('scroll', updatePosition);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [setPosition]);
 
   return (
     <div ref={divRef}>
-      <PlayingCard card="**" size={width > 1280 ? 'md' : 'sm'} />
+      <PlayingCard card="**" size={width > 1280 ? "md" : "sm"} />
     </div>
   );
 };
@@ -309,11 +309,16 @@ const Dealer = memo(() => {
     if (cardsToAnimate.size > 0) {
       const timer = setTimeout(() => {
         setCardsToAnimate(new Set());
-      }, 1000);
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
   }, [cardsToAnimate]);
+
+  const calculateDealerDelay = () => {
+    const playerCount = gameState.playerOrder.length;
+    return playerCount * 0.8; // 0.8
+  };
 
   return (
     <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
@@ -326,6 +331,7 @@ const Dealer = memo(() => {
             dealer
             index={gameState.playerOrder.length + 1}
             animateCards={cardsToAnimate}
+            dealerDelay={calculateDealerDelay()}
           />
         </div>
       )}
@@ -339,18 +345,18 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const { width } = useWindowSize();
   const getSize = () => {
     if (width > XL_VIEWPORT) {
-      if (isHovering) return '8rem';
-      return '16rem';
+      if (isHovering) return "8rem";
+      return "16rem";
     }
     if (width > LG_VIEWPORT) {
-      if (isHovering) return '5rem';
-      return '12rem';
+      if (isHovering) return "5rem";
+      return "12rem";
     }
   };
   const joinGame = () => {
-    console.log('joining game');
+    console.log("joining game");
     blackjackSend({
-      type: 'playerJoin',
+      type: "playerJoin",
       data: {
         seat: index + 1,
       },
@@ -362,8 +368,8 @@ const JoinGame = memo(({ index }: { index: number }) => {
       onHoverEnd={() => setIsHovering(false)}
       onClick={joinGame}
       className={cn(
-        'w-full h-full rounded-full cursor-pointer space-y-2 flex flex-col items-center justify-center overflow-hidden',
-        GodsMap[index]?.bg,
+        "w-full h-full rounded-full cursor-pointer space-y-2 flex flex-col items-center justify-center overflow-hidden",
+        GodsMap[index]?.bg
       )}
     >
       <motion.div
@@ -374,18 +380,18 @@ const JoinGame = memo(({ index }: { index: number }) => {
         className="rounded-full"
       >
         <Image
-          src={GodsMap[index]?.src || ''}
+          src={GodsMap[index]?.src || ""}
           alt=""
           height={500}
           width={500}
-          className={cn('size-full rounded-full')}
+          className={cn("size-full rounded-full")}
         />
       </motion.div>
       <AnimatePresence mode="popLayout">
         {isHovering && (
           <motion.div
             layout
-            key={'join'}
+            key={"join"}
             initial={{
               y: 30,
             }}
@@ -424,7 +430,7 @@ const InGame = memo(
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
-      new Set(),
+      new Set()
     );
 
     useEffect(() => {
@@ -454,24 +460,24 @@ const InGame = memo(
       if (cardsToAnimate.size > 0) {
         const timer = setTimeout(() => {
           setCardsToAnimate(new Set());
-        }, 2000);
+        }, 3000);
 
         return () => clearTimeout(timer);
       }
     }, [cardsToAnimate]);
 
     const handleExit = () => {
-      blackjackSend({ type: 'leave', data: {} });
-      console.log('closing');
+      blackjackSend({ type: "leave", data: {} });
+      console.log("closing");
     };
 
     const getState = (): EPlayingCardState => {
       switch (state) {
-        case 'win':
+        case "win":
           return EPlayingCardState.winner;
-        case 'loss':
+        case "loss":
           return EPlayingCardState.loser;
-        case 'blackjack':
+        case "blackjack":
           return EPlayingCardState.blackjack;
         default:
           return EPlayingCardState.default;
@@ -480,8 +486,8 @@ const InGame = memo(
 
     const memoizedPlayerDeck = useMemo(() => {
       if (!player) return null;
-      console.log('old: ', cards);
-      console.log('new ', cardsToAnimate);
+      console.log("old: ", cards);
+      console.log("new ", cardsToAnimate);
       return (
         cards &&
         cards.length > 0 && (
@@ -502,8 +508,8 @@ const InGame = memo(
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         className={cn(
-          'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
-          GodsMap[index]?.bg,
+          "w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden",
+          GodsMap[index]?.bg
         )}
       >
         <div className="flex">
@@ -521,17 +527,17 @@ const InGame = memo(
                   opacity: isMe ? 0 : 1,
                 }}
                 className={cn(
-                  'rounded-full lg:size-24 xl:size-32',
-                  !player && 'lg:size-48 xl:size-64 -mb-2',
+                  "rounded-full lg:size-24 xl:size-32",
+                  !player && "lg:size-48 xl:size-64 -mb-2"
                 )}
               >
                 {!(player && cards && cards.length > 0) && (
                   <Image
-                    src={GodsMap[index]?.src || ''}
+                    src={GodsMap[index]?.src || ""}
                     alt=""
                     height={500}
                     width={500}
-                    className={cn('size-full rounded-full')}
+                    className={cn("size-full rounded-full")}
                   />
                 )}
               </motion.div>
@@ -539,7 +545,7 @@ const InGame = memo(
             {isHovering && isMe && !(player && cards && cards.length > 0) && (
               <motion.div
                 layout
-                key={'join'}
+                key={"join"}
                 initial={{
                   x: 30,
                 }}
@@ -554,7 +560,7 @@ const InGame = memo(
                 className="flex space-x-2 cursor-pointer justify-center w-full lg:my-5 xl:my-6 items-center"
               >
                 {/* <div className="whitespace-nowrap text-center">Leave</div> */}
-                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
+                <DoorOpen className={cn("lg:size-14 xl:size-20 text-white")} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -562,7 +568,7 @@ const InGame = memo(
 
         {player && cards?.length === 0 && (
           <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-            {isMe ? 'You' : truncateAddress(player.userId)}
+            {isMe ? "You" : truncateAddress(player.userId)}
           </div>
         )}
         {player && (
@@ -572,5 +578,5 @@ const InGame = memo(
         )}
       </motion.div>
     );
-  },
+  }
 );

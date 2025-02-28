@@ -1,9 +1,9 @@
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { truncateAddress } from '@/lib/utils';
-import { type FC, memo } from 'react';
-import DeckOfCards4 from './DeckOfCards4';
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { truncateAddress } from "@/lib/utils";
+import { type FC, memo } from "react";
+import DeckOfCards4 from "./DeckOfCards4";
 // import DeckOfCards2 from "./DeckOfCards2";
-import type { EPlayingCardState, TPlayingCardSize } from './PlayingCard';
+import type { EPlayingCardState, TPlayingCardSize } from "./PlayingCard";
 
 type TPlayingCardProps = {
   cards: string[];
@@ -13,14 +13,24 @@ type TPlayingCardProps = {
   state?: EPlayingCardState;
   index: number;
   animateCards: Set<string>;
+  dealerDelay?: number;
 };
 
 const PlayerDeck: FC<TPlayingCardProps> = memo(
-  ({ bet, cards, walletAddress, dealer, state, index, animateCards }) => {
+  ({
+    bet,
+    cards,
+    walletAddress,
+    dealer,
+    state,
+    index,
+    animateCards,
+    dealerDelay,
+  }) => {
     // console.log("animateCards in PlayerDeck:", animateCards);
 
     const { width } = useWindowSize();
-    const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
+    const size: TPlayingCardSize = width < 1280 ? "sm" : "md";
 
     const calculate = (): {
       bottom: string;
@@ -29,11 +39,11 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
       let bottom = 0;
       let left = 0;
       switch (size) {
-        case 'sm':
+        case "sm":
           bottom = -16 * cards.length - 8;
           left = -1 * cards.length;
           break;
-        case 'md':
+        case "md":
           bottom = -14 * cards.length - 12;
           left = -10 * cards.length - 12;
           break;
@@ -85,7 +95,7 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
       prevProps.state === nextProps.state &&
       prevProps.animateCards === nextProps.animateCards
     );
-  },
+  }
 );
 
 export default PlayerDeck;
