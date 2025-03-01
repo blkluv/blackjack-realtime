@@ -78,6 +78,44 @@ const handler = NextAuth({
   // https://next-auth.js.org/configuration/providers/oauth
   secret: nextAuthSecret,
   providers,
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        domain: env.NODE_ENV === 'production' ? '.arcy.in' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: 'next-auth.callback-url',
+      options: {
+        domain: env.NODE_ENV === 'production' ? '.arcy.in' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: 'next-auth.csrf-token',
+      options: {
+        domain: env.NODE_ENV === 'production' ? '.arcy.in' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+      },
+    },
+    state: {
+      name: 'next-auth.state',
+      options: {
+        domain: env.NODE_ENV === 'production' ? '.arcy.in' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+      },
+    },
+  },
   session: {
     strategy: 'jwt',
   },

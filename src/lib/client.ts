@@ -7,4 +7,5 @@ import { createClient } from 'jstack';
  */
 export const client = createClient<AppRouter>({
   baseUrl: `${env.NEXT_PUBLIC_WRANGLER_URL}/api`,
+  credentials: 'include',
 });
