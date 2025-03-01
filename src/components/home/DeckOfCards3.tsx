@@ -10,7 +10,7 @@ import PlayingCard, {
   type TPlayingCardSize,
   type EPlayingCardState,
 } from './PlayingCard';
-import { SoundType } from './Utils/sound';
+import { ESoundType } from './Utils/sound';
 
 type TDeckOfCardsProps = {
   cards: string[];
@@ -160,7 +160,7 @@ const DeckOfCards3: FC<TDeckOfCardsProps> = ({
             onAnimationStart={() => {
               if (isNewCard) {
                 console.log(`Starting animation for card ${i} (${cardId})`);
-                playSound(SoundType.DEAL);
+                playSound(ESoundType.DEAL);
               } else {
                 console.log(
                   `Skipping animation for card ${i} (${cardId}) - already animated`,

@@ -10,7 +10,7 @@ import PlayingCard, {
   type TPlayingCardSize,
   type EPlayingCardState,
 } from './PlayingCard';
-import { SoundType } from './Utils/sound';
+import { ESoundType } from './Utils/sound';
 
 type TDeckOfCardsProps = {
   cards: string[];
@@ -89,10 +89,10 @@ const DeckOfCards2: FC<TDeckOfCardsProps> = ({
             y: cardPositions[i]?.y ?? 0,
           }}
           onClick={() => {
-            playSound(SoundType.DEAL);
+            playSound(ESoundType.DEAL);
           }}
           onLayoutAnimationStart={() => {
-            playSound(SoundType.DEAL);
+            playSound(ESoundType.DEAL);
           }}
           animate={{
             y: 0,

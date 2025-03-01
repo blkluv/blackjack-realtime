@@ -1,15 +1,16 @@
-"use client";
+'use client';
 
-import { deckPositionAtom } from "@/atoms/deck.atom";
-import { soundAtom } from "@/atoms/sound.atom";
-import { useAtomValue, useSetAtom } from "jotai";
-import { motion } from "motion/react";
+import { deckPositionAtom } from '@/atoms/deck.atom';
+// import { soundAtom } from "@/atoms/sound.atom";
+import { useAtomValue } from 'jotai';
+import { motion } from 'motion/react';
 // import { nanoid } from "nanoid";
-import { useLayoutEffect, useRef, useState, type FC } from "react";
+import { type FC, useLayoutEffect, useRef, useState } from 'react';
 import PlayingCard, {
   type TPlayingCardSize,
   type EPlayingCardState,
-} from "./PlayingCard";
+} from './PlayingCard';
+import { ESoundType, playSound } from './Utils/sound';
 // import { SoundType } from "./Utils/sound";
 // import { SoundType } from "./Utils/sound";
 
@@ -24,7 +25,7 @@ type TDeckOfCardsProps = {
 const DeckOfCards4: FC<TDeckOfCardsProps> = ({
   cards,
   state,
-  size = "sm",
+  size = 'sm',
   extraDelay = 0,
   animateCards,
 }) => {
@@ -43,7 +44,7 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
 
   const cardSize = cardSizeMap[size];
   const deckPosition = useAtomValue(deckPositionAtom);
-  const playSound = useSetAtom(soundAtom);
+  // const playSound = useSetAtom(soundAtom);
 
   useLayoutEffect(() => {
     if (!containerRef.current || (deckPosition.x === 0 && deckPosition.y === 0))
@@ -103,14 +104,13 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
         };
         let animationDelay = 0;
         if (shouldAnimate && animateCards) {
-   
           const animateCardsArray = Array.from(animateCards);
           const cardIndexInAnimate = animateCardsArray.indexOf(card);
           animationDelay = extraDelay + cardIndexInAnimate * 0.6;
         }
         return (
           <motion.div
-            key={`card-${i}-${card}-${shouldAnimate ? "animate" : "static"}`}
+            key={`card-${i}-${card}-${shouldAnimate ? 'animate' : 'static'}`}
             ref={(el) => {
               cardRefs.current[i] = el;
             }}
@@ -124,12 +124,17 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
             //     ? { delay: extraDelay + i * 0.6, duration: 0.6 }
             //     : {}
             // }
+            onAnimationComplete={() => {
+              if (shouldAnimate) {
+                playSound(ESoundType.FLIP);
+              }
+            }}
             transition={{
               delay: shouldAnimate ? animationDelay : 0,
               duration: shouldAnimate ? 0.6 : 0,
             }}
             style={{
-              position: i > 0 ? "absolute" : "relative",
+              position: i > 0 ? 'absolute' : 'relative',
               left: `${i * 40 * cardSize}px`,
               top: `${i * 12 * cardSize}px`,
             }}
@@ -144,11 +149,11 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
           left: `${
             cards.length * (48 * cardSize - cards.length) - (extra ? 14 : 0)
           }px`,
-          top: `${size === "sm" ? 10 : size === "md" ? -16 : -20}px`,
+          top: `${size === 'sm' ? 10 : size === 'md' ? -16 : -20}px`,
         }}
       >
         <div className="whitespace-nowrap">{`${value}${
-          extra ? ` , ${extra}` : ""
+          extra ? ` , ${extra}` : ''
         }`}</div>
       </div>
     </div>
@@ -158,24 +163,24 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
 export default DeckOfCards4;
 
 const getDeckValue = (
-  cards: string[]
+  cards: string[],
 ): {
   value: number;
   extra?: number;
 } => {
-  const flipped = cards[cards.length - 1] === "**";
+  const flipped = cards[cards.length - 1] === '**';
   let value = 0;
   let aceCount = 0;
   const cardsToConsider = flipped ? cards.slice(0, -1) : cards;
 
   for (const card of cardsToConsider) {
     const rank = card.slice(0, card.length - 1);
-    if (rank === "A") {
+    if (rank === 'A') {
       aceCount++;
       value += 11; // Initially count Ace as 11
-    } else if (["J", "Q", "K", "T"].includes(rank)) {
+    } else if (['J', 'Q', 'K', 'T'].includes(rank)) {
       value += 10;
-    } else if (rank !== "") {
+    } else if (rank !== '') {
       value += Number.parseInt(rank);
     }
   }

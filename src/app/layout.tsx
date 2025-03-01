@@ -1,7 +1,7 @@
 import { Providers } from '@/components/providers';
 import type { Metadata } from 'next';
 import './globals.css';
-import Sound from '@/components/home/Utils/sound';
+// import Sound from '@/components/home/Utils/sound';
 import { ThemeProvider } from '@/components/ui/theme';
 import { Inter } from 'next/font/google';
 
@@ -24,7 +24,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" forcedTheme="dark">
           <Providers>
             {children}
-            <Sound />
+            {/* <Sound /> */}
           </Providers>
         </ThemeProvider>
       </body>
