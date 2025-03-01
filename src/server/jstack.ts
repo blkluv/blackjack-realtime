@@ -65,9 +65,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
       req: compatReq,
       secret: c.env.JWT_SECRET,
       secureCookie: isSecureEnvironment,
-      cookieName: isSecureEnvironment
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
+      cookieName: 'next-auth.session-token',
     });
 
     if (!token || !token.name) {
