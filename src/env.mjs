@@ -12,6 +12,7 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    NODE_ENV: z.enum(['development', 'production']).default('development'),
     OPERATOR_PRIVATE_KEY: z.string().min(1).default(''),
     TURSO_CONNECTION_URL: z.string().min(1),
     TURSO_AUTH_TOKEN: z.string().min(1),
@@ -37,6 +38,7 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV,
     TURSO_CONNECTION_URL: process.env.TURSO_CONNECTION_URL,
     TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN,
     CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
