@@ -7,6 +7,18 @@ import Image from 'next/image';
 
 const Home = () => {
   const { readyState } = usePartyKit();
+  // const { joinRoom } = useRoom({
+  //   onJoin: () => {
+  //     console.log('Joined room');
+  //   },
+  // });
+
+  // useEffect(() => {
+  //   joinRoom({
+  //     roomId: 'your_room_id',
+  //     token: 'your_token',
+  //   });
+  // }, [])
 
   return (
     <div className="relative flex h-screen bg-zinc-0 overflow-hidden">

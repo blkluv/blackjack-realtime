@@ -113,6 +113,7 @@ export default class Server implements Party.Server {
   static async onBeforeConnect(req: Party.Request, lobby: Party.Lobby) {
     try {
       const urlParams = new URL(req.url).searchParams;
+
       const token = urlParams.get('token');
       const walletAddress = urlParams.get('walletAddress')?.toLowerCase();
       const staticId = urlParams.get('staticId');

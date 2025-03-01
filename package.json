@@ -22,11 +22,14 @@
     "party:dev": "partykit dev",
     "party:deploy": "dotenv -- partykit deploy --with-vars",
     "party:env": "dotenv -- partykit env",
+    "party:tail": "dotenv -- partykit tail",
     "fix": "biome check --write ./",
     "taze": "taze -r -I",
     "start": "next start"
   },
   "dependencies": {
+    "@huddle01/react": "^2.3.6",
+    "@huddle01/server-sdk": "^2.5.7",
     "@libsql/client": "^0.14.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.6",

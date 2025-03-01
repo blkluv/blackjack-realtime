@@ -1,15 +1,15 @@
 'use client';
 import { env } from '@/env.mjs';
-import { arbitrum, mainnet } from '@reown/appkit/networks';
+import { HuddleClient, HuddleProvider } from '@huddle01/react';
 import { createAppKit } from '@reown/appkit/react';
 import { QueryCache } from '@tanstack/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HTTPException } from 'hono/http-exception';
 import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
+import { huddle01Testnet } from 'viem/chains';
 import { type Config, WagmiProvider, cookieToInitialState } from 'wagmi';
 import { siweConfig, wagmiAdapter } from './auth/config';
-
 // Set up metadata
 const metadata = {
   name: 'Blackjack',
@@ -20,12 +20,11 @@ const metadata = {
       : 'http://localhost:3000',
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
-
 const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId: env.NEXT_PUBLIC_PROJECT_ID,
-  networks: [mainnet, arbitrum],
-  defaultNetwork: mainnet,
+  networks: [huddle01Testnet],
+  defaultNetwork: huddle01Testnet,
   metadata: metadata,
   siweConfig: siweConfig,
   features: {
@@ -37,6 +36,15 @@ type Props = {
   children: React.ReactNode;
   cookies?: string;
 };
+
+const huddleClient = new HuddleClient({
+  projectId: env.NEXT_PUBLIC_HUDDLE01_PROJECT_ID,
+  options: {
+    activeSpeakers: {
+      size: 8,
+    },
+  },
+});
 
 export const Providers = ({ children, cookies }: Props) => {
   const initialState = cookieToInitialState(
@@ -63,7 +71,7 @@ export const Providers = ({ children, cookies }: Props) => {
         initialState={initialState}
       >
         <QueryClientProvider client={queryClient}>
-          {children}
+          <HuddleProvider client={huddleClient}>{children}</HuddleProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </SessionProvider>

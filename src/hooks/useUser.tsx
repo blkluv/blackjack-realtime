@@ -1,43 +1,32 @@
 import { client } from '@/lib/client';
-import { useAppKitAccount } from '@reown/appkit/react';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
+import { useAtomValue, useSetAtom } from 'jotai';
 
+import { setUserAtom, userAtom } from '@/atoms/user.atom';
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { huddle01Testnet } from 'viem/chains';
 
-type User = {
-  walletAddress?: string;
-  wsToken?: string;
-  isAuthenticated: boolean;
-};
-
-const userAtom = atom<User>({
-  walletAddress: '',
-  wsToken: '',
-  isAuthenticated: false,
-});
-
-const setUserAtom = atom(null, (get, set, user: User) => {
-  set(userAtom, user);
-});
-
-// set/update single entry in map
 export const useUser = () => {
   const { status, address } = useAppKitAccount();
+  const { switchNetwork } = useAppKitNetwork();
   const { data: session } = useSession();
   const user = useAtomValue(userAtom);
-
   const updateUser = useSetAtom(setUserAtom);
 
   const fetchWsToken = async () => {
     if (!address) return;
     const response = await client.token.getPlayerToken.$get({
-      walletAddress: address.toLowerCase(),
+      walletAddress: address,
     });
     const { token } = await response.json();
 
     return token;
   };
+
+  useEffect(() => {
+    switchNetwork(huddle01Testnet);
+  }, []);
 
   const logout = async () => {
     try {
@@ -69,11 +58,7 @@ export const useUser = () => {
     }
 
     if (user.isAuthenticated && status === 'disconnected') {
-      updateUser({
-        isAuthenticated: false,
-        walletAddress: '',
-        wsToken: '',
-      });
+      logout();
     }
   }, [status, address, session]);
 

@@ -1,11 +1,11 @@
 'use client';
-
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useUser } from '@/hooks/useUser';
+import { useVault } from '@/hooks/useVault';
 import {
   useAppKit,
   useAppKitAccount,
@@ -13,14 +13,33 @@ import {
 } from '@reown/appkit/react';
 import { LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { useState } from 'react';
 import { Button } from '../ui/button';
 
 const WalletConnect = () => {
-  const fakeBalance = 75.65124;
-  const { open } = useAppKit();
   const { user } = useUser();
+  const { open } = useAppKit();
   const { disconnect } = useDisconnect();
   const { address } = useAppKitAccount();
+  const { balances, withdraw, deposit, transaction } = useVault();
+
+  const [value, setValue] = useState<number | undefined>(undefined);
+
+  const handleWithdraw = async () => {
+    if (!address || value === undefined || value <= 0) return;
+
+    if (value % 1 !== 0) {
+      console.error('Value must be a whole number');
+      return;
+    }
+
+    await withdraw(String(value));
+  };
+  const handleDeposit = async () => {
+    if (!address || value === undefined || value <= 0) return;
+
+    await deposit(String(value));
+  };
 
   return (
     <Popover>
@@ -29,7 +48,9 @@ const WalletConnect = () => {
           onClick={() => (!user.isAuthenticated ? open() : null)}
           className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
         >
-          {user.walletAddress ? `Bal: ${fakeBalance}` : 'Connect Wallet'}
+          {user.walletAddress
+            ? `Bal: ${balances.vaultBalance}`
+            : 'Connect Wallet'}
         </Button>
       </PopoverTrigger>
       {user.isAuthenticated && (
@@ -39,31 +60,50 @@ const WalletConnect = () => {
         >
           <div className="flex flex-col bg-zinc-900 text-yellow-500 text-xs divide-y divide-zinc-800">
             <div className="flex justify-between items-center p-4">
-              <div>Balance:</div>
-              <div>{fakeBalance} ETH</div>
+              <div>Wallet Balance:</div>
+              <div>{balances.tokenBalance} $BJT</div>
+            </div>
+            <div className="flex justify-between items-center p-4">
+              <div>Vault Balance:</div>
+              <div>{balances.vaultBalance} $BJT</div>
             </div>
             <div className="flex justify-between items-center p-4 space-x-4">
               <input
                 placeholder="0"
-                className="w-full bg-zinc-800 rounded-full h-7 px-3 focus:outline-none"
+                type="number"
+                value={value}
+                disabled={transaction.isLoading}
+                // no decimals allowed
+                onChange={(e) => {
+                  const newValue = Number(e.target.value);
+                  if (newValue >= 0 && newValue % 1 === 0) {
+                    setValue(newValue);
+                  }
+                }}
+                className="w-full bg-zinc-800 rounded-full h-7 px-3 focus:outline-none disabled:bg-zinc-700"
               />
-              <button
+              {/* <button
                 type="button"
-                className="cursor-pointer bg-yellow-500 py-1 px-3 text-xs rounded-full shrink-0 text-black flex items-center justify-center"
+                disabled={transaction.isLoading}
+                className="cursor-pointer bg-yellow-500 py-1 px-3 text-xs rounded-full shrink-0 text-black flex items-center justify-center disabled:bg-zinc-700"
               >
                 All
-              </button>
+              </button> */}
             </div>
             <div className="flex justify-between space-x-4 items-center p-4">
               <button
                 type="button"
-                className="cursor-pointer bg-yellow-500 py-1 w-full text-xs rounded-full text-black flex items-center justify-center"
+                disabled={transaction.isLoading}
+                onClick={handleWithdraw}
+                className="cursor-pointer bg-yellow-500 py-1 w-full text-xs rounded-full text-black flex items-center justify-center disabled:bg-zinc-700"
               >
                 Withdraw
               </button>
               <button
                 type="button"
-                className="cursor-pointer bg-zinc-950 outline outline-zinc-800 text-yellow-500 py-1 w-full text-xs rounded-full flex items-center justify-center"
+                disabled={transaction.isLoading}
+                onClick={handleDeposit}
+                className="cursor-pointer bg-zinc-950 outline outline-zinc-800 text-yellow-500 py-1 w-full text-xs rounded-full flex items-center justify-center disabled:bg-zinc-700"
               >
                 Deposit
               </button>

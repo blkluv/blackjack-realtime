@@ -12,6 +12,7 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    OPERATOR_PRIVATE_KEY: z.string().min(1).default(''),
     TURSO_CONNECTION_URL: z.string().min(1),
     TURSO_AUTH_TOKEN: z.string().min(1),
     CLOUDFLARE_API_TOKEN: z.string().min(1),
@@ -27,6 +28,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
     NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
+    NEXT_PUBLIC_HUDDLE01_PROJECT_ID: z.string().min(1),
     NEXT_PUBLIC_MULTIAVATAR_API_KEY: z.string().min(1),
   },
 
@@ -40,10 +42,13 @@ export const env = createEnv({
     CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
     CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
     JWT_SECRET: process.env.JWT_SECRET,
+    OPERATOR_PRIVATE_KEY: process.env.OPERATOR_PRIVATE_KEY,
 
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
     NEXT_PUBLIC_WRANGLER_URL: process.env.NEXT_PUBLIC_WRANGLER_URL,
+    NEXT_PUBLIC_HUDDLE01_PROJECT_ID:
+      process.env.NEXT_PUBLIC_HUDDLE01_PROJECT_ID,
     NEXT_PUBLIC_MULTIAVATAR_API_KEY:
       process.env.NEXT_PUBLIC_MULTIAVATAR_API_KEY,
   },

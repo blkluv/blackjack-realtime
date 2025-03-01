@@ -1,7 +1,9 @@
-// import { soundAtom } from "@/atoms/sound.atom";
+import { betStateAtom } from '@/atoms/blackjack.atom';
+import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
+import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
-import { useUser } from '@/hooks/useUser';
+import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { useAtomValue } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
@@ -17,12 +19,12 @@ import { ESoundType, playSound } from '../Utils/sound';
 // import { PlayerState } from "../../../../party/blackjack/blackjack.types";
 
 const ControlCentre = () => {
-  const { user } = useUser();
+  const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
-  // const playSound = useSetAtom(soundAtom);
+  const playSound = useSetAtom(soundAtom);
   // const player = getCurrentPlayer();
 
   const isCurrentTurn =
@@ -62,7 +64,8 @@ const ControlCentre = () => {
             onChange={(e) => {
               if (
                 Number.isNaN(Number(e.target.value)) ||
-                Number(e.target.value) < 0
+                Number(e.target.value) < 0 ||
+                Number(e.target.value) % 1 !== 0
               )
                 return;
               setBetAmount(e.target.value);
@@ -70,7 +73,12 @@ const ControlCentre = () => {
             placeholder="Place your bet"
             className="border-zinc-800 bg-zinc-900 rounded-full focus-visible:ring-zinc-700"
           />
-          <Button className="cursor-pointer rounded-full text-zinc-100 bg-zinc-900 border border-zinc-800">
+          <Button
+            className="cursor-pointer rounded-full text-zinc-100 bg-zinc-900 border border-zinc-800"
+            onClick={() => {
+              setBetAmount(balances.vaultBalance);
+            }}
+          >
             All
           </Button>
         </div>
@@ -133,8 +141,12 @@ const ControlCentre = () => {
       </div>
       <div className="px-4">
         <BatteryButton
-          text="Bet"
-          disabled={!isBet || !(Number(betAmount) > 0) || player?.bet !== 0}
+          text={`${betState === null ? 'Bet' : betState}`}
+          disabled={
+            !(isBet && (betState === null || betState === 'bet-placed')) ||
+            !(Number(betAmount) > 0) ||
+            player?.bet !== 0
+          }
           icon={<HandCoins />}
           animate={isBet}
           className="text-zinc-900"

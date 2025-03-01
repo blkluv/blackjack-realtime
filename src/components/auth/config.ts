@@ -6,14 +6,14 @@ import type {
   SIWESession,
   SIWEVerifyMessageArgs,
 } from '@reown/appkit-siwe';
-import { arbitrum, mainnet, sepolia } from '@reown/appkit/networks';
+import { huddle01Testnet } from '@reown/appkit/networks';
 import { cookieStorage, createStorage } from '@wagmi/core';
 import { getCsrfToken, getSession, signIn, signOut } from 'next-auth/react';
 
 // Get projectId from https://cloud.reown.com
 const projectId = env.NEXT_PUBLIC_PROJECT_ID;
 
-export const networks = [mainnet, arbitrum];
+export const networks = [huddle01Testnet];
 
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
@@ -30,7 +30,7 @@ export const siweConfig = createSIWEConfig({
   getMessageParams: async () => ({
     domain: typeof window !== 'undefined' ? window.location.host : '',
     uri: typeof window !== 'undefined' ? window.location.origin : '',
-    chains: [mainnet.id, sepolia.id, arbitrum.id],
+    chains: [huddle01Testnet.id],
     statement: 'Please sign with your account',
   }),
   createMessage: ({ address, ...args }: SIWECreateMessageArgs) =>

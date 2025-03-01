@@ -4,11 +4,7 @@ import { j, publicProcedure } from '../jstack';
 // This is a public procedure that generates a JWT token for the user
 export const tokenRouter = j.router({
   getPlayerToken: publicProcedure
-    .input(
-      z.object({
-        walletAddress: z.string().toLowerCase(),
-      }),
-    )
+    .input(z.object({ walletAddress: z.string() }))
     .get(async ({ ctx, c, input }) => {
       const secretKey = new TextEncoder().encode(c.env.JWT_SECRET);
 

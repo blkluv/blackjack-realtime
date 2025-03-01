@@ -19,7 +19,24 @@ import { generateRandomString } from '@/atoms/atom';
 import { TableRounds, UserRounds } from '@/server/db/schema';
 import type { ConnectionState, TDatabase } from '..';
 import { EnhancedEventEmitter } from '../EnhancedEventEmitter';
-import { createDeck, getCardName, handValue } from './blackjack.utils';
+import { createDeck, handValue } from './blackjack.utils';
+
+import { env } from '@/env.mjs';
+import {
+  TOKEN_ABI,
+  TOKEN_ADDRESS,
+  VAULT_ABI,
+  VAULT_ADDRESS,
+} from '@/web3/constants';
+import {
+  http,
+  createPublicClient,
+  createWalletClient,
+  formatUnits,
+  parseUnits,
+} from 'viem';
+import { nonceManager, privateKeyToAccount } from 'viem/accounts';
+import { huddle01Testnet } from 'viem/chains';
 
 type BlackjackRoomEvents = {
   'game-log': [log: string];
@@ -36,12 +53,24 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   state: GameState;
   timers: Timers;
   db: TDatabase;
+  decimals: number | null;
+  betPromises: Promise<void>[];
+
+  private operatorPrivateKey: string; // Server's private key for operator
+  private operatorAccount: ReturnType<typeof privateKeyToAccount>;
+  private walletClient: ReturnType<typeof createWalletClient>;
+  private publicClient: ReturnType<typeof createPublicClient>;
+
+  //Mutex for bet timer
+  private betTimerMutexLocked = false;
 
   constructor(id: string, room: Party.Room, db: TDatabase) {
     super();
     this.id = id;
     this.room = room;
     this.db = db;
+    this.decimals = null;
+    this.betPromises = [];
 
     this.state = {
       players: {},
@@ -59,6 +88,27 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       playerTimer: null,
       roundEndTimer: null,
     };
+
+    // Initialize blockchain clients
+    this.operatorPrivateKey = env.OPERATOR_PRIVATE_KEY;
+    if (this.operatorPrivateKey === '') {
+      throw new Error('Operator private key is empty, Set ENV Vars');
+    }
+    this.operatorAccount = privateKeyToAccount(
+      this.operatorPrivateKey as `0x${string}`,
+      { nonceManager: nonceManager },
+    );
+
+    this.publicClient = createPublicClient({
+      chain: huddle01Testnet, // Use your chain configuration
+      transport: http(),
+    });
+
+    this.walletClient = createWalletClient({
+      chain: huddle01Testnet, // Use your chain configuration
+      transport: http(),
+      account: this.operatorAccount,
+    });
   }
 
   broadcast<T extends keyof BlackjackRecord>(
@@ -125,7 +175,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         });
 
         player.online = true;
-        this.emit('game-log', `Player ${userId} Reconnected`);
+        // this.emit('game-log', `Player ${userId} Reconnected`);
         player.connectionId = connection.id;
         this.sendGameState('broadcast');
       }
@@ -145,6 +195,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       if (player) {
         if (this.state.status === 'playing') {
           player.online = false;
+          this.emit('game-log', `Player ${userId} Disconnected`);
         } else {
           connection.setState({
             userId: userId,
@@ -157,7 +208,6 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
           delete this.state.players[player.seat];
         }
 
-        this.emit('game-log', `Player ${userId} Disconnected`);
         this.sendGameState('broadcast');
       }
     }
@@ -306,7 +356,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     if (this.state.status === 'playing' && this.state.players[seat]) {
       this.state.players[seat].online = false;
-      this.emit('game-log', `Player ${userId} left the Table`);
+      // this.emit('game-log', `Player ${userId} left the Table`);
       this.sendGameState('broadcast');
       return;
     }
@@ -317,41 +367,152 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
 
-    this.emit('game-log', `Player ${userId} left the Table`);
+    // this.emit('game-log', `Player ${userId} left the Table`);
 
     this.sendGameState('broadcast');
   }
 
-  placeBet(connectionId: string, userId: `0x${string}`, bet: number): void {
+  /**
+   * Execute a function with timer mutex protection
+   */
+  private async withTimerMutex<T>(fn: () => T): Promise<T> {
+    // Wait until lock is free
+    while (this.betTimerMutexLocked) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    // Acquire lock
+    this.betTimerMutexLocked = true;
+
+    try {
+      // Execute the protected code
+      return fn();
+    } finally {
+      // Release lock
+      this.betTimerMutexLocked = false;
+    }
+  }
+
+  /**
+   * Safe timer check and start if needed
+   */
+  private async ensureBetTimer(): Promise<void> {
+    await this.withTimerMutex(() => {
+      if (!this.timers.betTimer) {
+        this.startBetTimer();
+      }
+      return true;
+    });
+  }
+
+  private placeBet(connectionId: string, userId: `0x${string}`, bet: number) {
+    const promise = this.placeBetPromise(connectionId, userId, bet);
+    this.betPromises.push(promise);
+  }
+
+  private async placeBetPromise(
+    connectionId: string,
+    userId: `0x${string}`,
+    bet: number,
+  ): Promise<void> {
     if (this.state.status !== 'waiting' && this.state.status !== 'betting') {
       return;
     }
 
+    this.send(connectionId, {
+      room: 'blackjack',
+      type: 'bet-log',
+      data: { status: 'checking-balance' },
+    });
+
+    // Check if player has enough balance
+    const hasSufficientBalance = await this.checkPlayerBalance(userId, bet);
+
+    if (!hasSufficientBalance) {
+      // Send error message to player
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'insufficient-funds' },
+      });
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'error',
+        data: { message: 'Insufficient balance to place bet' },
+      });
+      return;
+    }
+    console.log(
+      'Player',
+      userId,
+      ' hasSufficientBalance',
+      hasSufficientBalance,
+    );
     const seat = this.getSeat(userId);
     if (!seat) return;
 
     const p = this.state.players[seat];
     if (!p) return;
 
-    p.bet = bet;
+    try {
+      // Use a negative amount to deduct funds
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'deducting-funds' },
+      });
+      const success = await this.updatePlayerBalance(
+        userId,
+        -bet, // Negative value to deduct the bet amount
+        `Blackjack bet placed in round ${this.state.roundId || 'new round'}`,
+        1,
+      );
 
-    this.state.status = 'betting';
+      if (!success) {
+        this.send(connectionId, {
+          room: 'blackjack',
+          type: 'bet-log',
+          data: { status: 'bet-failed' },
+        });
+        this.send(connectionId, {
+          room: 'blackjack',
+          type: 'error',
+          data: { message: 'Failed to process bet. Please try again.' },
+        });
+        return;
+      }
+      p.bet = bet;
 
-    this.state.playerOrder = Object.values(this.state.players)
-      .filter((player) => player.bet > 0)
-      .sort((a, b) => {
-        const seatA = a.seat;
-        const seatB = b.seat;
-        return seatA - seatB;
-      })
-      .map((player) => player.userId);
+      this.state.status = 'betting';
 
-    this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
+      this.state.playerOrder = Object.values(this.state.players)
+        .filter((player) => player.bet > 0)
+        .sort((a, b) => {
+          const seatA = a.seat;
+          const seatB = b.seat;
+          return seatA - seatB;
+        })
+        .map((player) => player.userId);
 
-    this.sendGameState('broadcast');
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'bet-log',
+        data: { status: 'bet-placed' },
+      });
 
-    if (!this.timers.betTimer) {
-      this.startBetTimer();
+      this.emit('game-log', `Player ${userId} placed a bet of ${bet}`);
+
+      this.sendGameState('broadcast');
+
+      // Use the mutex-protected timer method
+      await this.ensureBetTimer();
+    } catch (error) {
+      console.error(`Error processing bet for ${userId}:`, error);
+      this.send(connectionId, {
+        room: 'blackjack',
+        type: 'error',
+        data: { message: 'Failed to process bet. Please try again.' },
+      });
     }
   }
 
@@ -389,14 +550,20 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     return Math.max(0, timeRemaining);
   }
 
-  startRound(): void {
+  async startRound(): Promise<void> {
+    await Promise.all(this.betPromises).catch((err) => {
+      console.error('bet promises failed', err);
+    });
+
+    this.betPromises = [];
+
     if (this.timers.betTimer) {
       clearTimeout(this.timers.betTimer);
       this.timers.betTimer = null;
       this.timers.betTimerStart = null;
     }
 
-    this.emit('game-log', 'Betting Period has Ended');
+    // this.emit('game-log', 'Betting Period has Ended');
     // Notify players that the bet timer has ended
     this.broadcast({
       room: 'blackjack',
@@ -423,8 +590,13 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .map((player) => player.userId);
 
     // Replenish deck if needed.
-    if (this.state.deck.length < 15) {
+    if (this.state.deck.length < 52) {
       this.state.deck = createDeck();
+      console.log(
+        'New 4-deck shoe created with',
+        this.state.deck.length,
+        'cards',
+      );
     }
 
     // Reset players' state.
@@ -455,10 +627,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.state.roundId = generateRandomString(9);
     this.state.currentPlayerIndex = 0;
 
-    this.emit(
-      'game-log',
-      'Game has Started, Dealer has dealt two cards to each player',
-    );
+    // this.emit(
+    //   'game-log',
+    //   'Game has Started, Dealer has dealt two cards to each player',
+    // );
 
     this.sendGameState('broadcast');
 
@@ -483,9 +655,9 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     const card = this.state.deck.pop();
     if (!card) throw new Error('Deck is empty');
     p.hand.push(card);
-    this.emit('game-log', `${p.userId} has hit with ${getCardName(card)}`);
+    // this.emit('game-log', `${p.userId} has hit with ${getCardName(card)}`);
     if (handValue(p.hand).value > 21) {
-      this.emit('game-log', `${p.userId} has busted`);
+      // this.emit('game-log', `${p.userId} has busted`);
       p.hasBusted = true;
       p.done = true;
       this.clearPlayerTimer();
@@ -506,7 +678,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     if (!p) throw new Error('Player not found');
     p.isStanding = true;
     p.done = true;
-    this.emit('game-log', `${p.userId} has chosen to stand`);
+    // this.emit('game-log', `${p.userId} has chosen to stand`);
     this.clearPlayerTimer();
     this.advanceTurn();
     this.sendGameState('broadcast');
@@ -531,7 +703,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       this.advanceTurn();
     }, PLAYER_TURN_PERIOD);
 
-    this.emit('game-log', `${currentPlayerId}'s Turn to Hit or Stand`);
+    // this.emit('game-log', `${currentPlayerId}'s Turn to Hit or Stand`);
 
     // Notify players that the player timer has started
     this.broadcast({
@@ -585,7 +757,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   dealerPlay(): void {
     // All players have been processed; now it's the dealer's turn.
 
-    this.emit('game-log', 'All Players have played, Dealers Turn Begins');
+    // this.emit('game-log', 'All Players have played, Dealers Turn Begins');
     this.state.status = 'dealerTurn';
 
     while (handValue(this.state.dealerHand).value < 17) {
@@ -593,17 +765,14 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       if (!card) throw new Error('Deck is empty');
 
       this.state.dealerHand.push(card);
-      this.emit('game-log', `Dealer draws ${getCardName(card)}`);
+      // this.emit('game-log', `Dealer draws ${getCardName(card)}`);
     }
 
     this.sendGameState('broadcast');
-
-    setTimeout(() => {
-      this.endRound();
-    }, 5000);
+    this.endRound();
   }
 
-  endRound(): void {
+  async endRound(): Promise<void> {
     type UserRoundObj = {
       id: string;
       walletAddress: string;
@@ -624,6 +793,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
     let netDealerReward = 0;
     const userRoundObj: UserRoundObj[] = [];
+    const balanceUpdates: Promise<boolean>[] = [];
 
     for (const pid of this.state.playerOrder) {
       const seat = this.getSeat(pid);
@@ -638,45 +808,60 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
       if (p.hasBusted) {
         console.log(`Player ${pid} busted and loses bet ${p.bet}`);
-        this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
+        // this.emit('game-log', `Player ${pid} busted and loses bet ${p.bet}`);
         state = 'loss';
-        reward = -p.bet; // Lost
+        reward = 0; // Lost
         netDealerReward += p.bet;
       } else if (dealerScore > 21 || playerScore > dealerScore) {
         // Check for Blackjack (example condition - adjust as needed)
         if (playerScore === 21 && p.hand.length === 2) {
           state = 'blackjack';
-          reward = 1.5 * p.bet; // Blackjack (1.5x bet - adjust as needed)
+          reward = Math.floor(2.5 * p.bet); // Blackjack (1.5x bet - adjust as needed)
           console.log(`Player ${pid} wins with Blackjack!`);
           this.emit('game-log', `Player ${pid} wins with Blackjack!`);
-          netDealerReward -= 1.5 * p.bet;
+          netDealerReward -= Math.floor(1.5 * p.bet);
         } else {
           console.log(
             `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
           );
-          this.emit(
-            'game-log',
-            `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
-          );
+          // this.emit(
+          //   'game-log',
+          //   `Player ${pid} wins! (Player: ${playerScore} vs Dealer: ${dealerScore})`,
+          // );
           state = 'win';
-          reward = p.bet; // Win (1x bet)
+          reward = 2 * p.bet; // Win (1x bet)
           netDealerReward -= p.bet;
         }
       } else if (playerScore === dealerScore) {
-        console.log(`Player ${pid} draws with ${playerScore} hence loses`);
-        this.emit(
-          'game-log',
-          `Player ${pid} draws with ${playerScore} hence loses`,
-        );
-        state = 'loss';
-        reward = -p.bet; // Draw (hence lost)
-        netDealerReward += p.bet;
+        if (
+          playerScore === 21 &&
+          p.hand.length === 2 &&
+          this.state.dealerHand.length === 2
+        ) {
+          state = 'push';
+          reward = p.bet; // Push (return bet)
+        } else if (playerScore === 21 && p.hand.length === 2) {
+          state = 'blackjack';
+          reward = Math.floor(2.5 * p.bet); // Blackjack (1.5x bet - adjust as needed)
+          console.log(`Player ${pid} wins with Blackjack!`);
+          this.emit('game-log', `Player ${pid} wins with Blackjack!`);
+          netDealerReward -= Math.floor(1.5 * p.bet);
+        } else {
+          console.log(`Player ${pid} draws with ${playerScore} hence loses`);
+          // this.emit(
+          //   'game-log',
+          //   `Player ${pid} draws with ${playerScore} hence loses`,
+          // );
+          state = 'loss';
+          reward = 0; // Draw (hence lost)
+          netDealerReward += p.bet;
+        }
       } else {
         console.log(
           `Player ${pid} loses. (Player: ${playerScore} vs Dealer: ${dealerScore})`,
         );
         state = 'loss';
-        reward = -p.bet; // Lost
+        reward = 0; // Lost
         netDealerReward += p.bet;
       }
       // Update the player's state with the round result
@@ -691,6 +876,17 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         handArray: p.hand.toString(),
         reward: reward,
       });
+
+      // Only send rewards for wins - losses were already deducted
+      if (reward > 0) {
+        const updatePromise = this.updatePlayerBalance(
+          p.userId,
+          reward, // Only positive values for winnings
+          `Blackjack round ${roundId}: ${state}`,
+          3,
+        );
+        balanceUpdates.push(updatePromise);
+      }
     }
 
     this.db
@@ -714,6 +910,8 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .catch((err) => {
         console.error('TableRounds insert failed', err);
       });
+
+    await Promise.all(balanceUpdates);
 
     this.sendGameState('broadcast');
 
@@ -760,5 +958,117 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     this.emit('game-log', 'Table is ready for a new game');
     this.sendGameState('broadcast');
+  }
+
+  // wallet functions
+  async getTokenDecimals(): Promise<number> {
+    try {
+      if (this.decimals !== null) {
+        return this.decimals;
+      }
+
+      const decimals = await this.publicClient.readContract({
+        address: TOKEN_ADDRESS,
+        abi: TOKEN_ABI,
+        functionName: 'decimals',
+      });
+
+      this.decimals = decimals;
+      return decimals;
+    } catch (error) {
+      console.error('Error getting token decimals:', error);
+      return 18; // Default to 18 if we can't get the value
+    }
+  }
+  /**
+   * Checks if a player has sufficient balance in the vault contract
+   */
+  async checkPlayerBalance(
+    userId: `0x${string}`,
+    betAmount: number,
+  ): Promise<boolean> {
+    try {
+      const balance = await this.publicClient.readContract({
+        address: VAULT_ADDRESS,
+        abi: VAULT_ABI,
+        functionName: 'getBalance',
+        args: [userId],
+      });
+
+      // floor the balance to 2 decimal places
+      const decimals = await this.getTokenDecimals();
+
+      const formattedBalance = formatUnits(balance, decimals);
+
+      console.log('Player', userId, 'has balance :', formattedBalance);
+
+      return BigInt(formattedBalance) >= BigInt(betAmount);
+    } catch (error) {
+      console.error('Error checking player balance:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Updates player balance in the vault contract
+   */
+  async updatePlayerBalance(
+    userId: `0x${string}`,
+    amount: number,
+    reason: string,
+    maxRetries = 0, // Default to 0 retries (single attempt)
+  ): Promise<boolean> {
+    const totalAttempts = maxRetries + 1; // Initial attempt + retries
+
+    try {
+      const decimals = await this.getTokenDecimals();
+      const formattedAmount = parseUnits(amount.toString(), decimals);
+
+      for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+        try {
+          // Call the adjustPlayerBalance function
+          const hash = await this.walletClient.writeContract({
+            address: VAULT_ADDRESS,
+            abi: VAULT_ABI,
+            functionName: 'adjustPlayerBalance',
+            args: [userId, formattedAmount, reason],
+            account: this.operatorAccount,
+            chain: huddle01Testnet,
+          });
+
+          // Wait for transaction to be confirmed
+          await this.publicClient.waitForTransactionReceipt({ hash });
+
+          // If it wasn't the first attempt, log success after retry
+          if (attempt > 1) {
+            console.log(
+              `Balance update for ${userId} succeeded on attempt ${attempt}/${totalAttempts}`,
+            );
+          }
+
+          // Success - return true
+          return true;
+        } catch (error) {
+          // On final attempt, just throw to outer catch
+          if (attempt === totalAttempts) {
+            throw error;
+          }
+
+          // Otherwise, log and retry immediately
+          console.log(
+            `Attempt ${attempt}/${totalAttempts} failed for ${userId}. Retrying immediately...`,
+          );
+          // No delay - continue directly to the next iteration
+        }
+      }
+
+      return false; // Should never reach here
+    } catch (error) {
+      console.error(
+        `Error updating balance for ${userId} after ${totalAttempts} attempts:`,
+        error,
+      );
+      return false;
+    }
   }
 }
