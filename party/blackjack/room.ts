@@ -1033,7 +1033,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       for (let attempt = 1; attempt <= totalAttempts; attempt++) {
         try {
           // Call the adjustPlayerBalance function
-          const hash = await this.walletClient.writeContract({
+          const { request } = await this.publicClient.simulateContract({
             address: VAULT_ADDRESS,
             abi: VAULT_ABI,
             functionName: 'adjustPlayerBalance',
@@ -1042,8 +1042,19 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
             chain: huddle01Testnet,
           });
 
+          const hash = await this.walletClient.writeContract(request);
+
           // Wait for transaction to be confirmed
-          await this.publicClient.waitForTransactionReceipt({ hash });
+          const receipt = await this.publicClient.waitForTransactionReceipt({
+            hash,
+          });
+
+          if (receipt.status === 'reverted') {
+            // need to retry
+            throw new Error(
+              `Transaction reverted receipt: ${JSON.stringify(receipt)}`,
+            );
+          }
 
           // If it wasn't the first attempt, log success after retry
           if (attempt > 1) {

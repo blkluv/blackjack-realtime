@@ -127,7 +127,10 @@ type BetStatus =
   | 'bet-placed'
   | 'insufficient-funds'
   | 'bet-failed';
+
 type BlackjackRecord = {
+  'player-joined': { userId: `0x${string}` };
+  'player-left': { userId: `0x${string}` };
   'bet-log': { status: BetStatus };
   error: { message: string };
   stateUpdate: { state: ClientSideGameState };
