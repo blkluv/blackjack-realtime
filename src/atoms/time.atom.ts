@@ -1,9 +1,4 @@
 import { atom } from 'jotai';
-// import {
-//   BETTING_PERIOD,
-//   ROUND_END_PERIOD,
-//   PLAYER_TURN_PERIOD,
-// } from "../../party/blackjack/blackjack.types";
 
 type TTimeState = {
   startedAt: number;

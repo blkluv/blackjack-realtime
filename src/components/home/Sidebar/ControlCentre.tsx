@@ -9,9 +9,15 @@ import { useAtomValue } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { motion } from 'motion/react';
 import { type FC, useEffect, useState } from 'react';
-import type { PlayerState } from '../../../../party/blackjack/blackjack.types';
+import {
+  BETTING_PERIOD,
+  PLAYER_TURN_PERIOD,
+  type PlayerState,
+} from '../../../../party/blackjack/blackjack.types';
 import { Input } from '../../ui/input';
 import { ESoundType, playSound } from '../Utils/sound';
+
+BETTING_PERIOD;
 
 const ControlCentre = () => {
   const user = useAtomValue(userAtom);
@@ -119,6 +125,7 @@ const ControlCentre = () => {
           icon={<HandCoins />}
           animate={isBet}
           className="text-zinc-900"
+          isBet
           onClick={() => {
             if (!player || player.bet !== 0) return;
             if (Number(betAmount) > 0) {
@@ -150,6 +157,7 @@ type TBatteryButtonProps = {
   animate?: boolean;
   className?: string;
   bgColor?: string;
+  isBet?: boolean;
 };
 
 const BatteryButton: FC<TBatteryButtonProps> = ({
@@ -160,10 +168,11 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
   animate = true,
   className,
   bgColor,
+  isBet,
 }) => {
   const [progress, setProgress] = useState(1);
-  const { startedAt: startTime, state } = useAtomValue(timeStateAtom);
-  const duration = 10000;
+  const { startedAt: startTime } = useAtomValue(timeStateAtom);
+  const duration = isBet ? BETTING_PERIOD : PLAYER_TURN_PERIOD;
 
   useEffect(() => {
     const calculateProgress = () => {
