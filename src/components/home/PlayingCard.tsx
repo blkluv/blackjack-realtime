@@ -113,7 +113,7 @@ const PlayingCard: FC<TPlayingCardProps> = ({
         <div className="w-full h-full p-2">
           <div className="bg-zinc-800 h-full w-full rounded flex items-center justify-center">
             <div className="text-xs -rotate-45 text-zinc-500 uppercase">
-              Gawk
+              DASH
             </div>
           </div>
         </div>

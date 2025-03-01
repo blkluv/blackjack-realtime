@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
-const BETTING_PERIOD = 20000;
+const BETTING_PERIOD = 12000;
 const PLAYER_TURN_PERIOD = 10000;
 const ROUND_END_PERIOD = 10000;
+const DEALER_TURN_PERIOD = 5000;
 
 /**
  * Cards are represented as "rank+suit".
@@ -28,6 +29,8 @@ type Timers = {
   playerTimer: NodeJS.Timeout | null;
   // timer on close will reset the round, timer starts when round ends
   roundEndTimer: NodeJS.Timeout | null;
+  // dealers turn timer
+  dealerTimer: NodeJS.Timeout | null;
 };
 type RoundResultState = 'win' | 'loss' | 'blackjack' | 'push';
 
@@ -156,4 +159,5 @@ export {
   BETTING_PERIOD,
   PLAYER_TURN_PERIOD,
   ROUND_END_PERIOD,
+  DEALER_TURN_PERIOD,
 };
