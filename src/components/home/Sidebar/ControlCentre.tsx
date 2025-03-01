@@ -1,5 +1,4 @@
 import { betStateAtom } from '@/atoms/blackjack.atom';
-import { soundAtom } from '@/atoms/sound.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { userAtom } from '@/atoms/user.atom';
 import { useBlackjack } from '@/hooks/useBlackjack';
@@ -24,8 +23,8 @@ const ControlCentre = () => {
   const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
-  const playSound = useSetAtom(soundAtom);
-  // const player = getCurrentPlayer();
+  const { balances } = useVault();
+  const betState = useAtomValue(betStateAtom);
 
   const isCurrentTurn =
     state === 'playerTimerStart' && !!player && userId === player.userId;
