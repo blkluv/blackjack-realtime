@@ -8,6 +8,7 @@ import * as schema from './db/schema';
 
 interface Env {
   Bindings: {
+    NODE_ENV: string;
     TURSO_CONNECTION_URL: string;
     TURSO_AUTH_TOKEN: string;
     CLOUDFLARE_API_TOKEN: string;
@@ -59,7 +60,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
         .catch(() => ({})),
     } as NextApiRequest;
 
-    const isSecureEnvironment = c.req.url.startsWith('https://');
+    const isSecureEnvironment = c.env.NODE_ENV === 'production';
     const token = await getToken({
       req: compatReq,
       secret: c.env.JWT_SECRET,
