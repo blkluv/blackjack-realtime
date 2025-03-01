@@ -1,5 +1,5 @@
 import { SignJWT } from 'jose';
-import { j, authProcedure } from '../jstack';
+import { authProcedure, j } from '../jstack';
 // This is a public procedure that generates a JWT token for the user
 export const tokenRouter = j.router({
   getPlayerToken: authProcedure.get(async ({ ctx, c }) => {
