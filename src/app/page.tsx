@@ -3,7 +3,7 @@
 import Logo from '@/components/home/Sidebar/Logo';
 // import Logo from "@/components/home/Sidebar/Logo";
 import Sidebar from '@/components/home/Sidebar/Sidebar';
-import Table from '@/components/home/Table';
+import Table from '@/components/home/Table/Table';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
 import Image from 'next/image';
