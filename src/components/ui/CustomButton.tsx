@@ -48,7 +48,7 @@ const CustomButton: FC<TCustomButtonProps> = ({
       />
       <span
         className={cn(
-          "relative rounded-lg",
+          "relative rounded-lg flex items-center",
           dark ? "text-zinc-100" : "text-zinc-900",
           bgColor ? "text-zinc-100" : ""
         )}
