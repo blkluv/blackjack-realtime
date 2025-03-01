@@ -354,7 +354,7 @@ const Dealer = memo(() => {
         <div className="relative left-1 xl:left-5 bottom-[4dvh] xl:top-[dvh]">
           <PlayerDeck
             cards={cards}
-            walletAddress="0xGawkGawk"
+            walletAddress="0xDealer"
             dealer
             index={gameState.playerOrder.length + 1}
             animateCards={cardsToAnimate}

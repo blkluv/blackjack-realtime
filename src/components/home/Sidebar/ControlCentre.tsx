@@ -1,43 +1,43 @@
-import { betStateAtom } from "@/atoms/blackjack.atom";
-import { timeStateAtom } from "@/atoms/time.atom";
-import { userAtom } from "@/atoms/user.atom";
-import CustomButton from "@/components/ui/CustomButton";
-import { useBlackjack } from "@/hooks/useBlackjack";
-import { useVault } from "@/hooks/useVault";
-import { cn } from "@/lib/utils";
-import { useAtomValue } from "jotai";
-import { Hand, HandCoins, HandHelping } from "lucide-react";
-import { motion } from "motion/react";
-import { type FC, useEffect, useState } from "react";
+import { betStateAtom } from '@/atoms/blackjack.atom';
+import { timeStateAtom } from '@/atoms/time.atom';
+import { userAtom } from '@/atoms/user.atom';
+import CustomButton from '@/components/ui/CustomButton';
+import { useBlackjack } from '@/hooks/useBlackjack';
+import { useVault } from '@/hooks/useVault';
+import { cn } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
+import { Hand, HandCoins, HandHelping } from 'lucide-react';
+import { motion } from 'motion/react';
+import { type FC, useEffect, useState } from 'react';
 import {
   BETTING_PERIOD,
   PLAYER_TURN_PERIOD,
   type PlayerState,
-} from "../../../../party/blackjack/blackjack.types";
-import { Input } from "../../ui/input";
-import { ESoundType, playSound } from "../Utils/sound";
+} from '../../../../party/blackjack/blackjack.types';
+import { Input } from '../../ui/input';
+import { ESoundType, playSound } from '../Utils/sound';
 
 const ControlCentre = () => {
   const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
-  const [betAmount, setBetAmount] = useState("");
+  const [betAmount, setBetAmount] = useState('');
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { state, userId } = useAtomValue(timeStateAtom);
   const { balances } = useVault();
   const betState = useAtomValue(betStateAtom);
 
   const isCurrentTurn =
-    state === "playerTimerStart" && !!player && userId === player.userId;
+    state === 'playerTimerStart' && !!player && userId === player.userId;
 
   const isHitOrStand =
     !!player &&
-    gameState.status === "playing" &&
+    gameState.status === 'playing' &&
     player.bet > 0 &&
     isCurrentTurn;
 
   const isBet =
     !!player &&
-    (gameState.status === "betting" || gameState.status === "waiting");
+    (gameState.status === 'betting' || gameState.status === 'waiting');
 
   useEffect(() => {
     const getCurrentPlayer = () => {
@@ -85,13 +85,14 @@ const ControlCentre = () => {
           text="Hit"
           animate={false}
           disabled={!isHitOrStand}
-          className="text-zinc-100"
-          bgColor="bg-green-900"
+          // increase font size
+          className="text-zinc-100 h-12"
+          bgColor="bg-green-600"
           icon={<HandHelping />}
           onClick={() => {
             // playSound(SoundType.DEAL);
             blackjackSend({
-              type: "hit",
+              type: 'hit',
               data: {},
             });
           }}
@@ -101,12 +102,12 @@ const ControlCentre = () => {
           disabled={!isHitOrStand}
           animate={isHitOrStand}
           icon={<Hand />}
-          className="text-zinc-100"
-          bgColor="bg-red-900"
+          className="text-zinc-100 h-12"
+          bgColor="bg-red-600"
           onClick={() => {
             // playSound(SoundType.);
             blackjackSend({
-              type: "stand",
+              type: 'stand',
               data: {},
             });
           }}
@@ -114,15 +115,15 @@ const ControlCentre = () => {
       </div>
       <div className="px-4">
         <BatteryButton
-          text={`${betState === null ? "Bet" : betState}`}
+          text={`${betState === null ? 'Bet' : betState}`}
           disabled={
-            !(isBet && (betState === null || betState === "bet-placed")) ||
+            !(isBet && (betState === null || betState === 'bet-placed')) ||
             !(Number(betAmount) > 0) ||
             player?.bet !== 0
           }
           icon={<HandCoins />}
           animate={isBet}
-          className="text-zinc-900"
+          className="text-zinc-900 h-12"
           isBet
           onClick={() => {
             if (!player || player.bet !== 0) return;
@@ -130,13 +131,13 @@ const ControlCentre = () => {
               // playSound(SoundType.BET);
               playSound(ESoundType.BET);
               blackjackSend({
-                type: "placeBet",
+                type: 'placeBet',
                 data: {
                   bet: Number(betAmount),
                 },
               });
             } else {
-              console.log("Enter amount > 0");
+              console.log('Enter amount > 0');
             }
           }}
         />
@@ -197,16 +198,16 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
     <div className="relative w-full">
       <div
         className={cn(
-          "w-full h-9 rounded-lg relative overflow-hidden",
-          disabled ? "cursor-not-allowed bg-zinc-400" : "bg-zinc-200",
-          className
+          'w-full h-9 rounded-lg relative overflow-hidden',
+          disabled ? 'cursor-not-allowed bg-zinc-400' : 'bg-zinc-200',
+          className,
         )}
       >
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: progress }}
           transition={{
-            ease: "linear",
+            ease: 'linear',
           }}
           className="w-full h-full origin-left bg-yellow-500"
         />
@@ -218,9 +219,9 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
         onClick={onClick}
         bgColor={bgColor}
         className={cn(
-          "z-10 absolute left-0 top-0 w-full py-0 h-9",
-          "bg-transparent border-none shadow-none",
-          className
+          'z-10 absolute left-0 top-0 w-full py-0 h-9',
+          'bg-transparent border-none shadow-none',
+          className,
         )}
       >
         <div className="flex items-center justify-center gap-2">

@@ -4,6 +4,7 @@ import {
   BlackjackMessageSchema,
   type BlackjackRecord,
   type ClientSideGameState,
+  DEALER_TURN_PERIOD,
   type GameState,
   PLAYER_TURN_PERIOD,
   type PlayerJoinData,
@@ -87,6 +88,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       betTimerStart: null,
       playerTimer: null,
       roundEndTimer: null,
+      dealerTimer: null,
     };
 
     // Initialize blockchain clients
@@ -769,7 +771,9 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
 
     this.sendGameState('broadcast');
-    this.endRound();
+    this.timers.dealerTimer = setTimeout(() => {
+      this.endRound();
+    }, DEALER_TURN_PERIOD);
   }
 
   async endRound(): Promise<void> {
@@ -783,6 +787,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       handArray: string;
     };
 
+    this.timers.dealerTimer = null;
     this.state.status = 'roundover';
     const { value: dealerScore } = handValue(this.state.dealerHand);
     const roundId = this.state.roundId;
@@ -954,6 +959,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       playerTimer: null,
       betTimerStart: null,
       betTimer: null,
+      dealerTimer: null,
     };
 
     this.emit('game-log', 'Table is ready for a new game');
