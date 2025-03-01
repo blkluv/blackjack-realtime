@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useChat } from "@/hooks/useChat";
-import { cn } from "@/lib/utils";
-import { MicIcon, MicOffIcon, Send } from "lucide-react";
-import { useState } from "react";
-import { Input } from "../../ui/input";
-import CustomButton from "@/components/ui/CustomButton";
+import CustomButton from '@/components/ui/CustomButton';
+import { useChat } from '@/hooks/useChat';
+import { cn } from '@/lib/utils';
+import { MicIcon, MicOffIcon, Send } from 'lucide-react';
+import { useState } from 'react';
+import { Input } from '../../ui/input';
 
 const BottomBar = () => {
   const [isMicOn, setIsMicOn] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const { chatSend } = useChat();
 
   const handleSendMessage = () => {
-    if (message.trim() !== "") {
+    if (message.trim() !== '') {
       // Prevent sending empty messages
-      chatSend({ data: { message }, type: "user-message" }); // Send the message using chatSend hook
-      setMessage(""); // Clear the input field after sending
+      chatSend({ data: { message }, type: 'user-message' }); // Send the message using chatSend hook
+      setMessage(''); // Clear the input field after sending
     }
   };
 
@@ -25,7 +25,7 @@ const BottomBar = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       // Check for Enter key press without Shift
       e.preventDefault(); // Prevent default form submission behavior
       handleSendMessage();
@@ -42,8 +42,8 @@ const BottomBar = () => {
     >
       <CustomButton
         className={cn(
-          "flex items-center justify-center aspect-square cursor-pointer size-9 border border-zinc-800 p-2 bg-zinc-900 rounded-full",
-          isMicOn && "bg-zinc-100 text-zinc-900"
+          'flex items-center justify-center aspect-square cursor-pointer size-9 border border-zinc-800 p-2 bg-zinc-900 rounded-full',
+          isMicOn && 'bg-zinc-100 text-zinc-900',
         )}
         onClick={() => setIsMicOn(!isMicOn)}
       >
@@ -61,7 +61,7 @@ const BottomBar = () => {
         aria-label="Send message" // Accessibility label
       >
         <div className="font-semibold">Send</div>
-        <Send className="ml-2" size={18} />{" "}
+        <Send className="ml-2" size={18} />{' '}
         {/* Add ml-2 for spacing and size for icon */}
       </CustomButton>
     </form>

@@ -1,21 +1,21 @@
-"use client";
+'use client';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { useUser } from "@/hooks/useUser";
-import { useVault } from "@/hooks/useVault";
+} from '@/components/ui/popover';
+import { useUser } from '@/hooks/useUser';
+import { useVault } from '@/hooks/useVault';
 import {
   useAppKit,
   useAppKitAccount,
   useDisconnect,
-} from "@reown/appkit/react";
-import { LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
-import { useState } from "react";
+} from '@reown/appkit/react';
+import { LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useState } from 'react';
 // import { Button } from "../ui/button";
-import CustomButton from "../ui/CustomButton";
+import CustomButton from '../ui/CustomButton';
 
 const WalletConnect = () => {
   const { user } = useUser();
@@ -30,7 +30,7 @@ const WalletConnect = () => {
     if (!address || value === undefined || value <= 0) return;
 
     if (value % 1 !== 0) {
-      console.error("Value must be a whole number");
+      console.error('Value must be a whole number');
       return;
     }
 
@@ -49,7 +49,7 @@ const WalletConnect = () => {
           <CustomButton onClick={() => (!user.isAuthenticated ? open() : null)}>
             {user.walletAddress
               ? `Bal: ${balances.vaultBalance}`
-              : "Connect Wallet"}
+              : 'Connect Wallet'}
           </CustomButton>
         </div>
       </PopoverTrigger>

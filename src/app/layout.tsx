@@ -8,9 +8,15 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'JStack App',
-  description: 'Created using JStack',
-  icons: [{ rel: 'icon', url: '/favicon.ico' }],
+  metadataBase: new URL('https://blackjack.arcy.in'),
+  title: 'Deckdash',
+  description:
+    'Play blackjack with your friends, family, or strangers. Powered by Huddle01.',
+  twitter: {
+    card: 'summary_large_image',
+    site: '@huddle01com',
+    creator: '@huddle01com',
+  },
 };
 
 export default function RootLayout({
