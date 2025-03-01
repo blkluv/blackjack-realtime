@@ -1,7 +1,7 @@
-import BottomBar from './BottomBar';
-import ControlCentre from './ControlCentre';
-import GameLog from './GameLog';
-import Navbar from './Navbar';
+import BottomBar from "./BottomBar";
+import ControlCentre from "./ControlCentre";
+import GameLog from "./GameLog";
+import Navbar from "./Navbar";
 
 const Sidebar = () => {
   return (

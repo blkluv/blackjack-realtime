@@ -1,20 +1,21 @@
-'use client';
+"use client";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { useUser } from '@/hooks/useUser';
-import { useVault } from '@/hooks/useVault';
+} from "@/components/ui/popover";
+import { useUser } from "@/hooks/useUser";
+import { useVault } from "@/hooks/useVault";
 import {
   useAppKit,
   useAppKitAccount,
   useDisconnect,
-} from '@reown/appkit/react';
-import { LogOut } from 'lucide-react';
-import { signOut } from 'next-auth/react';
-import { useState } from 'react';
-import { Button } from '../ui/button';
+} from "@reown/appkit/react";
+import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useState } from "react";
+// import { Button } from "../ui/button";
+import CustomButton from "../ui/CustomButton";
 
 const WalletConnect = () => {
   const { user } = useUser();
@@ -29,7 +30,7 @@ const WalletConnect = () => {
     if (!address || value === undefined || value <= 0) return;
 
     if (value % 1 !== 0) {
-      console.error('Value must be a whole number');
+      console.error("Value must be a whole number");
       return;
     }
 
@@ -44,21 +45,20 @@ const WalletConnect = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          onClick={() => (!user.isAuthenticated ? open() : null)}
-          className="cursor-pointer rounded-full bg-zinc-100 text-zinc-900"
-        >
-          {user.walletAddress
-            ? `Bal: ${balances.vaultBalance}`
-            : 'Connect Wallet'}
-        </Button>
+        <div>
+          <CustomButton onClick={() => (!user.isAuthenticated ? open() : null)}>
+            {user.walletAddress
+              ? `Bal: ${balances.vaultBalance}`
+              : "Connect Wallet"}
+          </CustomButton>
+        </div>
       </PopoverTrigger>
       {user.isAuthenticated && (
         <PopoverContent
-          className="p-0 mx-4 rounded-xl overflow-hidden border-zinc-800"
+          className="p-0 mx-4 rounded-xl overflow-hidden border-zinc-700"
           sideOffset={10}
         >
-          <div className="flex flex-col bg-zinc-900 text-yellow-500 text-xs divide-y divide-zinc-800">
+          <div className="flex flex-col bg-zinc-900/60 backdrop-blur-2xl text-zinc-200 text-xs divide-y divide-zinc-700">
             <div className="flex justify-between items-center p-4">
               <div>Wallet Balance:</div>
               <div>{balances.tokenBalance} $BJT</div>
@@ -80,33 +80,25 @@ const WalletConnect = () => {
                     setValue(newValue);
                   }
                 }}
-                className="w-full bg-zinc-800 rounded-full h-7 px-3 focus:outline-none disabled:bg-zinc-700"
+                className="w-full bg-zinc-200 font-bold text-zinc-900 rounded-md h-7 px-3 focus:outline-none disabled:bg-zinc-700"
               />
-              {/* <button
-                type="button"
-                disabled={transaction.isLoading}
-                className="cursor-pointer bg-yellow-500 py-1 px-3 text-xs rounded-full shrink-0 text-black flex items-center justify-center disabled:bg-zinc-700"
-              >
-                All
-              </button> */}
             </div>
             <div className="flex justify-between space-x-4 items-center p-4">
-              <button
-                type="button"
-                disabled={transaction.isLoading}
+              <CustomButton
                 onClick={handleWithdraw}
-                className="cursor-pointer bg-yellow-500 py-1 w-full text-xs rounded-full text-black flex items-center justify-center disabled:bg-zinc-700"
+                disabled={transaction.isLoading}
+                className="w-full"
               >
                 Withdraw
-              </button>
-              <button
-                type="button"
+              </CustomButton>
+
+              <CustomButton
                 disabled={transaction.isLoading}
                 onClick={handleDeposit}
-                className="cursor-pointer bg-zinc-950 outline outline-zinc-800 text-yellow-500 py-1 w-full text-xs rounded-full flex items-center justify-center disabled:bg-zinc-700"
+                className="w-full"
               >
                 Deposit
-              </button>
+              </CustomButton>
             </div>
             <button
               type="button"
@@ -117,7 +109,7 @@ const WalletConnect = () => {
               className="flex justify-between items-center p-4 hover:bg-zinc-950/50 cursor-pointer"
             >
               <div>Disconnect</div>
-              <LogOut className="text-yellow-500" size={18} />
+              <LogOut className="text-red-500" size={18} />
             </button>
           </div>
         </PopoverContent>
