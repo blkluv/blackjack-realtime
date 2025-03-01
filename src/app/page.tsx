@@ -43,9 +43,6 @@ const Home = () => {
         className="brightness-[35%]"
       />
       <div className="relative w-full h-full p-8 z-10">
-        {/* <div className="absolute top-4 left-4">
-
-        </div> */}
         <Table />
       </div>
       <Sidebar />

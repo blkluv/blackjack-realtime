@@ -1,7 +1,6 @@
 import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
 import { deckPositionAtom } from '@/atoms/deck.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
-import PlayerDeck from '@/components/home/PlayerDeck';
 import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
@@ -16,8 +15,9 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   PlayerState,
   RoundResultState,
-} from '../../../party/blackjack/blackjack.types';
-import { ESoundType, playSound } from './Utils/sound';
+} from '../../../../party/blackjack/blackjack.types';
+import { ESoundType, playSound } from '../Utils/sound';
+import PlayerDeck from './PlayerDeck';
 
 const FiveIconMap = [
   {
