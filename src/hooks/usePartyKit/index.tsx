@@ -36,7 +36,7 @@ export const usePartyKit = () => {
     room: 'blackjack',
     query: { token: user.wsToken, walletAddress: user.walletAddress, staticId },
     onOpen: () => {
-      console.log('Connected to PartyKit');
+      console.log('Connected to GameServer');
       setPartyKit(partyKit);
     },
     onMessage: (event) => {
