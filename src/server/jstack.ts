@@ -38,7 +38,6 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
   try {
     const authHeader = c.req.header('Authorization');
     const cookies = c.req.header('Cookie');
-    console.log(c.env);
     if (!authHeader && !cookies) {
       throw new HTTPException(401, { message: 'Unauthorized' });
     }
@@ -60,17 +59,20 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
         .catch(() => ({})),
     } as NextApiRequest;
 
-    // Get the token from the request using next-auth
+    const isSecureEnvironment = c.req.url.startsWith('https://');
     const token = await getToken({
       req: compatReq,
       secret: c.env.JWT_SECRET,
+      secureCookie: isSecureEnvironment,
+      cookieName: isSecureEnvironment
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
     });
 
     if (!token || !token.name) {
       throw new HTTPException(401, { message: 'Invalid token' });
     }
 
-    // Add the user info to the context for use in procedures
     return await next({
       user: {
         id: token.sub,
