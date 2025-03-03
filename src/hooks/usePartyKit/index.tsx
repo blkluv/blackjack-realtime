@@ -62,12 +62,12 @@ export const usePartyKit = () => {
     },
     onError: () => {},
   });
-  // // on unmount
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       partyKit.close();
     };
-  }, []);
+  }, [partyKit]);
 
   return {
     readyState: partyKit.readyState,
