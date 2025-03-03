@@ -7,12 +7,12 @@ import { useVault } from '@/hooks/useVault';
 import { useAtomValue } from 'jotai';
 import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { PlayerState } from '../../../../party/blackjack/blackjack.types';
-import { Input } from '../../ui/input';
-import BatteryButton from '../Sidebar/BatteryButton';
-import { ESoundType, playSound } from '../Utils/sound';
+import type { PlayerState } from '../../../party/blackjack/blackjack.types';
+import { Input } from '../ui/input';
+import BatteryButton from './Sidebar/BatteryButton';
+import { ESoundType, playSound } from './Utils/sound';
 
-const ControlCentre = () => {
+const MobileControlCentre = () => {
   const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
   const [betAmount, setBetAmount] = useState('');
@@ -48,33 +48,7 @@ const ControlCentre = () => {
 
   return (
     <div className="flex flex-col space-y-4 py-4 border-b border-zinc-900">
-      <div className="flex flex-col space-y-2 px-4">
-        <div className="text-zinc-400 text-sm">Bet Amount</div>
-        <div className="flex space-x-4">
-          <Input
-            value={betAmount}
-            onChange={(e) => {
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                Number(e.target.value) < 0 ||
-                Number(e.target.value) % 1 !== 0
-              )
-                return;
-              setBetAmount(e.target.value);
-            }}
-            placeholder="Place your bet"
-            className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
-          />
-          <CustomButton
-            dark
-            onClick={() => {
-              setBetAmount(balances.vaultBalance);
-            }}
-          >
-            All In
-          </CustomButton>
-        </div>
-      </div>
+      {/* <div className="flex flex-col space-y-2 px-4"></div> */}
       <div className="flex px-4 space-x-4">
         <BatteryButton
           text="Hit"
@@ -108,7 +82,31 @@ const ControlCentre = () => {
           }}
         />
       </div>
-      <div className="px-4">
+      <div className="px-4 flex space-x-4">
+        <div className="flex space-x-4 w-full">
+          <Input
+            value={betAmount}
+            onChange={(e) => {
+              if (
+                Number.isNaN(Number(e.target.value)) ||
+                Number(e.target.value) < 0 ||
+                Number(e.target.value) % 1 !== 0
+              )
+                return;
+              setBetAmount(e.target.value);
+            }}
+            placeholder="Place your bet"
+            className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
+          />
+          <CustomButton
+            dark
+            onClick={() => {
+              setBetAmount(balances.vaultBalance);
+            }}
+          >
+            All In
+          </CustomButton>
+        </div>
         <BatteryButton
           text={`${betState === null ? 'Bet' : betState}`}
           disabled={
@@ -118,7 +116,7 @@ const ControlCentre = () => {
           }
           icon={<HandCoins />}
           animate={isBet}
-          className="text-zinc-900 h-12"
+          className="text-zinc-900 h-12 w-1/3"
           isBet
           onClick={() => {
             if (!player || player.bet !== 0) return;
@@ -141,4 +139,4 @@ const ControlCentre = () => {
   );
 };
 
-export default ControlCentre;
+export default MobileControlCentre;

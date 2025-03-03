@@ -1,4 +1,5 @@
 import { j } from './jstack';
+import { bjtRouter } from './routers/bjt';
 import { leaderboardRouter } from './routers/leaderboard';
 import { tokenRouter } from './routers/token';
 
@@ -21,6 +22,7 @@ const api = j
 const appRouter = j.mergeRouters(api, {
   token: tokenRouter,
   leaderboard: leaderboardRouter,
+  bjt: bjtRouter,
 });
 
 export type AppRouter = typeof appRouter;

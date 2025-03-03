@@ -11,7 +11,7 @@ import { DoorOpen } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, memo, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   PlayerState,
   RoundResultState,
@@ -175,9 +175,9 @@ const Table = memo(() => {
           const isJoinGame = mySeat === -1 && !player;
           const result = player?.roundResult?.state;
 
-          if (isCurrentTurn && gameState.playerOrder.length > 1) {
-            playSound(ESoundType.TURN, { volume: 0.15 });
-          }
+          // if (isCurrentTurn && gameState.playerOrder.length > 1) {
+          //   playSound(ESoundType.TURN, { volume: 0.15 });
+          // }
 
           if ((result === 'win' || result === 'blackjack') && isMe) {
             playSound(ESoundType.WIN, { volume: 0.5 });
@@ -223,8 +223,7 @@ const Table = memo(() => {
                     // `${FiveColorMap[index]}`,
                     player &&
                       'border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300',
-                    isCurrentTurn &&
-                      'animate-pulse border-sky-400 outline-sky-400',
+                    isCurrentTurn && 'border-sky-400 outline-sky-400',
                     getResultColor(),
                   )}
                 >
@@ -237,6 +236,7 @@ const Table = memo(() => {
                       player={player}
                       cards={cards}
                       isMe={isMe}
+                      isCurrentTurn={isCurrentTurn}
                       state={result}
                     />
                   )}
@@ -440,20 +440,17 @@ const JoinGame = memo(({ index }: { index: number }) => {
   );
 });
 
-const InGame = memo(
-  ({
-    index,
-    player,
-    cards,
-    isMe,
-    state,
-  }: {
-    index: number;
-    player?: PlayerState;
-    cards?: string[];
-    isMe: boolean;
-    state?: RoundResultState;
-  }) => {
+type TInGameProps = {
+  index: number;
+  player?: PlayerState;
+  cards?: string[];
+  isMe: boolean;
+  state?: RoundResultState;
+  isCurrentTurn: boolean;
+};
+
+const InGame: FC<TInGameProps> = memo(
+  ({ index, player, cards, isMe, state, isCurrentTurn }) => {
     const [isHovering, setIsHovering] = useState(false);
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
@@ -501,6 +498,7 @@ const InGame = memo(
     };
 
     const getState = (): EPlayingCardState => {
+      if (isCurrentTurn) return EPlayingCardState.focus;
       switch (state) {
         case 'win':
           return EPlayingCardState.winner;

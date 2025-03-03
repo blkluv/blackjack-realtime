@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { huddle01Testnet } from 'viem/chains';
 import { type Config, WagmiProvider, cookieToInitialState } from 'wagmi';
 import { siweConfig, wagmiAdapter } from './auth/config';
+import { Toaster } from './ui/sonner';
 // Set up metadata
 const metadata = {
   name: 'Blackjack',
@@ -71,7 +72,10 @@ export const Providers = ({ children, cookies }: Props) => {
         initialState={initialState}
       >
         <QueryClientProvider client={queryClient}>
-          <HuddleProvider client={huddleClient}>{children}</HuddleProvider>
+          <HuddleProvider client={huddleClient}>
+            {children}
+            <Toaster />
+          </HuddleProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </SessionProvider>

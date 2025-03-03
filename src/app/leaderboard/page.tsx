@@ -1,3 +1,4 @@
+import Logo from '@/components/home/Sidebar/Logo';
 import {
   Table,
   TableBody,
@@ -60,13 +61,33 @@ const LeaderboardPage = async () => {
   const rest = leaderboardData.slice(3);
 
   return (
-    <div className="flex flex-col h-screen items-center bg-zinc-950 text-zinc-200">
-      <div className="flex mt-52 items-end">
+    <div className="flex relative flex-col h-screen items-center bg-zinc-950 text-zinc-200">
+      <Image
+        alt=""
+        height={2000}
+        width={2000}
+        priority
+        quality={100}
+        className="absolute h-full w-full object-cover opacity-50"
+        src={'/bg.png'}
+      />
+      <div className="flex justify-start items-center z-10 p-4 max-w-xl w-2xl">
+        <Logo />
+      </div>
+      <div className="flex mt-52 items-end z-10">
         {top3[1] && (
-          <div className="flex flex-col relative rounded-l-4xl items-center pt-20 bg-zinc-800/50 h-48 px-12">
+          <div className="flex flex-col relative rounded-l-4xl items-center pt-20 bg-zinc-800 h-48 px-12">
             <div className="size-24 rounded-full bg-zinc-950 absolute -top-12 flex justify-center border-4 border-sky-500">
+              <Image
+                alt=""
+                height={100}
+                width={100}
+                priority
+                className="rounded-full"
+                src={`/api/blockie/${top3[1]?.walletAddress}`}
+              />
               <div className="size-6 text-xs rounded bg-sky-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
-                <div className="-rotate-45 text-black">2</div>
+                <div className="-rotate-45 text-white">2</div>
               </div>
             </div>
             <div className="flex items-center flex-col space-y-4">
@@ -79,10 +100,18 @@ const LeaderboardPage = async () => {
           </div>
         )}
         {top3[0] && (
-          <div className="flex flex-col relative rounded-t-4xl items-center pt-28 bg-zinc-800 h-64 px-12">
+          <div className="flex flex-col relative rounded-t-4xl items-center pt-28 bg-zinc-900 h-64 px-12">
             <div className="size-32 rounded-full bg-zinc-950 absolute -top-16 flex justify-center border-4 border-yellow-500">
+              <Image
+                alt=""
+                height={100}
+                width={100}
+                priority
+                className="rounded-full w-full h-full object-cover"
+                src={`/api/blockie/${top3[0]?.walletAddress}`}
+              />
               <div className="size-6 text-xs rounded bg-yellow-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
-                <div className="-rotate-45 text-black">1</div>
+                <div className="-rotate-45 text-white">1</div>
               </div>
               <Image
                 src={'/crown.svg'}
@@ -105,10 +134,18 @@ const LeaderboardPage = async () => {
           </div>
         )}
         {top3[2] && (
-          <div className="flex flex-col relative rounded-r-4xl items-center pt-20 bg-zinc-800/50 h-48 px-12">
+          <div className="flex flex-col relative rounded-r-4xl items-center pt-20 bg-zinc-800 h-48 px-12">
             <div className="size-24 rounded-full bg-zinc-950 absolute -top-12 flex justify-center border-4 border-green-500">
+              <Image
+                alt=""
+                height={100}
+                width={100}
+                priority
+                className="rounded-full w-full h-full object-cover"
+                src={`/api/blockie/${top3[2]?.walletAddress}`}
+              />
               <div className="size-6 text-xs rounded bg-green-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
-                <div className="-rotate-45 text-black">3</div>
+                <div className="-rotate-45 text-white">3</div>
               </div>
             </div>
             <div className="flex items-center flex-col space-y-4">
@@ -135,15 +172,11 @@ const LeaderboardPage = async () => {
 
 export default LeaderboardPage;
 
-const LeaderboardTable = ({
-  data,
-}: {
-  data: LeaderboardDataItem[];
-}) => {
+const LeaderboardTable = ({ data }: { data: LeaderboardDataItem[] }) => {
   const totalNetProfit = data.reduce((acc, row) => acc + row.netProfit, 0);
 
   return (
-    <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-xl ">
+    <div className="text-xs bg-zinc-800 border border-zinc-800 rounded-xl ">
       <Table className="text-[10px] font-[400]">
         <TableHeader>
           <TableRow>

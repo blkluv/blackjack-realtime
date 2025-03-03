@@ -71,11 +71,11 @@ type TPlayingCardProps = {
 export type TPlayingCardSize = 'sm' | 'md' | 'lg';
 
 export enum EPlayingCardState {
-  winner = 'border-green-500 border-2',
-  loser = 'border-red-500 border-2',
-  default = 'border-zinc-800 border-2',
-  blackjack = 'border-yellow-500 border-2',
-  focus = 'border-blue-500 border-2',
+  winner = 'border-green-500 border-4',
+  loser = 'border-red-500 border-4',
+  default = 'border-zinc-800 border-4',
+  blackjack = 'border-yellow-500 border-4',
+  focus = 'border-sky-500 border-4',
 }
 
 const PlayingCard: FC<TPlayingCardProps> = ({

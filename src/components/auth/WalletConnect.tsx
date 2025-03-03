@@ -6,14 +6,16 @@ import {
 } from '@/components/ui/popover';
 import { useUser } from '@/hooks/useUser';
 import { useVault } from '@/hooks/useVault';
+import { getBjtTokens } from '@/lib/action';
 import {
   useAppKit,
   useAppKitAccount,
   useDisconnect,
 } from '@reown/appkit/react';
-import { LogOut } from 'lucide-react';
+import { Coins, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 // import { Button } from "../ui/button";
 import CustomButton from '../ui/CustomButton';
 
@@ -23,7 +25,6 @@ const WalletConnect = () => {
   const { disconnect } = useDisconnect();
   const { address } = useAppKitAccount();
   const { balances, withdraw, deposit, transaction } = useVault();
-
   const [value, setValue] = useState<number | undefined>(undefined);
 
   const handleWithdraw = async () => {
@@ -67,6 +68,7 @@ const WalletConnect = () => {
               <div>Vault Balance:</div>
               <div>{balances.vaultBalance} $BJT</div>
             </div>
+            <Faucet />
             <div className="flex justify-between items-center p-4 space-x-4">
               <input
                 placeholder="0"
@@ -119,3 +121,26 @@ const WalletConnect = () => {
 };
 
 export default WalletConnect;
+
+const Faucet = () => {
+  const handleClaim = async () => {
+    try {
+      const res = await getBjtTokens();
+      toast('Successfully claimed tokens from faucet');
+    } catch (error) {
+      toast('Failed to claim tokens from faucet');
+    }
+  };
+  return (
+    <div
+      onClick={handleClaim}
+      onKeyDown={handleClaim}
+      className="flex justify-between hover:bg-zinc-950/50 cursor-pointer items-center p-4"
+    >
+      <div>Get $BJT tokens</div>
+      <div>
+        <Coins size={16} />
+      </div>
+    </div>
+  );
+};

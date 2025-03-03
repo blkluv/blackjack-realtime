@@ -19,6 +19,7 @@ export const env = createEnv({
     CLOUDFLARE_API_TOKEN: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     JWT_SECRET: z.string().min(1),
+    HUDDLE01_API_KEY: z.string().min(1),
   },
 
   /**
@@ -30,7 +31,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PARTYKIT_HOST: z.string().min(1).default('localhost:1999'),
     NEXT_PUBLIC_PROJECT_ID: z.string().min(1),
     NEXT_PUBLIC_HUDDLE01_PROJECT_ID: z.string().min(1),
-    NEXT_PUBLIC_MULTIAVATAR_API_KEY: z.string().min(1),
+    NEXT_PUBLIC_HUDDLE01_ROOM_ID: z.string().min(1),
   },
 
   /**
@@ -45,13 +46,12 @@ export const env = createEnv({
     CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
     JWT_SECRET: process.env.JWT_SECRET,
     OPERATOR_PRIVATE_KEY: process.env.OPERATOR_PRIVATE_KEY,
-
+    HUDDLE01_API_KEY: process.env.HUDDLE01_API_KEY,
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
     NEXT_PUBLIC_WRANGLER_URL: process.env.NEXT_PUBLIC_WRANGLER_URL,
     NEXT_PUBLIC_HUDDLE01_PROJECT_ID:
       process.env.NEXT_PUBLIC_HUDDLE01_PROJECT_ID,
-    NEXT_PUBLIC_MULTIAVATAR_API_KEY:
-      process.env.NEXT_PUBLIC_MULTIAVATAR_API_KEY,
+    NEXT_PUBLIC_HUDDLE01_ROOM_ID: process.env.NEXT_PUBLIC_HUDDLE01_ROOM_ID,
   },
 });
