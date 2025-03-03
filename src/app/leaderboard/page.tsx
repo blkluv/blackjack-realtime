@@ -84,7 +84,7 @@ const LeaderboardPage = async () => {
                 width={100}
                 priority
                 className="rounded-full"
-                src={`/api/blockie/${top3[1]?.walletAddress}`}
+                src={'/rank/second.png'}
               />
               <div className="size-6 text-xs rounded bg-sky-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
                 <div className="-rotate-45 text-white">2</div>
@@ -108,7 +108,7 @@ const LeaderboardPage = async () => {
                 width={100}
                 priority
                 className="rounded-full w-full h-full object-cover"
-                src={`/api/blockie/${top3[0]?.walletAddress}`}
+                src={'/rank/first.png'}
               />
               <div className="size-6 text-xs rounded bg-yellow-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
                 <div className="-rotate-45 text-white">1</div>
@@ -142,7 +142,7 @@ const LeaderboardPage = async () => {
                 width={100}
                 priority
                 className="rounded-full w-full h-full object-cover"
-                src={`/api/blockie/${top3[2]?.walletAddress}`}
+                src={'/rank/third.png'}
               />
               <div className="size-6 text-xs rounded bg-green-500 flex items-center justify-center rotate-45 -bottom-3 absolute">
                 <div className="-rotate-45 text-white">3</div>

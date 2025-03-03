@@ -74,7 +74,8 @@ export const Providers = ({ children, cookies }: Props) => {
         <QueryClientProvider client={queryClient}>
           <HuddleProvider client={huddleClient}>
             {children}
-            <Toaster />
+            {/* increase text size */}
+            <Toaster richColors position="bottom-left" duration={5000} />
           </HuddleProvider>
         </QueryClientProvider>
       </WagmiProvider>

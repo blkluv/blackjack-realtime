@@ -31,6 +31,23 @@ export class ChatRoom {
         data: { message: shortForm },
       });
     });
+
+    blackjackRoom.on('toast', (toast) => {
+      const regex = /(\b0x[a-fA-F0-9]{40}\b)/g;
+      const shortForm = toast.desc.replace(regex, (match) => {
+        return `${match.substring(0, 3)}...${match.substring(match.length - 3)}`;
+      });
+
+      this.broadcast({
+        room: 'chat',
+        type: 'toast',
+        data: {
+          type: toast.type,
+          title: toast.title,
+          desc: shortForm,
+        },
+      });
+    });
   }
 
   broadcast<T extends keyof ChatRecord>(

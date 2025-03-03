@@ -1,7 +1,7 @@
 import { addChatLogAtom, generateRandomId } from '@/atoms/chat.atom'; // Import chatLogsAtom
 import { useSetAtom } from 'jotai';
+import { toast } from 'sonner';
 import type { TPartyKitServerMessage } from '../../../party';
-
 export const useChatHandler = () => {
   const addChatLog = useSetAtom(addChatLogAtom);
 
@@ -9,7 +9,24 @@ export const useChatHandler = () => {
     const { room, type, data } = message;
 
     if (room === 'chat') {
-      if (type === 'game-log') {
+      if (type === 'toast') {
+        if (data.type === 'success')
+          toast.success(data.title, {
+            description: data.desc,
+          });
+        else if (data.type === 'error')
+          toast.error(data.title, {
+            description: data.desc,
+          });
+        else if (data.type === 'info')
+          toast.info(data.title, {
+            description: data.desc,
+          });
+        else if (data.type === 'warning')
+          toast.warning(data.title, {
+            description: data.desc,
+          });
+      } else if (type === 'game-log') {
         addChatLog({
           id: generateRandomId(),
           isGameLog: true,

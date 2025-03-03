@@ -44,7 +44,6 @@
     "clsx": "^2.1.1",
     "connectkit": "^1.8.2",
     "drizzle-orm": "^0.39.3",
-    "ethereum-blockies-base64": "^1.0.2",
     "hono": "^4.7.2",
     "jose": "^6.0.6",
     "jotai": "^2.12.1",

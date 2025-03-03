@@ -38,9 +38,11 @@ import {
 } from 'viem';
 import { nonceManager, privateKeyToAccount } from 'viem/accounts';
 import { huddle01Testnet } from 'viem/chains';
+import type { TToast } from '../chat/chat.types';
 
 type BlackjackRoomEvents = {
   'game-log': [log: string];
+  toast: [toast: TToast];
 };
 
 /*-------------------------------------------------------------------------
@@ -177,7 +179,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         });
 
         player.online = true;
-        // this.emit('game-log', `Player ${userId} Reconnected`);
+        this.emit('toast', {
+          title: 'Player Reconnected',
+          desc: `Player ${userId} Reconnected`,
+          type: 'info',
+        });
         player.connectionId = connection.id;
         this.sendGameState('broadcast');
       }
@@ -197,7 +203,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       if (player) {
         if (this.state.status === 'playing') {
           player.online = false;
-          this.emit('game-log', `Player ${userId} Disconnected`);
+          this.emit('toast', {
+            title: 'Player Disconnected',
+            desc: `Player ${userId} Disconnected`,
+            type: 'warning',
+          });
         } else {
           connection.setState({
             userId: userId,
@@ -341,7 +351,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
 
-    this.emit('game-log', `Player ${userId} joined the Table`);
+    this.emit('toast', {
+      title: 'Player Joined',
+      desc: `Player ${userId} joined the Table`,
+      type: 'info',
+    });
 
     this.sendGameState('broadcast');
 
@@ -358,7 +372,6 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     if (this.state.status === 'playing' && this.state.players[seat]) {
       this.state.players[seat].online = false;
-      // this.emit('game-log', `Player ${userId} left the Table`);
       this.sendGameState('broadcast');
       return;
     }
@@ -369,7 +382,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       .sort((a, b) => a.seat - b.seat)
       .map((p) => p.userId);
 
-    // this.emit('game-log', `Player ${userId} left the Table`);
+    this.emit('toast', {
+      title: 'Player Left',
+      desc: `Player ${userId} left the Table`,
+      type: 'info',
+    });
 
     this.sendGameState('broadcast');
   }
@@ -962,7 +979,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       dealerTimer: null,
     };
 
-    this.emit('game-log', 'Table is ready for a new game');
+    this.emit('toast', {
+      title: 'Game Ready!!!',
+      desc: 'Table is ready for a new game',
+      type: 'info',
+    });
     this.sendGameState('broadcast');
   }
 

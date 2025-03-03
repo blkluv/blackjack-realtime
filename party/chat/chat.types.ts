@@ -12,8 +12,13 @@ const ChatMessageSchema = ChatUserMessageSchema;
 type TChatMessageSchema = z.infer<typeof ChatMessageSchema>;
 
 type ChatRole = 'player' | 'viewer';
-
+type TToast = {
+  type: 'warning' | 'error' | 'info' | 'success';
+  title: string;
+  desc: string;
+};
 type ChatRecord = {
+  toast: TToast;
   'game-log': { message: string };
   'user-message': { userId: UserId; message: string; role: ChatRole };
 };
@@ -29,4 +34,5 @@ export {
   type TChatMessageSchema,
   type ChatRecord,
   type ChatServerMessage,
+  type TToast,
 };
