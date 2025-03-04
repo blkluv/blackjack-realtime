@@ -20,6 +20,7 @@ type TDeckOfCardsProps = {
   size?: TPlayingCardSize;
   extraDelay?: number;
   animateCards?: Set<string>;
+  animate?: boolean;
 };
 
 const DeckOfCards4: FC<TDeckOfCardsProps> = ({
@@ -28,6 +29,7 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
   size = 'sm',
   extraDelay = 0,
   animateCards,
+  animate = true,
 }) => {
   //   console.log("animateCards in DeckOfCards4: ", animateCards, "cards: ", cards);
   const { value, extra } = getDeckValue(cards);
@@ -93,7 +95,7 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
       ref={containerRef}
     >
       {cards.map((card, i) => {
-        const shouldAnimate = animateCards?.has(card);
+        const shouldAnimate = animateCards?.has(card) && animate;
 
         // const shouldAnimate = true;
 
