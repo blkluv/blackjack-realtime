@@ -197,7 +197,11 @@ const Tekken = () => {
   return (
     <div className="absolute z-20 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
       <div className="text-7xl text-yellow-400 font-serif">
-        Betting Phase ends in {countdown}
+        Place your bets in
+      </div>
+      <div className="text-10xl text-yellow-400 font-serif">{countdown}</div>
+      <div className="text-10xl text-yellow-400 font-serif">
+        Round started by {}
       </div>
     </div>
   );

@@ -134,7 +134,7 @@ type BlackjackRecord = {
   'bet-log': { status: BetStatus };
   error: { message: string };
   stateUpdate: { state: ClientSideGameState };
-  betTimerStart: { startedAt: number };
+  betTimerStart: { startedAt: number; startedByUserId: `0x${string}` };
   betTimerEnd: { endedAt: number };
   playerTimerStart: { userId: `0x${string}`; startedAt: number }; // Send the user ID of the player whose turn it is
   playerTimerEnd: { userId: `0x${string}`; endedAt: number }; // Send the user ID of the player whose turn it just ended

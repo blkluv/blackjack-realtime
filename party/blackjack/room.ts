@@ -358,12 +358,6 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     });
 
     this.sendGameState('broadcast');
-
-    if (this.state.status === 'betting' && this.timers.betTimer) {
-      if (this.getBetTimerRemainingTime() < 15) {
-        this.resetBetTimer();
-      }
-    }
   }
 
   playerLeave(userId: `0x${string}`): void {
@@ -415,10 +409,10 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
   /**
    * Safe timer check and start if needed
    */
-  private async ensureBetTimer(): Promise<void> {
+  private async ensureBetTimer(startedByUserId: `0x${string}`): Promise<void> {
     await this.withTimerMutex(() => {
       if (!this.timers.betTimer) {
-        this.startBetTimer();
+        this.startBetTimer(startedByUserId);
       }
       return true;
     });
@@ -524,7 +518,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       this.sendGameState('broadcast');
 
       // Use the mutex-protected timer method
-      await this.ensureBetTimer();
+      await this.ensureBetTimer(userId);
     } catch (error) {
       console.error(`Error processing bet for ${userId}:`, error);
       this.send(connectionId, {
@@ -535,7 +529,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     }
   }
 
-  startBetTimer(): void {
+  startBetTimer(startedByUserId: `0x${string}`): void {
     this.timers.betTimerStart = Date.now(); // Store the start time
     this.timers.betTimer = setTimeout(() => {
       this.startRound();
@@ -550,16 +544,16 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     this.broadcast({
       room: 'blackjack',
       type: 'betTimerStart',
-      data: { startedAt: Date.now() },
+      data: { startedAt: Date.now(), startedByUserId },
     });
   }
 
-  resetBetTimer(): void {
-    if (this.timers.betTimer) {
-      clearTimeout(this.timers.betTimer);
-    }
-    this.startBetTimer();
-  }
+  // resetBetTimer(): void {
+  //   if (this.timers.betTimer) {
+  //     clearTimeout(this.timers.betTimer);
+  //   }
+  //   this.startBetTimer();
+  // }
 
   getBetTimerRemainingTime(): number {
     if (!this.timers.betTimer || this.timers.betTimerStart === null) return 0;
