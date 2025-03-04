@@ -1,4 +1,5 @@
 'use client';
+import { setTriggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
 import {
   Popover,
   PopoverContent,
@@ -12,6 +13,7 @@ import {
   useAppKitAccount,
   useDisconnect,
 } from '@reown/appkit/react';
+import { useSetAtom } from 'jotai';
 import { Coins, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
@@ -123,12 +125,14 @@ const WalletConnect = () => {
 export default WalletConnect;
 
 const Faucet = () => {
+  const setTriggerBalanceRefresh = useSetAtom(setTriggerBalanceRefreshAtom);
   const handleClaim = async () => {
     try {
       const data = await client.bjt.getBjtTokens.$get();
       const res = await data.json();
       if (res.success) {
         toast.success(res.message);
+        setTriggerBalanceRefresh();
       } else {
         toast.error(res.message);
       }
