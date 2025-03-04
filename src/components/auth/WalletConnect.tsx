@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/popover';
 import { useUser } from '@/hooks/useUser';
 import { useVault } from '@/hooks/useVault';
-import { getBjtTokens } from '@/lib/action';
+import { client } from '@/lib/client';
 import {
   useAppKit,
   useAppKitAccount,
@@ -125,10 +125,15 @@ export default WalletConnect;
 const Faucet = () => {
   const handleClaim = async () => {
     try {
-      const res = await getBjtTokens();
-      toast('Successfully claimed tokens from faucet');
+      const data = await client.bjt.getBjtTokens.$get();
+      const res = await data.json();
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
     } catch (error) {
-      toast('Failed to claim tokens from faucet');
+      toast.error('Failed to claim tokens from faucet');
     }
   };
   return (

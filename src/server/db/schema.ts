@@ -24,3 +24,10 @@ export const TableRounds = sqliteTable('tableRounds', {
   netDealerReward: int('netDealerReward').notNull(),
   date: text('date').notNull(),
 });
+
+export const FaucetEntries = sqliteTable('faucetEntries', {
+  id: text('id').notNull().primaryKey(),
+  walletAddress: text('walletAddress').notNull(),
+  amount: int('amount').notNull(),
+  date: text('date').notNull(),
+});

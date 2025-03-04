@@ -14,6 +14,7 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'production']).default('development'),
     OPERATOR_PRIVATE_KEY: z.string().min(1).default(''),
+    FAUCET_PRIVATE_KEY: z.string().min(1).default(''),
     TURSO_CONNECTION_URL: z.string().min(1),
     TURSO_AUTH_TOKEN: z.string().min(1),
     CLOUDFLARE_API_TOKEN: z.string().min(1),
@@ -46,6 +47,7 @@ export const env = createEnv({
     CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
     JWT_SECRET: process.env.JWT_SECRET,
     OPERATOR_PRIVATE_KEY: process.env.OPERATOR_PRIVATE_KEY,
+    FAUCET_PRIVATE_KEY: process.env.FAUCET_PRIVATE_KEY,
     HUDDLE01_API_KEY: process.env.HUDDLE01_API_KEY,
     NEXT_PUBLIC_PARTYKIT_HOST: process.env.NEXT_PUBLIC_PARTYKIT_HOST,
     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,

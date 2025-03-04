@@ -15,6 +15,7 @@ interface Env {
     CLOUDFLARE_ACCOUNT_ID: string;
     NEXT_PUBLIC_WRANGLER_URL: string;
     JWT_SECRET: string;
+    FAUCET_PRIVATE_KEY: string;
   };
 }
 
@@ -39,6 +40,7 @@ const authMiddleWare = j.middleware(async ({ c, next }) => {
   try {
     const authHeader = c.req.header('Authorization');
     const cookies = c.req.header('Cookie');
+
     if (!authHeader && !cookies) {
       throw new HTTPException(401, { message: 'Unauthorized' });
     }
