@@ -20,6 +20,7 @@ import {
 } from '../../../../party/blackjack/blackjack.types';
 import { ESoundType, playSound } from '../Utils/sound';
 import PlayerDeck from './PlayerDeck';
+// import { useRemoteAudio } from "@huddle01/react";
 
 const GodsMap = [
   {
@@ -349,7 +350,8 @@ const JoinGame = memo(({ index }: { index: number }) => {
       },
     });
     playSound(ESoundType.JOIN, { volume: 0.5 });
-    if (!isOpen) setIsOpen(true);
+    const hasSeenRules = localStorage.getItem('hasSeenRules');
+    if (!isOpen && !hasSeenRules) setIsOpen(true);
   };
   return (
     <motion.div
@@ -418,6 +420,7 @@ const InGame: FC<TInGameProps> = memo(
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
       new Set(),
     );
+    // const { isAudioOn } = useRemoteAudio({peerId:""});
     const [isAudioOn, setisAudioOn] = useState(false);
     useEffect(() => {
       if (!player) return;
@@ -545,10 +548,12 @@ const InGame: FC<TInGameProps> = memo(
                   opacity: 0,
                 }}
                 onClick={handleExit}
-                className="flex space-x-2 cursor-pointer justify-center w-full lg:my-5 xl:my-6 items-center"
+                className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
               >
-                {/* <div className="whitespace-nowrap text-center">Leave</div> */}
                 <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
+                <div className="whitespace-nowrap text-center text-sm">
+                  Leave
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

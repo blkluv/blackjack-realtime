@@ -17,14 +17,21 @@ const Rules = () => {
   type TTabs = 'basic' | 'advanced';
   const [activeTab, setActiveTab] = useState<TTabs>('basic');
 
+  const handleClose = (value: boolean) => {
+    setIsOpen(value);
+    if (!value) {
+      localStorage.setItem('hasSeenRules', 'true');
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <div className="cursor-pointer">
           <HelpCircle size={24} />
         </div>
       </DialogTrigger>
-      <DialogContent className="bg-zinc-950/10 h-[40rem] backdrop-blur-3xl text-zinc-100 border-zinc-900 p-6 flex flex-col">
+      <DialogContent className="bg-zinc-950/10 h-[42rem] backdrop-blur-3xl text-zinc-100 border-zinc-900 p-6 flex flex-col">
         <DialogHeader className="h-0 hidden">
           <DialogTitle> </DialogTitle>
           <DialogDescription> </DialogDescription>
@@ -110,8 +117,8 @@ const Rules = () => {
                     automatically.
                   </li>
                   <li>
-                    <b>Push (Tie):</b> If you and the dealer have the same
-                    total, no one wins.
+                    <b>Player Busts:</b> If you exceed 21, you lose
+                    automatically (even if the dealer busts).
                   </li>
                 </ul>
               </div>
@@ -147,7 +154,7 @@ const Rules = () => {
                     🛑 Dealer <b>must stand</b> on 17 or higher.
                   </li>
                   <li>
-                    ⚖️ If you & dealer tie, it's a <b>push</b> (dealer wins).
+                    ⚖️ If you & dealer tie, it's a <b>tie</b> (dealer wins).
                   </li>
                 </ul>
               </div>

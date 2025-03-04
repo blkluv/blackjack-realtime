@@ -13,7 +13,8 @@ import { env } from '@/env.mjs';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
-import { cn } from '@/lib/utils';
+import { useUser } from '@/hooks/useUser';
+import { cn, truncateAddress } from '@/lib/utils';
 import {
   // useLocalPeer,
   usePeerIds,
@@ -38,14 +39,17 @@ const Home = () => {
       console.log('Joined room');
     },
   });
+  const { user } = useUser();
   const roomId = env.NEXT_PUBLIC_HUDDLE01_ROOM_ID;
   useEffect(() => {
     const fetchToken = async () => {
-      const res = await fetch(`/api/token?roomId=${roomId}`, {
-        method: 'GET',
-      });
+      const res = await fetch(
+        `/api/token?roomId=${roomId}&walletAddress=${user.walletAddress}`,
+        {
+          method: 'GET',
+        },
+      );
       const { token } = (await res.json()) as { token: string };
-      console.log(token);
 
       joinRoom({
         roomId,
@@ -53,7 +57,7 @@ const Home = () => {
       });
     };
     fetchToken();
-  }, []);
+  }, [user.walletAddress]);
 
   if (!isMounted) {
     return (
@@ -167,7 +171,7 @@ const HowToBox = () => {
 };
 
 const Tekken = () => {
-  const { startedAt: startTime, state } = useAtomValue(timeStateAtom);
+  const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
   const bettingDuration = BETTING_PERIOD;
   const isBet = state === 'betTimerStart';
   const [countdown, setCountdown] = useState(Math.ceil(bettingDuration / 1000));
@@ -195,13 +199,15 @@ const Tekken = () => {
   if (!isBet) return null;
 
   return (
-    <div className="absolute z-20 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
-      <div className="text-7xl text-yellow-400 font-serif">
+    <div className="absolute z-20 flex-col space-y-4 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
+      <div className="text-5xl text-yellow-400 font-serif">
         Place your bets in
       </div>
-      <div className="text-10xl text-yellow-400 font-serif">{countdown}</div>
-      <div className="text-10xl text-yellow-400 font-serif">
-        Round started by {}
+      <div className="text-10xl text-yellow-400 font-serif text-8xl">
+        {countdown}
+      </div>
+      <div className="text-10xl text-yellow-400 font-serif text pt-4">
+        Round started by {truncateAddress(userId)}
       </div>
     </div>
   );
