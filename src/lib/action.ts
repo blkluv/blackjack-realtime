@@ -1,13 +1,6 @@
 'use server';
 
 import { env } from '@/env.mjs';
-import { client } from './client';
-
-export const getBjtTokens = async () => {
-  const res = await client.bjt.getBjtTokens.$get();
-  const data = await res.json();
-  return data;
-};
 
 export const createRoom = async () => {
   const response = await fetch(
