@@ -1,5 +1,6 @@
 import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
 import { deckPositionAtom } from '@/atoms/deck.atom';
+import { rulesAtom } from '@/atoms/rules.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
 import { useBlackjack } from '@/hooks/useBlackjack';
@@ -7,50 +8,18 @@ import { useWindowSize } from '@/hooks/useWindowSize';
 import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
 import { cn, truncateAddress } from '@/lib/utils';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { DoorOpen } from 'lucide-react';
+import { DoorOpen, MicIcon, MicOffIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { type FC, memo, useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  PlayerState,
-  RoundResultState,
+import {
+  PLAYER_TURN_PERIOD,
+  type PlayerState,
+  type RoundResultState,
 } from '../../../../party/blackjack/blackjack.types';
 import { ESoundType, playSound } from '../Utils/sound';
 import PlayerDeck from './PlayerDeck';
-
-const FiveIconMap = [
-  {
-    src: 'fire.png',
-    border: 'border-[#FF6C0A]',
-    text: 'text-[#FF6C0A]',
-    bg: 'bg-[#FF6C0A]',
-  },
-  {
-    src: 'water.png',
-    border: 'border-[#0593FF]',
-    text: 'text-[#0593FF]',
-    bg: 'bg-[#0593FF]',
-  },
-  {
-    src: 'wind.png',
-    border: 'border-[#00FFD5]',
-    text: 'text-[#00FFD5]',
-    bg: 'bg-[#00FFD5]',
-  },
-  {
-    src: 'lightning.png',
-    border: 'border-[#EFFF00]',
-    text: 'text-[#EFFF00]',
-    bg: 'bg-[#EFFF00]',
-  },
-  {
-    src: 'leaf.png',
-    border: 'border-[#41A851]',
-    text: 'text-[#41A851]',
-    bg: 'bg-[#41A851]',
-  },
-];
 
 const GodsMap = [
   {
@@ -92,7 +61,6 @@ const Table = memo(() => {
   const { width } = useWindowSize();
   const { mySeat, gameState } = useBlackjack();
   const { state, userId } = useAtomValue(timeStateAtom);
-  // console.log("state in Table: ");
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -165,19 +133,12 @@ const Table = memo(() => {
 
           const isMe = mySeat === index + 1;
           const player = gameState.players[index + 1];
-          // const isCurrentTurn =
-          //   gameState.status === "playing" &&
-          //   player?.userId ===
-          //     gameState.playerOrder[gameState.currentPlayerIndex];
           const isCurrentTurn =
             state === 'playerTimerStart' && userId === player?.userId;
+          const turnDuration = PLAYER_TURN_PERIOD;
           const cards = player?.hand;
           const isJoinGame = mySeat === -1 && !player;
           const result = player?.roundResult?.state;
-
-          // if (isCurrentTurn && gameState.playerOrder.length > 1) {
-          //   playSound(ESoundType.TURN, { volume: 0.15 });
-          // }
 
           if ((result === 'win' || result === 'blackjack') && isMe) {
             playSound(ESoundType.WIN, { volume: 0.5 });
@@ -219,15 +180,13 @@ const Table = memo(() => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-60 rounded-full aspect-square',
-                    // `${FiveColorMap[index]}`,
+                    'lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-60 2xl:size-[13vw] rounded-full aspect-square',
                     player &&
                       'border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300',
                     isCurrentTurn && 'border-sky-400 outline-sky-400',
                     getResultColor(),
                   )}
                 >
-                  {/* <div className="fixed w-full h-full top-0 left-0"> */}
                   {isJoinGame ? (
                     <JoinGame index={index} />
                   ) : (
@@ -240,7 +199,6 @@ const Table = memo(() => {
                       state={result}
                     />
                   )}
-                  {/* </div> */}
                 </div>
               </span>
             </div>
@@ -368,7 +326,9 @@ const Dealer = memo(() => {
 
 const JoinGame = memo(({ index }: { index: number }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const { mySeat, blackjackSend, gameState } = useBlackjack();
+  const { blackjackSend } = useBlackjack();
+  const [isOpen, setIsOpen] = useAtom(rulesAtom);
+
   const { width } = useWindowSize();
   const getSize = () => {
     if (width > XL_VIEWPORT) {
@@ -389,6 +349,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
       },
     });
     playSound(ESoundType.JOIN, { volume: 0.5 });
+    if (!isOpen) setIsOpen(true);
   };
   return (
     <motion.div
@@ -457,7 +418,7 @@ const InGame: FC<TInGameProps> = memo(
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
       new Set(),
     );
-
+    const [isAudioOn, setisAudioOn] = useState(false);
     useEffect(() => {
       if (!player) return;
 
@@ -594,8 +555,13 @@ const InGame: FC<TInGameProps> = memo(
         </div>
 
         {player && cards?.length === 0 && (
-          <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-            {isMe ? 'You' : truncateAddress(player.userId)}
+          <div className="flex space-x-2">
+            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+              {isMe ? 'You' : truncateAddress(player.userId)}
+            </div>
+            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+              {isAudioOn ? <MicIcon size={14} /> : <MicOffIcon size={14} />}
+            </div>
           </div>
         )}
         {player && (

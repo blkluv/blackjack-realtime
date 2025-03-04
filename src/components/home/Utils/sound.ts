@@ -8,6 +8,7 @@ export enum ESoundType {
   TURN = 'turn',
   JOIN = 'join',
   EXIT = 'exit',
+  DING = 'ding',
 }
 
 const soundMap: Record<ESoundType, string> = {
@@ -20,6 +21,7 @@ const soundMap: Record<ESoundType, string> = {
   [ESoundType.TURN]: '/sounds/Turn.mp3',
   [ESoundType.JOIN]: '/sounds/Join.mp3',
   [ESoundType.EXIT]: '/sounds/Exit.mp3',
+  [ESoundType.DING]: '/sounds/Ding.mp3',
 };
 
 type TSoundOptions = {

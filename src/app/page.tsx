@@ -1,13 +1,19 @@
 'use client';
 
+import { rulesAtom } from '@/atoms/rules.atom';
+import { timeStateAtom } from '@/atoms/time.atom';
+import Rules from '@/components/home/Rules';
 import Logo from '@/components/home/Sidebar/Logo';
 import Navbar from '@/components/home/Sidebar/Navbar';
 // import Logo from "@/components/home/Sidebar/Logo";
 import Sidebar from '@/components/home/Sidebar/Sidebar';
 import Table from '@/components/home/Table/Table';
+import { ESoundType, playSound } from '@/components/home/Utils/sound';
 import { env } from '@/env.mjs';
+import { useBlackjack } from '@/hooks/useBlackjack';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
+import { cn } from '@/lib/utils';
 import {
   // useLocalPeer,
   usePeerIds,
@@ -16,8 +22,11 @@ import {
 } from '@huddle01/react';
 // import { createRoom } from "@/lib/action";
 import { Audio } from '@huddle01/react/components';
+import { useAtom, useAtomValue } from 'jotai';
+import { MousePointerClick, X } from 'lucide-react';
 import Image from 'next/image';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
+import { BETTING_PERIOD } from '../../party/blackjack/blackjack.types';
 // import MobileControlCentre from "@/components/home/MobileControlCentre";
 // import PeerAudioElem from "@/components/home/asd";
 
@@ -67,11 +76,15 @@ const Home = () => {
       <div className="flex flex-col overflow-hidden w-full z-10">
         <Navbar forMobile />
         <div className="relative w-full h-full p-8">
+          <div className="absolute top-4 left-4">
+            <Rules />
+          </div>
+          <HowToBox />
           <Table />
+          <Tekken />
         </div>
         <div className="flex flex-col">{/* <MobileControlCentre /> */}</div>
       </div>
-
       <Sidebar />
       <HuddleAudioWrapper />
     </div>
@@ -100,3 +113,92 @@ const RemotePeer = memo(({ peerId }: { peerId: string }) => {
     return <Audio key={`peer-audio-wrapper-${peerId}`} stream={stream} />;
   return null;
 });
+
+const HowToBox = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isOpen, setIsOpen] = useAtom(rulesAtom);
+  const { mySeat } = useBlackjack();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isClosed = localStorage.getItem('howToBoxClosed') === 'true';
+      console.log('isClosed:', isClosed);
+      setIsVisible(!isClosed);
+    }
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    localStorage.setItem('howToBoxClosed', 'true');
+  };
+
+  const shouldVisible = isVisible && mySeat === -1;
+
+  if (!shouldVisible) return null;
+
+  return (
+    <div
+      className={cn(
+        'absolute flex flex-col p-3 z-10 top-4 right-4 w-64 bg-zinc-950/40 backdrop-blur-xl rounded-xl border border-zinc-800',
+      )}
+    >
+      <div className="flex justify-end">
+        <X size={16} className="cursor-pointer" onClick={handleClose} />
+      </div>
+      <div className="flex flex-col items-center">
+        <MousePointerClick size={64} className="text-yellow-400" />
+        <div className="p-4 text-sm text-center">
+          Click on the Character to reserve a position.
+        </div>
+        <div className="text-sm text-center">
+          Also checkout the{' '}
+          <span
+            onClick={() => !isOpen && setIsOpen(true)}
+            onKeyDown={() => !isOpen && setIsOpen(true)}
+            className="underline cursor-pointer text-yellow-400"
+          >
+            rules
+          </span>
+          .
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Tekken = () => {
+  const { startedAt: startTime, state } = useAtomValue(timeStateAtom);
+  const bettingDuration = BETTING_PERIOD;
+  const isBet = state === 'betTimerStart';
+  const [countdown, setCountdown] = useState(Math.ceil(bettingDuration / 1000));
+
+  useEffect(() => {
+    if (!isBet) return;
+
+    const updateCountdown = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(
+        0,
+        Math.ceil((bettingDuration - elapsed) / 1000),
+      );
+      setCountdown(remaining);
+      playSound(ESoundType.DING, { volume: 0.1 });
+    };
+
+    updateCountdown();
+
+    const intervalId = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [startTime, isBet]);
+
+  if (!isBet) return null;
+
+  return (
+    <div className="absolute z-20 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
+      <div className="text-7xl text-yellow-400 font-serif">
+        Betting Phase ends in {countdown}
+      </div>
+    </div>
+  );
+};

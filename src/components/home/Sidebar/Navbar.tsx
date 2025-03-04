@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
-import { ChartNoAxesColumn } from 'lucide-react';
-import Link from 'next/link';
 import WalletConnect from '../../auth/WalletConnect';
+import Leaderboard from '../Leaderboard';
 import Logo from './Logo';
 
 const Navbar = ({ forMobile = false }: { forMobile?: boolean }) => {
@@ -14,12 +13,7 @@ const Navbar = ({ forMobile = false }: { forMobile?: boolean }) => {
     >
       <Logo />
       <div className="flex space-x-4 items-center">
-        <Link href={'/leaderboard'}>
-          <div className="flex items-center space-x-1 cursor-pointer">
-            {/* <div className="text-sm text-zinc-200">Leaderboard</div> */}
-            <ChartNoAxesColumn size={24} />
-          </div>
-        </Link>
+        <Leaderboard />
         <WalletConnect />
       </div>
     </div>
