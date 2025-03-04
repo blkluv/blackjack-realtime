@@ -123,17 +123,22 @@ const WalletConnect = () => {
 export default WalletConnect;
 
 const Faucet = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const handleClaim = async () => {
+    setIsLoading(true);
     try {
       const data = await client.bjt.getBjtTokens.$get();
       const res = await data.json();
       if (res.success) {
         toast.success(res.message);
+        setIsLoading(false);
       } else {
         toast.error(res.message);
+        setIsLoading(false);
       }
     } catch (error) {
       toast.error('Failed to claim tokens from faucet');
+      setIsLoading(false);
     }
   };
   return (
@@ -142,7 +147,7 @@ const Faucet = () => {
       onKeyDown={handleClaim}
       className="flex justify-between hover:bg-zinc-950/50 cursor-pointer items-center p-4"
     >
-      <div>Get $BJT tokens</div>
+      <div>{isLoading ? 'Getting tokens...' : 'Get $BJT tokens'}</div>
       <div>
         <Coins size={16} />
       </div>
