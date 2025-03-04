@@ -25,7 +25,11 @@ export const useBlackjackHandler = () => {
           setBetState(null);
         }
       } else if (type === 'betTimerStart') {
-        setTimeState({ startedAt: data.startedAt, state: 'betTimerStart' });
+        setTimeState({
+          startedAt: data.startedAt,
+          state: 'betTimerStart',
+          userId: data.startedByUserId,
+        });
         // console.log("bet timer start");
       } else if (type === 'betTimerEnd') {
         // setTimeState({ startedAt: data.endedAt, state: "betTimerEnd" });
