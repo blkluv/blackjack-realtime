@@ -20,6 +20,7 @@ import {
 } from '../../../../party/blackjack/blackjack.types';
 import { ESoundType, playSound } from '../Utils/sound';
 import PlayerDeck from './PlayerDeck';
+// import { useRemoteAudio } from "@huddle01/react";
 
 const GodsMap = [
   {
@@ -419,6 +420,7 @@ const InGame: FC<TInGameProps> = memo(
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
       new Set(),
     );
+    // const { isAudioOn } = useRemoteAudio({peerId:""});
     const [isAudioOn, setisAudioOn] = useState(false);
     useEffect(() => {
       if (!player) return;
