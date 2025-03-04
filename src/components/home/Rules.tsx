@@ -17,8 +17,15 @@ const Rules = () => {
   type TTabs = 'basic' | 'advanced';
   const [activeTab, setActiveTab] = useState<TTabs>('basic');
 
+  const handleClose = (value: boolean) => {
+    setIsOpen(value);
+    if (!value) {
+      localStorage.setItem('hasSeenRules', 'true');
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <div className="cursor-pointer">
           <HelpCircle size={24} />

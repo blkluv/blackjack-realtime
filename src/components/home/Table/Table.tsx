@@ -349,7 +349,8 @@ const JoinGame = memo(({ index }: { index: number }) => {
       },
     });
     playSound(ESoundType.JOIN, { volume: 0.5 });
-    if (!isOpen) setIsOpen(true);
+    const hasSeenRules = localStorage.getItem('hasSeenRules');
+    if (!isOpen && !hasSeenRules) setIsOpen(true);
   };
   return (
     <motion.div
