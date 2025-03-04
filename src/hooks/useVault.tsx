@@ -137,6 +137,16 @@ export function useVault(): UseVaultReturn {
         args: [address],
       });
 
+      // if(balances.vaultBalance>vaultBalance){
+      //aler(-200 dolare lost ,)
+      // turn component red
+      // }
+      // if(balances.vaultBalance<vaultBalance){
+      //aler(+200 dolare added ,)
+      // turn component green
+      // }
+
+
       setBalances({
         tokenBalance: formatUnits(tokenBalance, decimals),
         vaultBalance: formatUnits(vaultBalance, decimals),
