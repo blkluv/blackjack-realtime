@@ -5,7 +5,6 @@ import CustomButton from '@/components/ui/CustomButton';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useVault } from '@/hooks/useVault';
 import { useAtomValue } from 'jotai';
-import { Hand, HandCoins, HandHelping } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PlayerState } from '../../../party/blackjack/blackjack.types';
 import { Input } from '../ui/input';
@@ -51,13 +50,10 @@ const MobileControlCentre = () => {
       {/* <div className="flex flex-col space-y-2 px-4"></div> */}
       <div className="flex px-4 space-x-4">
         <BatteryButton
-          text="Hit"
           animate={false}
           disabled={!isHitOrStand}
           // increase font size
-          className="text-zinc-100 h-12"
-          bgColor="bg-green-600"
-          icon={<HandHelping />}
+          className="text-zinc-100 h-12 bg-green-600"
           onClick={() => {
             // playSound(SoundType.DEAL);
             blackjackSend({
@@ -67,12 +63,9 @@ const MobileControlCentre = () => {
           }}
         />
         <BatteryButton
-          text="Stand"
           disabled={!isHitOrStand}
           animate={isHitOrStand}
-          icon={<Hand />}
-          className="text-zinc-100 h-12"
-          bgColor="bg-red-600"
+          className="text-zinc-100 h-12 bg-red-600"
           onClick={() => {
             // playSound(SoundType.);
             blackjackSend({
@@ -108,13 +101,11 @@ const MobileControlCentre = () => {
           </CustomButton>
         </div>
         <BatteryButton
-          text={`${betState === null ? 'Bet' : betState}`}
           disabled={
             !(isBet && (betState === null || betState === 'bet-placed')) ||
             !(Number(betAmount) > 0) ||
             player?.bet !== 0
           }
-          icon={<HandCoins />}
           animate={isBet}
           className="text-zinc-900 h-12 w-1/3"
           isBet
