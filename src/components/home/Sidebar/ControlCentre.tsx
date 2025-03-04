@@ -77,53 +77,51 @@ const ControlCentre = () => {
       </div>
       <div className="flex px-4 space-x-4">
         <BatteryButton
-          text="Hit"
           animate={false}
           disabled={!isHitOrStand}
-          // increase font size
-          className="text-zinc-100 h-12"
-          bgColor="bg-green-600"
-          icon={<HandHelping />}
+          className="text-zinc-100 bg-green-600"
           onClick={() => {
-            // playSound(SoundType.DEAL);
             blackjackSend({
               type: 'hit',
               data: {},
             });
           }}
-        />
+        >
+          <div className="flex justify-center w-full space-x-1">
+            <div className="w-fit">Hit</div>
+            <HandHelping />
+          </div>
+        </BatteryButton>
         <BatteryButton
-          text="Stand"
           disabled={!isHitOrStand}
           animate={isHitOrStand}
-          icon={<Hand />}
-          className="text-zinc-100 h-12"
-          bgColor="bg-red-600"
+          className="text-zinc-100 h-12 bg-red-600"
           onClick={() => {
-            // playSound(SoundType.);
             blackjackSend({
               type: 'stand',
               data: {},
             });
           }}
-        />
+        >
+          <div className="flex justify-center w-full space-x-1  items-center">
+            <div className="w-fit">Stand</div>
+            <Hand size={18} />
+          </div>
+        </BatteryButton>
       </div>
       <div className="px-4">
         <BatteryButton
-          text={`${betState === null ? 'Bet' : betState}`}
           disabled={
             !(isBet && (betState === null || betState === 'bet-placed')) ||
             !(Number(betAmount) > 0) ||
             player?.bet !== 0
           }
-          icon={<HandCoins />}
           animate={isBet}
-          className="text-zinc-900 h-12"
+          className="text-zinc-900 h-12 bg-zinc-200"
           isBet
           onClick={() => {
             if (!player || player.bet !== 0) return;
             if (Number(betAmount) > 0) {
-              // playSound(SoundType.BET);
               playSound(ESoundType.BET);
               blackjackSend({
                 type: 'placeBet',
@@ -135,7 +133,12 @@ const ControlCentre = () => {
               console.log('Enter amount > 0');
             }
           }}
-        />
+        >
+          <div className="flex justify-center w-full space-x-1  items-center">
+            <div className="w-fit">{betState === null ? 'Bet' : betState}</div>
+            <HandCoins size={18} />
+          </div>
+        </BatteryButton>
       </div>
     </div>
   );

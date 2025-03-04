@@ -1,6 +1,4 @@
 import { timeStateAtom } from '@/atoms/time.atom';
-import CustomButton from '@/components/ui/CustomButton';
-
 import { cn } from '@/lib/utils';
 import { useAtomValue } from 'jotai';
 import { motion } from 'motion/react';
@@ -11,27 +9,23 @@ import {
 } from '../../../../party/blackjack/blackjack.types';
 
 type TBatteryButtonProps = {
-  text: string;
-  icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
   animate?: boolean;
   className?: string;
-  bgColor?: string;
   isBet?: boolean;
+  children?: React.ReactNode;
 };
 
 const BatteryButton: FC<TBatteryButtonProps> = ({
-  text,
-  icon,
   onClick,
   disabled,
   animate = true,
   className,
-  bgColor,
   isBet,
+  children,
 }) => {
-  const [progress, setProgress] = useState(1);
+  const [progress, setProgress] = useState(0);
   const { startedAt: startTime } = useAtomValue(timeStateAtom);
   const duration = isBet ? BETTING_PERIOD : PLAYER_TURN_PERIOD;
 
@@ -41,10 +35,8 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
         setProgress(0);
         return;
       }
-      const currentTime = Date.now();
-      const elapsed = currentTime - startTime;
-      const newProgress = Math.min(1, elapsed / duration);
-      setProgress(1 - newProgress);
+      const elapsed = Date.now() - startTime;
+      setProgress(1 - Math.min(1, elapsed / duration));
     };
 
     calculateProgress();
@@ -54,44 +46,25 @@ const BatteryButton: FC<TBatteryButtonProps> = ({
     return () => {
       clearInterval(intervalId);
     };
-  }, [startTime, disabled, animate]);
+  }, [startTime]);
 
   return (
-    <div className="relative w-full">
-      <div
-        className={cn(
-          'w-full h-9 rounded-lg relative overflow-hidden',
-          disabled ? 'cursor-not-allowed bg-zinc-400' : 'bg-zinc-200',
-          className,
-        )}
-      >
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: progress }}
-          transition={{
-            ease: 'linear',
-          }}
-          className="w-full h-full origin-left bg-yellow-500"
-        />
-        <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-zinc-300 rounded-r-sm -mr-1" />
-      </div>
-
-      <CustomButton
-        disabled={disabled}
-        onClick={onClick}
-        bgColor={bgColor}
-        className={cn(
-          'z-10 absolute left-0 top-0 w-full py-0 h-9',
-          'bg-transparent border-none shadow-none',
-          className,
-        )}
-      >
-        <div className="flex items-center justify-center gap-2">
-          <span className="font-semibold">{text}</span>
-          {icon}
-        </div>
-      </CustomButton>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'relative w-full h-12 bg-zinc-950 border-zinc-800 border rounded-lg overflow-hidden',
+        className,
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+      )}
+    >
+      <motion.div
+        animate={{ scaleX: progress }}
+        transition={{ ease: 'linear' }}
+        className="absolute top-0 left-0 h-full w-full origin-left bg-yellow-500"
+      />
+      <span className="relative z-10 font-semibold flex">{children}</span>
+    </button>
   );
 };
 

@@ -3,6 +3,7 @@ import { truncateAddress } from '@/lib/utils';
 import { type FC, memo } from 'react';
 import DeckOfCards4 from '../DeckOfCards4';
 import type { EPlayingCardState, TPlayingCardSize } from '../PlayingCard';
+
 // import DeckOfCards2 from "./DeckOfCards2";
 
 type TPlayingCardProps = {
@@ -27,8 +28,6 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
     animateCards,
     dealerDelay,
   }) => {
-    // console.log("animateCards in PlayerDeck:", animateCards);
-
     const { width } = useWindowSize();
     const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
 
