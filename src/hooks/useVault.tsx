@@ -181,7 +181,7 @@ export function useVault(): UseVaultReturn {
           abi: TOKEN_ABI,
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          gas: parseGwei('20'),
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({
@@ -246,7 +246,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'deposit',
           args: [amountInTokenUnits],
-          gas: parseGwei('20'),
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({
@@ -315,7 +315,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'withdraw',
           args: [amountInTokenUnits],
-          gas: parseGwei('20'),
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({
