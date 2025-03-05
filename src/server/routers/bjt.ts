@@ -1,15 +1,19 @@
 import { generateRandomString } from '@/atoms/atom';
 import { TOKEN_ABI, TOKEN_ADDRESS } from '@/web3/constants';
 import { eq } from 'drizzle-orm';
-import { http, createPublicClient, createWalletClient, parseUnits } from 'viem';
+import {
+  http,
+  createPublicClient,
+  createWalletClient,
+  parseEther,
+  parseUnits,
+} from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { huddle01Testnet } from 'viem/chains';
 import { FaucetEntries } from '../db/schema';
 import { authProcedure, j } from '../jstack';
 
 const getClients = (faucetKey: string) => {
-  console.log(faucetKey);
-
   if (faucetKey === '') {
     throw new Error('Operator private key is empty, Set ENV Vars');
   }
@@ -29,7 +33,8 @@ const getClients = (faucetKey: string) => {
   return { walletClient, publicClient };
 };
 
-const FAUCET_AMOUNT = '5000';
+const FAUCET_AMOUNT_BJT = '5000';
+const FAUCET_AMOUNT_ETH = '0.001';
 
 export const bjtRouter = j.router({
   getBjtTokens: authProcedure.query(async ({ ctx, c }) => {
@@ -64,31 +69,43 @@ export const bjtRouter = j.router({
       functionName: 'decimals',
     });
 
-    const amount = FAUCET_AMOUNT;
-
-    const amountInTokenUnits = parseUnits(amount, decimals);
-
     try {
-      const hash = await walletClient.writeContract({
+      const parsedBJTAmount = parseUnits(FAUCET_AMOUNT_BJT, decimals);
+      const bjtTokenHash = await walletClient.writeContract({
         address: TOKEN_ADDRESS,
         abi: TOKEN_ABI,
         functionName: 'transfer',
-        args: [address as `0x${string}`, amountInTokenUnits],
+        args: [address as `0x${string}`, parsedBJTAmount],
       });
+
+      const userBalance = await publicClient.getBalance({
+        address: address as `0x${string}`,
+      });
+
+      if (userBalance <= parseEther('0.001')) {
+        const ethHash = await walletClient.sendTransaction({
+          to: address as `0x${string}`,
+          value: parseEther(FAUCET_AMOUNT_ETH),
+        });
+
+        await publicClient.waitForTransactionReceipt({ hash: ethHash });
+      }
+
+      await publicClient.waitForTransactionReceipt({ hash: bjtTokenHash });
 
       await ctx.db.insert(FaucetEntries).values([
         {
           id: generateRandomString(10),
           walletAddress: address,
-          amount: Number(amount),
+          amount: Number(FAUCET_AMOUNT_BJT),
           date: new Date().toISOString(),
         },
       ]);
 
       return c.superjson({
         success: true,
-        message: `Successfully transferred ${amount} tokens to ${address}`,
-        hash,
+        message: `Successfully transferred ${FAUCET_AMOUNT_BJT} tokens to ${address}`,
+        hash: bjtTokenHash,
       });
     } catch (error) {
       console.error('Faucet error:', error);

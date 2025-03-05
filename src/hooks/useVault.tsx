@@ -113,7 +113,6 @@ export function useVault(): UseVaultReturn {
   // Consolidated refresh balances function
   const refreshBalances = useCallback(async (): Promise<void> => {
     if (!waddress) {
-      console.error('address is undefined');
       return;
     }
 
