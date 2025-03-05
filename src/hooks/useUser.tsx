@@ -32,7 +32,7 @@ export const useUser = () => {
 
       updateUser({
         isAuthenticated: false,
-        walletAddress: '',
+        walletAddress: undefined,
         wsToken: '',
       });
     } catch (error) {
@@ -46,7 +46,7 @@ export const useUser = () => {
         .then((token) => {
           updateUser({
             isAuthenticated: true,
-            walletAddress: session.address.toLowerCase(),
+            walletAddress: session.address.toLowerCase() as `0x${string}`,
             wsToken: token,
           });
         })

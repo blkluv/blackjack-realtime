@@ -1,13 +1,12 @@
 import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
+import { userAtom } from '@/atoms/user.atom';
 import { useAtomValue } from 'jotai';
 // hooks/useVault.ts
 import { useCallback, useEffect, useState } from 'react';
 import {
   http,
-  type WalletClient,
   createPublicClient,
   createWalletClient,
-  custom,
   formatUnits,
   parseUnits,
 } from 'viem';
@@ -57,10 +56,14 @@ const publicClient = createPublicClient({
   transport: http(),
 });
 
+const walletClient = createWalletClient({
+  chain: huddle01Testnet,
+  transport: http(),
+});
+
 export function useVault(): UseVaultReturn {
   // State hooks
-  const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-  const [waddress, setAddress] = useState<`0x${string}` | null>(null);
+  const { walletAddress: waddress } = useAtomValue(userAtom);
   const triggerBalanceRefresh = useAtomValue(triggerBalanceRefreshAtom);
   const [balances, setBalances] = useState<VaultBalances>({
     tokenBalance: '0',
@@ -74,25 +77,6 @@ export function useVault(): UseVaultReturn {
     success: false,
     hash: null,
   });
-
-  // Initialize wallet client
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.ethereum) return;
-
-    const client = createWalletClient({
-      chain: huddle01Testnet,
-      //@ts-ignore
-      transport: custom(window.ethereum),
-    });
-
-    client.getAddresses().then(([walletAddress]) => {
-      if (walletAddress) {
-        setAddress(walletAddress);
-      }
-    });
-
-    setWalletClient(client);
-  }, []);
 
   // Fetch balances when address changes
   useEffect(() => {
@@ -147,6 +131,7 @@ export function useVault(): UseVaultReturn {
       //aler(+200 dolare added ,)
       // turn component green
       // }
+
       const fmtTokenBalance = formatUnits(tokenBalance, decimals);
       const fmtVaultBalance = formatUnits(vaultBalance, decimals);
       console.log('refreshing balances', fmtTokenBalance, fmtVaultBalance);
@@ -405,7 +390,7 @@ export function useVault(): UseVaultReturn {
   );
 
   return {
-    address: waddress,
+    address: waddress ?? null,
 
     // Balance state
     balances,

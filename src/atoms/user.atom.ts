@@ -1,14 +1,14 @@
 import { atom } from 'jotai';
 
 type User = {
-  walletAddress?: string;
+  walletAddress?: `0x${string}`;
   wsToken?: string;
   isAuthenticated: boolean;
 };
 
 const userAtom = atom<User>({
-  walletAddress: '',
-  wsToken: '',
+  walletAddress: undefined,
+  wsToken: undefined,
   isAuthenticated: false,
 });
 
