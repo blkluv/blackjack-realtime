@@ -1,16 +1,14 @@
 import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
 import { userAtom } from '@/atoms/user.atom';
 import { useAtomValue } from 'jotai';
-// hooks/useVault.ts
 import { useCallback, useEffect, useState } from 'react';
-import {
-  http,
-  createPublicClient,
-  createWalletClient,
-  formatUnits,
-  parseUnits,
-} from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { huddle01Testnet } from 'viem/chains';
+import {
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi';
 import {
   TOKEN_ABI,
   TOKEN_ADDRESS,
@@ -35,31 +33,14 @@ interface TransactionState {
 
 interface UseVaultReturn {
   address: `0x${string}` | null;
-
-  // Balance state
   balances: VaultBalances;
   refreshBalances: () => Promise<void>;
-
-  // Transaction state
   transaction: TransactionState;
   resetTransactionState: () => void;
-
-  // Actions
   deposit: (amount: string) => Promise<void>;
   withdraw: (amount: string) => Promise<void>;
   approveTokens: (amount: string) => Promise<boolean>;
 }
-
-// Create public client
-const publicClient = createPublicClient({
-  chain: huddle01Testnet,
-  transport: http(),
-});
-
-const walletClient = createWalletClient({
-  chain: huddle01Testnet,
-  transport: http(),
-});
 
 export function useVault(): UseVaultReturn {
   // State hooks
@@ -78,62 +59,41 @@ export function useVault(): UseVaultReturn {
     hash: null,
   });
 
-  // Fetch balances when address changes
+  // useReadContract hooks for fetching data
+  const { data: tokenDecimals } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'decimals',
+  });
+
+  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: waddress ? [waddress] : undefined,
+  });
+
+  const { data: vaultBalance, refetch: refetchVaultBalance } = useReadContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'getBalance',
+    args: waddress ? [waddress] : undefined,
+  });
+
+  // Single writeContract hook for all write operations
+  const { writeContractAsync } = useWriteContract();
+
+  // Update balances when data changes
   useEffect(() => {
-    console.log('Fetching balances...');
-    refreshBalances();
-  }, [waddress, triggerBalanceRefresh]);
-
-  // Get token decimals
-  const getTokenDecimals = useCallback(async (): Promise<number> => {
-    try {
-      const decimals = await publicClient.readContract({
-        address: TOKEN_ADDRESS,
-        abi: TOKEN_ABI,
-        functionName: 'decimals',
-      });
-      return decimals;
-    } catch (error) {
-      console.error('Error getting token decimals:', error);
-      return 18;
-    }
-  }, []);
-
-  // Refresh balances
-  const refreshBalances = useCallback(async (): Promise<void> => {
-    if (!waddress) {
-      console.error('address is undefined');
-      return;
-    }
-
-    try {
-      const decimals = await getTokenDecimals();
-
-      const tokenBalance = await publicClient.readContract({
-        address: TOKEN_ADDRESS,
-        abi: TOKEN_ABI,
-        functionName: 'balanceOf',
-        args: [waddress],
-      });
-
-      const vaultBalance = await publicClient.readContract({
-        address: VAULT_ADDRESS,
-        abi: VAULT_ABI,
-        functionName: 'getBalance',
-        args: [waddress],
-      });
-
-      // if(balances.vaultBalance>vaultBalance){
-      //aler(-200 dolare lost ,)
-      // turn component red
-      // }
-      // if(balances.vaultBalance<vaultBalance){
-      //aler(+200 dolare added ,)
-      // turn component green
-      // }
-
+    if (
+      tokenBalance !== undefined &&
+      vaultBalance !== undefined &&
+      tokenDecimals !== undefined
+    ) {
+      const decimals = Number(tokenDecimals || 18);
       const fmtTokenBalance = formatUnits(tokenBalance, decimals);
       const fmtVaultBalance = formatUnits(vaultBalance, decimals);
+
       console.log('refreshing balances', fmtTokenBalance, fmtVaultBalance);
 
       setBalances({
@@ -142,10 +102,28 @@ export function useVault(): UseVaultReturn {
         rawTokenBalance: tokenBalance,
         rawVaultBalance: vaultBalance,
       });
+    }
+  }, [tokenBalance, vaultBalance, tokenDecimals]);
+
+  // Fetch balances when address changes or refresh is triggered
+  useEffect(() => {
+    console.log('Fetching balances...');
+    refreshBalances();
+  }, [waddress, triggerBalanceRefresh]);
+
+  // Consolidated refresh balances function
+  const refreshBalances = useCallback(async (): Promise<void> => {
+    if (!waddress) {
+      console.error('address is undefined');
+      return;
+    }
+
+    try {
+      await Promise.all([refetchTokenBalance(), refetchVaultBalance()]);
     } catch (error) {
       console.error('Error fetching balances:', error);
     }
-  }, [waddress, getTokenDecimals]);
+  }, [waddress, refetchTokenBalance, refetchVaultBalance]);
 
   // Reset transaction state
   const resetTransactionState = useCallback((): void => {
@@ -157,10 +135,28 @@ export function useVault(): UseVaultReturn {
     });
   }, []);
 
+  // Wait for transaction receipt
+  const { data: txReceipt, isLoading: isTxLoading } =
+    useWaitForTransactionReceipt({
+      hash: transaction.hash ?? undefined,
+    });
+
+  // Update transaction state when receipt is received
+  useEffect(() => {
+    if (transaction.hash && txReceipt && !isTxLoading) {
+      setTransaction((prev) => ({
+        ...prev,
+        isLoading: false,
+        success: true,
+      }));
+      refreshBalances();
+    }
+  }, [txReceipt, isTxLoading, transaction.hash, refreshBalances]);
+
   // Approve tokens
   const approveTokens = useCallback(
     async (amount: string): Promise<boolean> => {
-      if (!walletClient || !waddress) return false;
+      if (!waddress || !tokenDecimals) return false;
 
       setTransaction({
         isLoading: true,
@@ -170,11 +166,11 @@ export function useVault(): UseVaultReturn {
       });
 
       try {
-        const decimals = await getTokenDecimals();
+        const decimals = Number(tokenDecimals || 18);
         const amountInTokenUnits = parseUnits(amount, decimals);
 
         // Check if user has enough tokens
-        if (amountInTokenUnits > balances.rawTokenBalance) {
+        if (tokenBalance && amountInTokenUnits > tokenBalance) {
           setTransaction({
             isLoading: false,
             error: `Insufficient token balance. You have ${balances.tokenBalance} tokens.`,
@@ -185,29 +181,18 @@ export function useVault(): UseVaultReturn {
         }
 
         // Approve spending
-        const hash = await walletClient.writeContract({
+        const hash = await writeContractAsync({
           address: TOKEN_ADDRESS,
           abi: TOKEN_ABI,
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          account: waddress,
-          chain: huddle01Testnet,
+          chainId: huddle01Testnet.id,
         });
 
         setTransaction({
           isLoading: true,
           error: null,
           success: false,
-          hash,
-        });
-
-        // Wait for transaction confirmation
-        await publicClient.waitForTransactionReceipt({ hash });
-
-        setTransaction({
-          isLoading: false,
-          error: null,
-          success: true,
           hash,
         });
 
@@ -221,20 +206,19 @@ export function useVault(): UseVaultReturn {
           success: false,
           hash: null,
         });
-
         return false;
       }
     },
-    [walletClient, waddress, getTokenDecimals, balances],
+    [waddress, tokenDecimals, tokenBalance, balances, writeContractAsync],
   );
 
   // Deposit tokens
   const deposit = useCallback(
     async (amount: string): Promise<void> => {
-      if (!walletClient || !waddress) {
+      if (!waddress || !tokenDecimals) {
         setTransaction({
           isLoading: false,
-          error: 'Wallet not connected',
+          error: 'Wallet not connected or token decimals not available',
           success: false,
           hash: null,
         });
@@ -258,17 +242,16 @@ export function useVault(): UseVaultReturn {
       });
 
       try {
-        const decimals = await getTokenDecimals();
+        const decimals = Number(tokenDecimals || 18);
         const amountInTokenUnits = parseUnits(amount, decimals);
 
         // Deposit tokens
-        const hash = await walletClient.writeContract({
+        const hash = await writeContractAsync({
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
           functionName: 'deposit',
           args: [amountInTokenUnits],
-          account: waddress,
-          chain: huddle01Testnet,
+          chainId: huddle01Testnet.id,
         });
 
         setTransaction({
@@ -277,19 +260,6 @@ export function useVault(): UseVaultReturn {
           success: false,
           hash,
         });
-
-        // Wait for transaction confirmation
-        await publicClient.waitForTransactionReceipt({ hash });
-
-        setTransaction({
-          isLoading: false,
-          error: null,
-          success: true,
-          hash,
-        });
-
-        // Refresh balances
-        await refreshBalances();
       } catch (error) {
         console.error('Error depositing tokens:', error);
         setTransaction({
@@ -301,16 +271,16 @@ export function useVault(): UseVaultReturn {
         });
       }
     },
-    [walletClient, waddress, approveTokens, getTokenDecimals, refreshBalances],
+    [waddress, tokenDecimals, approveTokens, writeContractAsync],
   );
 
   // Withdraw tokens
   const withdraw = useCallback(
     async (amount: string): Promise<void> => {
-      if (!walletClient || !waddress) {
+      if (!waddress || !tokenDecimals) {
         setTransaction({
           isLoading: false,
-          error: 'Wallet not connected',
+          error: 'Wallet not connected or token decimals not available',
           success: false,
           hash: null,
         });
@@ -330,11 +300,11 @@ export function useVault(): UseVaultReturn {
       });
 
       try {
-        const decimals = await getTokenDecimals();
+        const decimals = Number(tokenDecimals || 18);
         const amountInTokenUnits = parseUnits(amount, decimals);
 
         // Check if user has enough balance in vault
-        if (amountInTokenUnits > balances.rawVaultBalance) {
+        if (vaultBalance && amountInTokenUnits > vaultBalance) {
           setTransaction({
             isLoading: false,
             error: `Insufficient vault balance. You have ${balances.vaultBalance} tokens in the game vault.`,
@@ -345,13 +315,12 @@ export function useVault(): UseVaultReturn {
         }
 
         // Withdraw tokens
-        const hash = await walletClient.writeContract({
+        const hash = await writeContractAsync({
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
           functionName: 'withdraw',
           args: [amountInTokenUnits],
-          account: waddress,
-          chain: huddle01Testnet,
+          chainId: huddle01Testnet.id,
         });
 
         setTransaction({
@@ -360,19 +329,6 @@ export function useVault(): UseVaultReturn {
           success: false,
           hash,
         });
-
-        // Wait for transaction confirmation
-        await publicClient.waitForTransactionReceipt({ hash });
-
-        setTransaction({
-          isLoading: false,
-          error: null,
-          success: true,
-          hash,
-        });
-
-        // Refresh balances
-        await refreshBalances();
       } catch (error) {
         console.error('Error withdrawing tokens:', error);
         setTransaction({
@@ -386,21 +342,15 @@ export function useVault(): UseVaultReturn {
         });
       }
     },
-    [walletClient, waddress, getTokenDecimals, balances, refreshBalances],
+    [waddress, tokenDecimals, balances, vaultBalance, writeContractAsync],
   );
 
   return {
     address: waddress ?? null,
-
-    // Balance state
     balances,
     refreshBalances,
-
-    // Transaction state
     transaction,
     resetTransactionState,
-
-    // Actions
     deposit,
     withdraw,
     approveTokens,
