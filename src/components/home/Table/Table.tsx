@@ -1,57 +1,57 @@
-import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
-import { deckPositionAtom } from '@/atoms/deck.atom';
-import { rulesAtom } from '@/atoms/rules.atom';
-import { timeStateAtom } from '@/atoms/time.atom';
-import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
-import { useBlackjack } from '@/hooks/useBlackjack';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
-import { cn, truncateAddress } from '@/lib/utils';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { DoorOpen, MicIcon, MicOffIcon } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { nanoid } from 'nanoid';
-import Image from 'next/image';
-import { type FC, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { dealerCardsAtom, playerCardsAtom } from "@/atoms/cards.atom";
+import { deckPositionAtom } from "@/atoms/deck.atom";
+import { rulesAtom } from "@/atoms/rules.atom";
+import { timeStateAtom } from "@/atoms/time.atom";
+import PlayingCard, { EPlayingCardState } from "@/components/home/PlayingCard";
+import { useBlackjack } from "@/hooks/useBlackjack";
+import { useWindowSize } from "@/hooks/useWindowSize";
+// import { LG_VIEWPORT, XL_VIEWPORT } from "@/lib/constants";
+import { cn, truncateAddress } from "@/lib/utils";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { DoorOpen, MicIcon, MicOffIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { nanoid } from "nanoid";
+import Image from "next/image";
+import { type FC, memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   PLAYER_TURN_PERIOD,
   type PlayerState,
   type RoundResultState,
-} from '../../../../party/blackjack/blackjack.types';
-import { ESoundType, playSound } from '../Utils/sound';
-import PlayerDeck from './PlayerDeck';
+} from "../../../../party/blackjack/blackjack.types";
+import { ESoundType, playSound } from "../Utils/sound";
+import PlayerDeck from "./PlayerDeck";
 // import { useRemoteAudio } from "@huddle01/react";
 
 const GodsMap = [
   {
-    src: '/images/gods/1.png',
-    border: 'border-[#C63F3D]',
-    text: 'text-[#C63F3D]',
-    bg: 'bg-[#C63F3D]',
+    src: "/images/gods/1.png",
+    border: "border-[#C63F3D]",
+    text: "text-[#C63F3D]",
+    bg: "bg-[#C63F3D]",
   },
   {
-    src: '/images/gods/2.png',
-    border: 'border-[#3CA89C]',
-    text: 'text-[#3CA89C]',
-    bg: 'bg-[#3CA89C]',
+    src: "/images/gods/2.png",
+    border: "border-[#3CA89C]",
+    text: "text-[#3CA89C]",
+    bg: "bg-[#3CA89C]",
   },
   {
-    src: '/images/gods/3.png',
-    border: 'border-[#6251C8]',
-    text: 'text-[#6251C8]',
-    bg: 'bg-[#6251C8]',
+    src: "/images/gods/3.png",
+    border: "border-[#6251C8]",
+    text: "text-[#6251C8]",
+    bg: "bg-[#6251C8]",
   },
   {
-    src: '/images/gods/4.png',
-    border: 'border-[#CE4471]',
-    text: 'text-[#CE4471]',
-    bg: 'bg-[#CE4471]',
+    src: "/images/gods/4.png",
+    border: "border-[#CE4471]",
+    text: "text-[#CE4471]",
+    bg: "bg-[#CE4471]",
   },
   {
-    src: '/images/gods/5.png',
-    border: 'border-[#FD994E]',
-    text: 'text-[#FD994E]',
-    bg: 'bg-[#FD994E]',
+    src: "/images/gods/5.png",
+    border: "border-[#FD994E]",
+    text: "text-[#FD994E]",
+    bg: "bg-[#FD994E]",
   },
 ];
 
@@ -59,7 +59,7 @@ const Table = memo(() => {
   const length = 5;
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { width } = useWindowSize();
+  const { width, height } = useWindowSize();
   const { mySeat, gameState } = useBlackjack();
   const { state, userId } = useAtomValue(timeStateAtom);
 
@@ -90,7 +90,7 @@ const Table = memo(() => {
   return (
     <div className="h-full w-full outline-4 outline-zinc-950 p-10 rounded-full bg-amber-950 relative">
       <Image
-        src={'/wood.png'}
+        src={"/wood.png"}
         alt=""
         layout="fill"
         objectFit="cover"
@@ -102,7 +102,7 @@ const Table = memo(() => {
         className="w-full h-full bg-zinc-950 outline-4 outline-amber-900 flex items-center justify-center rounded-full border border-zinc-800 relative"
       >
         <Image
-          src={'/bg.png'}
+          src={"/bg.png"}
           alt=""
           width={2000}
           height={2000}
@@ -111,7 +111,7 @@ const Table = memo(() => {
         />
         <Dealer />
         {Array.from({ length: 5 }).map((text, index) => {
-          const size = width < 1024 ? 70 : width < 1280 ? 100 : 126;
+          const size = width / 12;
           const startAngle = dimensions.width > dimensions.height ? -7 : 0;
           const angle =
             -index * (360 / length) -
@@ -128,38 +128,38 @@ const Table = memo(() => {
           const tangentAngle =
             Math.atan2(
               radiusX * Math.sin(angleRad),
-              radiusY * Math.cos(angleRad),
+              radiusY * Math.cos(angleRad)
             ) *
             (180 / Math.PI);
 
           const isMe = mySeat === index + 1;
           const player = gameState.players[index + 1];
           const isCurrentTurn =
-            state === 'playerTimerStart' && userId === player?.userId;
+            state === "playerTimerStart" && userId === player?.userId;
           const turnDuration = PLAYER_TURN_PERIOD;
           const cards = player?.hand;
           const isJoinGame = mySeat === -1 && !player;
           const result = player?.roundResult?.state;
 
-          if ((result === 'win' || result === 'blackjack') && isMe) {
+          if ((result === "win" || result === "blackjack") && isMe) {
             playSound(ESoundType.WIN, { volume: 0.5 });
           }
 
-          if (result === 'loss' && isMe) {
+          if (result === "loss" && isMe) {
             playSound(ESoundType.LOSE, { volume: 0.5 });
           }
 
           const getResultColor = (): string => {
-            if (!result) return '';
+            if (!result) return "";
             switch (result) {
-              case 'win':
-                return ' animate-none outline-green-500';
-              case 'loss':
-                return ' animate-none outline-red-500';
-              case 'blackjack':
-                return 'outline-yellow-500 animate-none';
+              case "win":
+                return " animate-none outline-green-500";
+              case "loss":
+                return " animate-none outline-red-500";
+              case "blackjack":
+                return "outline-yellow-500 animate-none";
               default:
-                return '';
+                return "";
             }
           };
 
@@ -181,12 +181,15 @@ const Table = memo(() => {
               >
                 <div
                   className={cn(
-                    'lg:size-48 relative border-2 border-zinc-400 xl:bottom-6 xl:size-60 2xl:size-[13vw] rounded-full aspect-square',
+                    "relative size-[14dvw] border-2 border-zinc-400 rounded-full aspect-square",
                     player &&
-                      'border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300',
-                    isCurrentTurn && 'border-sky-400 outline-sky-400',
-                    getResultColor(),
+                      "border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300",
+                    isCurrentTurn && "border-sky-400 outline-sky-400",
+                    getResultColor()
                   )}
+                  style={{
+                    top: dimensions.width > dimensions.height ? width / -70 : 0,
+                  }}
                 >
                   {isJoinGame ? (
                     <JoinGame index={index} />
@@ -237,19 +240,19 @@ const EmtpyDeck = () => {
     updatePosition();
 
     // Update position on scroll and resize
-    window.addEventListener('scroll', updatePosition);
-    window.addEventListener('resize', updatePosition);
+    window.addEventListener("scroll", updatePosition);
+    window.addEventListener("resize", updatePosition);
 
     // Clean up
     return () => {
-      window.removeEventListener('scroll', updatePosition);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [setPosition]);
 
   return (
     <div ref={divRef} className="z-20 rotate-90">
-      <PlayingCard card="**" size={width > 1280 ? 'md' : 'sm'} />
+      <PlayingCard card="**" size={width > 1280 ? "md" : "sm"} />
     </div>
   );
 };
@@ -268,8 +271,8 @@ const Dealer = memo(() => {
     }
 
     const newCards = cards.filter((card, index) => {
-      if (index === 1 && dealerPrevCards[1] === '**') {
-        return card !== '**';
+      if (index === 1 && dealerPrevCards[1] === "**") {
+        return card !== "**";
       }
       return !dealerPrevCards.includes(card);
     });
@@ -295,12 +298,9 @@ const Dealer = memo(() => {
 
   useEffect(() => {
     if (cardsToAnimate.size > 0) {
-      const timer = setTimeout(
-        () => {
-          setCardsToAnimate(new Set());
-        },
-        (calculateDealerDelay() + calculateTotalPlayerDelay()) * 1000,
-      );
+      const timer = setTimeout(() => {
+        setCardsToAnimate(new Set());
+      }, (calculateDealerDelay() + calculateTotalPlayerDelay()) * 1000);
 
       return () => clearTimeout(timer);
     }
@@ -330,27 +330,18 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const { blackjackSend } = useBlackjack();
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
 
-  const { width } = useWindowSize();
-  const getSize = () => {
-    if (width > XL_VIEWPORT) {
-      if (isHovering) return '8rem';
-      return '16rem';
-    }
-    if (width > LG_VIEWPORT) {
-      if (isHovering) return '5rem';
-      return '12rem';
-    }
-  };
+  const { width, q } = useWindowSize();
+
   const joinGame = () => {
-    console.log('joining game');
+    console.log("joining game");
     blackjackSend({
-      type: 'playerJoin',
+      type: "playerJoin",
       data: {
         seat: index + 1,
       },
     });
     playSound(ESoundType.JOIN, { volume: 0.5 });
-    const hasSeenRules = localStorage.getItem('hasSeenRules');
+    const hasSeenRules = localStorage.getItem("hasSeenRules");
     if (!isOpen && !hasSeenRules) setIsOpen(true);
   };
   return (
@@ -359,30 +350,30 @@ const JoinGame = memo(({ index }: { index: number }) => {
       onHoverEnd={() => setIsHovering(false)}
       onClick={joinGame}
       className={cn(
-        'w-full h-full rounded-full cursor-pointer space-y-2 flex flex-col items-center justify-center overflow-hidden',
-        GodsMap[index]?.bg,
+        "w-full h-full rounded-full cursor-pointer space-y-2 flex flex-col items-center justify-center overflow-hidden",
+        GodsMap[index]?.bg
       )}
     >
       <motion.div
         animate={{
-          width: getSize(),
-          height: getSize(),
+          width: isHovering ? q / 20 : "100%",
+          height: isHovering ? q / 20 : "100%",
         }}
         className="rounded-full"
       >
         <Image
-          src={GodsMap[index]?.src || ''}
+          src={GodsMap[index]?.src || ""}
           alt=""
           height={500}
           width={500}
-          className={cn('size-full rounded-full')}
+          className={cn("size-full rounded-full")}
         />
       </motion.div>
       <AnimatePresence mode="popLayout">
         {isHovering && (
           <motion.div
             layout
-            key={'join'}
+            key={"join"}
             initial={{
               y: 30,
             }}
@@ -393,7 +384,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
               y: 30,
               opacity: 0,
             }}
-            className="origin-left whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
+            className="origin-left text-[1dvw] whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
           >
             Join game
           </motion.div>
@@ -418,7 +409,7 @@ const InGame: FC<TInGameProps> = memo(
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
-      new Set(),
+      new Set()
     );
     // const { isAudioOn } = useRemoteAudio({peerId:""});
     const [isAudioOn, setisAudioOn] = useState(false);
@@ -456,19 +447,19 @@ const InGame: FC<TInGameProps> = memo(
     // }, [cardsToAnimate]);
 
     const handleExit = () => {
-      blackjackSend({ type: 'leave', data: {} });
-      console.log('closing');
+      blackjackSend({ type: "leave", data: {} });
+      console.log("closing");
       playSound(ESoundType.EXIT, { volume: 0.25 });
     };
 
     const getState = (): EPlayingCardState => {
       if (isCurrentTurn) return EPlayingCardState.focus;
       switch (state) {
-        case 'win':
+        case "win":
           return EPlayingCardState.winner;
-        case 'loss':
+        case "loss":
           return EPlayingCardState.loser;
-        case 'blackjack':
+        case "blackjack":
           return EPlayingCardState.blackjack;
         default:
           return EPlayingCardState.default;
@@ -499,8 +490,8 @@ const InGame: FC<TInGameProps> = memo(
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         className={cn(
-          'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
-          GodsMap[index]?.bg,
+          "w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden",
+          GodsMap[index]?.bg
         )}
       >
         <div className="flex">
@@ -518,17 +509,17 @@ const InGame: FC<TInGameProps> = memo(
                   opacity: isMe ? 0 : 1,
                 }}
                 className={cn(
-                  'rounded-full lg:size-24 xl:size-32',
-                  !player && 'lg:size-48 xl:size-64 -mb-2',
+                  "rounded-full lg:size-24 xl:size-32",
+                  !player && "lg:size-48 xl:size-64 -mb-2"
                 )}
               >
                 {!(player && cards && cards.length > 0) && (
                   <Image
-                    src={GodsMap[index]?.src || ''}
+                    src={GodsMap[index]?.src || ""}
                     alt=""
                     height={500}
                     width={500}
-                    className={cn('size-full rounded-full')}
+                    className={cn("size-full rounded-full")}
                   />
                 )}
               </motion.div>
@@ -536,7 +527,7 @@ const InGame: FC<TInGameProps> = memo(
             {isHovering && isMe && !(player && cards && cards.length > 0) && (
               <motion.div
                 layout
-                key={'join'}
+                key={"join"}
                 initial={{
                   x: 30,
                 }}
@@ -550,7 +541,7 @@ const InGame: FC<TInGameProps> = memo(
                 onClick={handleExit}
                 className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
               >
-                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
+                <DoorOpen className={cn("lg:size-14 xl:size-20 text-white")} />
                 <div className="whitespace-nowrap text-center text-sm">
                   Leave
                 </div>
@@ -562,7 +553,7 @@ const InGame: FC<TInGameProps> = memo(
         {player && cards?.length === 0 && (
           <div className="flex space-x-2">
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-              {isMe ? 'You' : truncateAddress(player.userId)}
+              {isMe ? "You" : truncateAddress(player.userId)}
             </div>
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isAudioOn ? <MicIcon size={14} /> : <MicOffIcon size={14} />}
@@ -576,5 +567,5 @@ const InGame: FC<TInGameProps> = memo(
         )}
       </motion.div>
     );
-  },
+  }
 );
