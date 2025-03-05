@@ -93,8 +93,6 @@ export function useVault(): UseVaultReturn {
       const fmtTokenBalance = formatUnits(tokenBalance, decimals);
       const fmtVaultBalance = formatUnits(vaultBalance, decimals);
 
-      console.log('refreshing balances', fmtTokenBalance, fmtVaultBalance);
-
       setBalances({
         tokenBalance: fmtTokenBalance,
         vaultBalance: fmtVaultBalance,
@@ -106,7 +104,6 @@ export function useVault(): UseVaultReturn {
 
   // Fetch balances when address changes or refresh is triggered
   useEffect(() => {
-    console.log('Fetching balances...');
     refreshBalances();
   }, [waddress, triggerBalanceRefresh]);
 

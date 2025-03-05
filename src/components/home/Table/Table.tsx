@@ -7,12 +7,14 @@ import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { LG_VIEWPORT, XL_VIEWPORT } from '@/lib/constants';
 import { cn, truncateAddress } from '@/lib/utils';
+import { useLocalAudio, useLocalPeer, useRemoteAudio } from '@huddle01/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { DoorOpen, MicIcon, MicOffIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { type FC, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   PLAYER_TURN_PERIOD,
   type PlayerState,
@@ -329,7 +331,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const [isHovering, setIsHovering] = useState(false);
   const { blackjackSend } = useBlackjack();
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
-
+  const { peerId } = useLocalPeer();
   const { width } = useWindowSize();
   const getSize = () => {
     if (width > XL_VIEWPORT) {
@@ -343,10 +345,15 @@ const JoinGame = memo(({ index }: { index: number }) => {
   };
   const joinGame = () => {
     console.log('joining game');
+    if (!peerId) {
+      toast.error('Connection to VoiceChat failed! , Please Reload the page');
+      return;
+    }
     blackjackSend({
       type: 'playerJoin',
       data: {
         seat: index + 1,
+        huddle01PeerId: peerId,
       },
     });
     playSound(ESoundType.JOIN, { volume: 0.5 });
@@ -420,8 +427,11 @@ const InGame: FC<TInGameProps> = memo(
     const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(
       new Set(),
     );
-    // const { isAudioOn } = useRemoteAudio({peerId:""});
-    const [isAudioOn, setisAudioOn] = useState(false);
+    const { isAudioOn: isRemoteAudioOn } = useRemoteAudio({
+      peerId: player?.huddle01PeerId ?? '',
+    });
+    const { isAudioOn: isLocalAudioOn } = useLocalAudio();
+
     useEffect(() => {
       if (!player) return;
 
@@ -565,7 +575,17 @@ const InGame: FC<TInGameProps> = memo(
               {isMe ? 'You' : truncateAddress(player.userId)}
             </div>
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-              {isAudioOn ? <MicIcon size={14} /> : <MicOffIcon size={14} />}
+              {isMe ? (
+                isLocalAudioOn ? (
+                  <MicIcon size={14} />
+                ) : (
+                  <MicOffIcon size={14} />
+                )
+              ) : isRemoteAudioOn ? (
+                <MicIcon size={14} />
+              ) : (
+                <MicOffIcon size={14} />
+              )}
             </div>
           </div>
         )}

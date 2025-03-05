@@ -41,7 +41,7 @@ const BottomBar = () => {
     }
   };
 
-  const handleMicClick = () => {
+  const handleMicClick = async () => {
     const getCurrentPlayer = () => {
       if (!user.walletAddress) return;
       for (const player of Object.values(gameState.players)) {
@@ -57,12 +57,12 @@ const BottomBar = () => {
       toast.error('Only players can use the mic');
       return;
     }
-
-    if (isAudioOn && isProducing) {
-      disableAudio();
+    console.log(isAudioOn, isProducing);
+    if (isAudioOn) {
+      await disableAudio();
       console.log('Audio disabled');
     } else {
-      enableAudio();
+      await enableAudio();
       console.log('Audio enabled');
     }
   };

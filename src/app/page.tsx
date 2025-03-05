@@ -34,21 +34,21 @@ import { BETTING_PERIOD } from '../../party/blackjack/blackjack.types';
 const Home = () => {
   const isMounted = useMounted();
   const { readyState } = usePartyKit();
-  const { joinRoom } = useRoom({
+  const { joinRoom, state } = useRoom({
     onJoin: () => {
       console.log('Joined room');
     },
   });
+
   const { user } = useUser();
   const roomId = env.NEXT_PUBLIC_HUDDLE01_ROOM_ID;
   useEffect(() => {
     const fetchToken = async () => {
-      const res = await fetch(
-        `/api/token?roomId=${roomId}&walletAddress=${user.walletAddress}`,
-        {
-          method: 'GET',
-        },
-      );
+      if (state === 'connecting' || state === 'connected') return;
+
+      const res = await fetch(`/api/token?roomId=${roomId}`, {
+        method: 'GET',
+      });
       const { token } = (await res.json()) as { token: string };
 
       joinRoom({
@@ -57,7 +57,7 @@ const Home = () => {
       });
     };
     fetchToken();
-  }, [user.walletAddress]);
+  }, []);
 
   if (!isMounted) {
     return (
@@ -104,7 +104,7 @@ const HuddleAudioWrapper = () => {
   return (
     <>
       {peerIds.map((peerId) => (
-        <RemotePeer peerId={peerId} />
+        <RemotePeer key={`peer-${peerId}`} peerId={peerId} />
       ))}
     </>
   );
