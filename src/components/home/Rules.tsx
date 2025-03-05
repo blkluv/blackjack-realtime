@@ -1,4 +1,4 @@
-import { rulesAtom } from '@/atoms/rules.atom';
+import { rulesAtom } from "@/atoms/rules.atom";
 import {
   Dialog,
   DialogContent,
@@ -6,29 +6,30 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { useAtom } from 'jotai';
-import { HelpCircle } from 'lucide-react';
-import { useState } from 'react';
-import { BETTING_PERIOD } from '../../../party/blackjack/blackjack.types';
+} from "@/components/ui/dialog";
+import { useAtom } from "jotai";
+import { HelpCircle } from "lucide-react";
+import { useState } from "react";
+import { BETTING_PERIOD } from "../../../party/blackjack/blackjack.types";
 
 const Rules = () => {
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
-  type TTabs = 'basic' | 'advanced';
-  const [activeTab, setActiveTab] = useState<TTabs>('basic');
+  type TTabs = "basic" | "advanced";
+  const [activeTab, setActiveTab] = useState<TTabs>("basic");
 
   const handleClose = (value: boolean) => {
     setIsOpen(value);
     if (!value) {
-      localStorage.setItem('hasSeenRules', 'true');
+      localStorage.setItem("hasSeenRules", "true");
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <div className="cursor-pointer">
-          <HelpCircle size={24} />
+        <div className="cursor-pointer flex items-center space-x-2">
+          <HelpCircle size={20} />
+          <div className="text-sm">How to play</div>
         </div>
       </DialogTrigger>
       <DialogContent className="bg-zinc-950/10 h-[42rem] backdrop-blur-3xl text-zinc-100 border-zinc-900 p-6 flex flex-col">
@@ -38,23 +39,23 @@ const Rules = () => {
         </DialogHeader>
         {/* tabs */}
         <div className="flex h-16 space-x-4 justify-center border-b border-zinc-800">
-          {['basic', 'advanced'].map((tab) => (
+          {["basic", "advanced"].map((tab) => (
             <button
               type="button"
               key={tab}
               onClick={() => setActiveTab(tab as TTabs)}
               className={`p-4 text-sm font-bold cursor-pointer focus-visible:outline-none ${
                 activeTab === tab
-                  ? 'text-white border-b-2 border-white'
-                  : 'text-zinc-400'
+                  ? "text-white border-b-2 border-white"
+                  : "text-zinc-400"
               }`}
             >
-              {tab === 'basic' ? 'Basics' : 'Advanced'}
+              {tab === "basic" ? "Basics" : "Advanced"}
             </button>
           ))}
         </div>
         <div className="flex-1 overflow-y-auto mt-4">
-          {activeTab === 'basic' ? (
+          {activeTab === "basic" ? (
             <div className="flex flex-col space-y-4">
               <div className="font-bold text-lg">🎯 Objective</div>
               <div>
@@ -88,7 +89,7 @@ const Rules = () => {
                   keeps one hidden.
                 </li>
                 <li>
-                  🎯 <b>Your Turn:</b> Choose to <b>Hit</b> (draw) or{' '}
+                  🎯 <b>Your Turn:</b> Choose to <b>Hit</b> (draw) or{" "}
                   <b>Stand</b> (hold).
                 </li>
                 <li>
