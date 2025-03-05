@@ -145,11 +145,13 @@ export function useVault(): UseVaultReturn {
       //aler(+200 dolare added ,)
       // turn component green
       // }
-
+      const fmtTokenBalance = formatUnits(tokenBalance, decimals);
+      const fmtVaultBalance = formatUnits(vaultBalance, decimals);
+      console.log('refreshing balances', fmtTokenBalance, fmtVaultBalance);
 
       setBalances({
-        tokenBalance: formatUnits(tokenBalance, decimals),
-        vaultBalance: formatUnits(vaultBalance, decimals),
+        tokenBalance: fmtTokenBalance,
+        vaultBalance: fmtVaultBalance,
         rawTokenBalance: tokenBalance,
         rawVaultBalance: vaultBalance,
       });
