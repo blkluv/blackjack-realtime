@@ -60,7 +60,7 @@ const publicClient = createPublicClient({
 export function useVault(): UseVaultReturn {
   // State hooks
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-  const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [waddress, setAddress] = useState<`0x${string}` | null>(null);
   const triggerBalanceRefresh = useAtomValue(triggerBalanceRefreshAtom);
   const [balances, setBalances] = useState<VaultBalances>({
     tokenBalance: '0',
@@ -96,10 +96,9 @@ export function useVault(): UseVaultReturn {
 
   // Fetch balances when address changes
   useEffect(() => {
-    if (address) {
-      refreshBalances();
-    }
-  }, [address, triggerBalanceRefresh]);
+    console.log('Fetching balances...');
+    refreshBalances();
+  }, [waddress, triggerBalanceRefresh]);
 
   // Get token decimals
   const getTokenDecimals = useCallback(async (): Promise<number> => {
@@ -118,7 +117,10 @@ export function useVault(): UseVaultReturn {
 
   // Refresh balances
   const refreshBalances = useCallback(async (): Promise<void> => {
-    if (!address) return;
+    if (!waddress) {
+      console.error('address is undefined');
+      return;
+    }
 
     try {
       const decimals = await getTokenDecimals();
@@ -127,14 +129,14 @@ export function useVault(): UseVaultReturn {
         address: TOKEN_ADDRESS,
         abi: TOKEN_ABI,
         functionName: 'balanceOf',
-        args: [address],
+        args: [waddress],
       });
 
       const vaultBalance = await publicClient.readContract({
         address: VAULT_ADDRESS,
         abi: VAULT_ABI,
         functionName: 'getBalance',
-        args: [address],
+        args: [waddress],
       });
 
       // if(balances.vaultBalance>vaultBalance){
@@ -158,7 +160,7 @@ export function useVault(): UseVaultReturn {
     } catch (error) {
       console.error('Error fetching balances:', error);
     }
-  }, [address, getTokenDecimals]);
+  }, [waddress, getTokenDecimals]);
 
   // Reset transaction state
   const resetTransactionState = useCallback((): void => {
@@ -173,7 +175,7 @@ export function useVault(): UseVaultReturn {
   // Approve tokens
   const approveTokens = useCallback(
     async (amount: string): Promise<boolean> => {
-      if (!walletClient || !address) return false;
+      if (!walletClient || !waddress) return false;
 
       setTransaction({
         isLoading: true,
@@ -203,7 +205,7 @@ export function useVault(): UseVaultReturn {
           abi: TOKEN_ABI,
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          account: address,
+          account: waddress,
           chain: huddle01Testnet,
         });
 
@@ -238,13 +240,13 @@ export function useVault(): UseVaultReturn {
         return false;
       }
     },
-    [walletClient, address, getTokenDecimals, balances],
+    [walletClient, waddress, getTokenDecimals, balances],
   );
 
   // Deposit tokens
   const deposit = useCallback(
     async (amount: string): Promise<void> => {
-      if (!walletClient || !address) {
+      if (!walletClient || !waddress) {
         setTransaction({
           isLoading: false,
           error: 'Wallet not connected',
@@ -280,7 +282,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'deposit',
           args: [amountInTokenUnits],
-          account: address,
+          account: waddress,
           chain: huddle01Testnet,
         });
 
@@ -314,13 +316,13 @@ export function useVault(): UseVaultReturn {
         });
       }
     },
-    [walletClient, address, approveTokens, getTokenDecimals, refreshBalances],
+    [walletClient, waddress, approveTokens, getTokenDecimals, refreshBalances],
   );
 
   // Withdraw tokens
   const withdraw = useCallback(
     async (amount: string): Promise<void> => {
-      if (!walletClient || !address) {
+      if (!walletClient || !waddress) {
         setTransaction({
           isLoading: false,
           error: 'Wallet not connected',
@@ -363,7 +365,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'withdraw',
           args: [amountInTokenUnits],
-          account: address,
+          account: waddress,
           chain: huddle01Testnet,
         });
 
@@ -399,11 +401,11 @@ export function useVault(): UseVaultReturn {
         });
       }
     },
-    [walletClient, address, getTokenDecimals, balances, refreshBalances],
+    [walletClient, waddress, getTokenDecimals, balances, refreshBalances],
   );
 
   return {
-    address,
+    address: waddress,
 
     // Balance state
     balances,
