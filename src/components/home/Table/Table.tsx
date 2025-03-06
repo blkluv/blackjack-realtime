@@ -639,17 +639,6 @@ const InGame: FC<TInGameProps> = memo(
               ) : (
                 <MicOffIcon size={14} />
               )}
-              {isMe ? (
-                isLocalAudioOn ? (
-                  <MicIcon size={14} />
-                ) : (
-                  <MicOffIcon size={14} />
-                )
-              ) : isRemoteAudioOn ? (
-                <MicIcon size={14} />
-              ) : (
-                <MicOffIcon size={14} />
-              )}
             </div>
           </div>
         )}
@@ -690,7 +679,7 @@ const GTAOverlay = ({ player }: { player: PlayerState }) => {
   };
 
   return (
-    <div className="absolute aspect-square rounded-full flex items-center justify-center top-0 left-0 w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-black to-transparent">
+    <div className="absolute aspect-square rounded-full flex items-center justify-center top-0 left-0 w-full bg-zinc-950/80">
       <div className={cn('text-[3dvw] font-serif font-black', getColor())}>
         {value}
       </div>

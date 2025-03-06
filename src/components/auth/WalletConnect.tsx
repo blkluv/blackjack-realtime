@@ -5,10 +5,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useBlackjack } from '@/hooks/useBlackjack';
 import { useUser } from '@/hooks/useUser';
 import { useVault } from '@/hooks/useVault';
 import { client } from '@/lib/client';
-import { truncateAddress } from '@/lib/utils';
+import { cn, truncateAddress } from '@/lib/utils';
 import {
   useAppKit,
   useAppKitAccount,
@@ -40,6 +41,7 @@ const WalletConnect = () => {
 
     await withdraw(String(value));
   };
+
   const handleDeposit = async () => {
     if (!address || value === undefined || value <= 0) return;
 
@@ -49,12 +51,13 @@ const WalletConnect = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div>
+        <div className="relative">
           <CustomButton onClick={() => (!user.isAuthenticated ? open() : null)}>
             {user.walletAddress
               ? `Bal: ${balances.vaultBalance}`
               : 'Connect Wallet'}
           </CustomButton>
+          <GTAEarnings />
         </div>
       </PopoverTrigger>
       {user.isAuthenticated && (
@@ -160,6 +163,45 @@ const Faucet = () => {
       <div>{isLoading ? 'Getting tokens...' : 'Get $BJT tokens'}</div>
       <div>
         <Coins size={16} />
+      </div>
+    </div>
+  );
+};
+
+const GTAEarnings = () => {
+  const { user } = useUser();
+  const { getPlayer } = useBlackjack();
+  if (!user.walletAddress) return null;
+  const player = getPlayer(user.walletAddress);
+  if (!player) return null;
+  const playerBet = player.roundResult?.bet;
+  const result = player.roundResult?.state;
+  if (!result || !playerBet) return null;
+  const value =
+    result === 'win'
+      ? `+${playerBet}`
+      : result === 'blackjack'
+        ? `+${playerBet * 1.5}`
+        : // : "+0";
+          `-${playerBet}`; // commented out to hide losses
+
+  const getColor = () => {
+    if (!result) return '';
+    switch (result) {
+      case 'win':
+        return 'text-green-400';
+      case 'loss':
+        return 'text-red-400';
+      case 'blackjack':
+        return 'text-yellow-400';
+      default:
+        return '';
+    }
+  };
+  return (
+    <div className="absolute top-10 right-0 ">
+      <div className={cn('text-3xl font-black font-serif', getColor())}>
+        {value}
       </div>
     </div>
   );
