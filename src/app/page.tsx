@@ -1,8 +1,10 @@
 'use client';
 
+import { huddleSpeakerAtom } from '@/atoms/huddle.atom';
 import { rulesAtom } from '@/atoms/rules.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import Rules from '@/components/home/Rules';
+import HuddleSpeaker from '@/components/home/Sidebar/BottomBar/HuddleSpeaker';
 import Logo from '@/components/home/Sidebar/Logo';
 import Navbar from '@/components/home/Sidebar/Navbar';
 // import Logo from "@/components/home/Sidebar/Logo";
@@ -15,25 +17,17 @@ import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
 import { useUser } from '@/hooks/useUser';
 import { cn, truncateAddress } from '@/lib/utils';
-import {
-  // useLocalPeer,
-  usePeerIds,
-  useRemoteAudio,
-  useRoom,
-} from '@huddle01/react';
-// import { createRoom } from "@/lib/action";
-import { Audio } from '@huddle01/react/components';
+import { useRoom } from '@huddle01/react';
 import { useAtom, useAtomValue } from 'jotai';
 import { MousePointerClick, X } from 'lucide-react';
 import Image from 'next/image';
-import { memo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BETTING_PERIOD } from '../../party/blackjack/blackjack.types';
-// import MobileControlCentre from "@/components/home/MobileControlCentre";
-// import PeerAudioElem from "@/components/home/asd";
 
 const Home = () => {
   const isMounted = useMounted();
   const { readyState } = usePartyKit();
+  const [huddleSpeaker] = useAtom(huddleSpeakerAtom);
   const { joinRoom } = useRoom({
     onJoin: () => {
       console.log('Joined room');
@@ -90,33 +84,12 @@ const Home = () => {
         <div className="flex flex-col">{/* <MobileControlCentre /> */}</div>
       </div>
       <Sidebar />
-      <HuddleAudioWrapper />
+      {huddleSpeaker.isSpeakerOn && <HuddleSpeaker />}
     </div>
   );
 };
 
 export default Home;
-
-const HuddleAudioWrapper = () => {
-  const { peerIds } = usePeerIds({
-    labels: ['audio'],
-  });
-  return (
-    <>
-      {peerIds.map((peerId) => (
-        <RemotePeer peerId={peerId} />
-      ))}
-    </>
-  );
-};
-
-const RemotePeer = memo(({ peerId }: { peerId: string }) => {
-  const { state, stream } = useRemoteAudio({ peerId: peerId as string });
-
-  if (stream && state === 'playable' && peerId)
-    return <Audio key={`peer-audio-wrapper-${peerId}`} stream={stream} />;
-  return null;
-});
 
 const HowToBox = () => {
   const [isVisible, setIsVisible] = useState(false);

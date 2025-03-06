@@ -65,6 +65,16 @@ const ControlCentre = () => {
             placeholder="Place your bet"
             className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
           />
+          <CustomButton dark onClick={() => setBetAmount('10')} className="w-8">
+            <div className="text-zinc-100 text-xs">10</div>
+          </CustomButton>
+          <CustomButton
+            dark
+            onClick={() => setBetAmount('100')}
+            className="w-10"
+          >
+            <div className="text-zinc-100 text-xs">100</div>
+          </CustomButton>
           <CustomButton
             dark
             onClick={() => {
@@ -116,7 +126,7 @@ const ControlCentre = () => {
             !(Number(betAmount) > 0) ||
             player?.bet !== 0
           }
-          animate={isBet}
+          animate={false}
           className="text-zinc-900 h-12 bg-zinc-200"
           isBet
           onClick={() => {

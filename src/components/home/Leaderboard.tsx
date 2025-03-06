@@ -18,9 +18,10 @@ import {
 } from '@/components/ui/table';
 import { client } from '@/lib/client';
 import { truncateAddress } from '@/lib/utils';
-import { ChartNoAxesColumn } from 'lucide-react';
+// import { ChartNoAxesColumn } from "lucide-react";
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import CustomButton from '../ui/CustomButton';
 
 interface LeaderboardDataItem {
   id: number;
@@ -33,6 +34,7 @@ interface LeaderboardDataItem {
 }
 
 const Leaderboard = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardDataItem[]>(
     [],
   );
@@ -56,18 +58,27 @@ const Leaderboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [isOpen]);
 
   const top3 = leaderboardData.slice(0, 3);
-  const rest = leaderboardData.slice(3);
+  const rest = leaderboardData.slice(3, 10);
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <div className="cursor-pointer">
-          <ChartNoAxesColumn size={24} />
+          <CustomButton className="w-10 p-0">
+            <Image
+              src={'/images/icons/podium.png'}
+              alt=""
+              height={50}
+              width={50}
+              className="size-7 p-1 object-contain"
+            />
+          </CustomButton>
+          {/* <ChartNoAxesColumn size={24} /> */}
         </div>
       </DialogTrigger>
-      <DialogContent className="bg-zinc-950/10 p-8 h-[54.5rem] backdrop-blur-3xl text-zinc-100 border-zinc-900 flex flex-col">
+      <DialogContent className="bg-zinc-950/10 overflow-auto p-8 h-[52.6rem] backdrop-blur-3xl text-zinc-100 border-zinc-900 flex flex-col">
         <DialogHeader className="h-0 hidden">
           <DialogTitle> </DialogTitle>
           <DialogDescription> </DialogDescription>
@@ -171,7 +182,7 @@ const Leaderboard = () => {
               </div>
             )}
           </div>
-          <div className="flex space-x-8 items-center py-8">
+          <div className="flex space-x-4 items-center py-4">
             <div className="w-32 h-px bg-zinc-700" />
             <div className="text-xs text-zinc-400 whitespace-nowrap">
               Leaderboard of the month

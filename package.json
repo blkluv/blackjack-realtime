@@ -32,6 +32,8 @@
     "@huddle01/server-sdk": "^2.5.7",
     "@libsql/client": "^0.14.0",
     "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-hover-card": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@reown/appkit": "^1.6.9",

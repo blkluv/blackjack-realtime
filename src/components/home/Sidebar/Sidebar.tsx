@@ -1,4 +1,4 @@
-import BottomBar from './BottomBar';
+import BottomBar from './BottomBar/BottomBar';
 import ControlCentre from './ControlCentre';
 import GameLog from './GameLog';
 import Navbar from './Navbar';

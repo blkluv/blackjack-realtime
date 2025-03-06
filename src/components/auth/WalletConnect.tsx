@@ -8,13 +8,14 @@ import {
 import { useUser } from '@/hooks/useUser';
 import { useVault } from '@/hooks/useVault';
 import { client } from '@/lib/client';
+import { truncateAddress } from '@/lib/utils';
 import {
   useAppKit,
   useAppKitAccount,
   useDisconnect,
 } from '@reown/appkit/react';
 import { useSetAtom } from 'jotai';
-import { Coins, LogOut } from 'lucide-react';
+import { CircleUserRound, Coins, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -63,6 +64,22 @@ const WalletConnect = () => {
         >
           <div className="flex flex-col bg-zinc-900/60 backdrop-blur-2xl text-zinc-200 text-xs divide-y divide-zinc-700">
             <div className="flex justify-between items-center p-4">
+              <div className="flex space-x-2 items-center">
+                <CircleUserRound size={20} />
+                <div>{truncateAddress(address)}</div>
+              </div>
+              <div>
+                <LogOut
+                  onClick={() => {
+                    disconnect();
+                    signOut({ redirect: false });
+                  }}
+                  className="text-red-500 cursor-pointer"
+                  size={18}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between items-center p-4">
               <div>Wallet Balance:</div>
               <div>{balances.tokenBalance} $BJT</div>
             </div>
@@ -104,17 +121,6 @@ const WalletConnect = () => {
                 Deposit
               </CustomButton>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                disconnect();
-                signOut({ redirect: false });
-              }}
-              className="flex justify-between items-center p-4 hover:bg-zinc-950/50 cursor-pointer"
-            >
-              <div>Disconnect</div>
-              <LogOut className="text-red-500" size={18} />
-            </button>
           </div>
         </PopoverContent>
       )}
