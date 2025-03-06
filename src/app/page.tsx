@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import { huddleSpeakerAtom } from "@/atoms/huddle.atom";
-import { rulesAtom } from "@/atoms/rules.atom";
-import { timeStateAtom } from "@/atoms/time.atom";
-import Rules from "@/components/home/Rules";
-import HuddleSpeaker from "@/components/home/Sidebar/BottomBar/HuddleSpeaker";
-import Logo from "@/components/home/Sidebar/Logo";
-import Navbar from "@/components/home/Sidebar/Navbar";
+import { huddleSpeakerAtom } from '@/atoms/huddle.atom';
+import { rulesAtom } from '@/atoms/rules.atom';
+import { timeStateAtom } from '@/atoms/time.atom';
+import Rules from '@/components/home/Rules';
+import HuddleSpeaker from '@/components/home/Sidebar/BottomBar/HuddleSpeaker';
+import Logo from '@/components/home/Sidebar/Logo';
+import Navbar from '@/components/home/Sidebar/Navbar';
 // import Logo from "@/components/home/Sidebar/Logo";
-import Sidebar from "@/components/home/Sidebar/Sidebar";
-import Table from "@/components/home/Table/Table";
-import { ESoundType, playSound } from "@/components/home/Utils/sound";
-import { env } from "@/env.mjs";
-import { useBlackjack } from "@/hooks/useBlackjack";
-import useMounted from "@/hooks/useMounted";
-import { usePartyKit } from "@/hooks/usePartyKit";
-import { useUser } from "@/hooks/useUser";
-import { cn, truncateAddress } from "@/lib/utils";
-import { useRoom } from "@huddle01/react";
-import { useAtom, useAtomValue } from "jotai";
-import { MousePointerClick, X } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { BETTING_PERIOD } from "../../party/blackjack/blackjack.types";
+import Sidebar from '@/components/home/Sidebar/Sidebar';
+import Table from '@/components/home/Table/Table';
+import { ESoundType, playSound } from '@/components/home/Utils/sound';
+import { env } from '@/env.mjs';
+import { useBlackjack } from '@/hooks/useBlackjack';
+import useMounted from '@/hooks/useMounted';
+import { usePartyKit } from '@/hooks/usePartyKit';
+import { useUser } from '@/hooks/useUser';
+import { cn, truncateAddress } from '@/lib/utils';
+import { useRoom } from '@huddle01/react';
+import { useAtom, useAtomValue } from 'jotai';
+import { MousePointerClick, X } from 'lucide-react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { BETTING_PERIOD } from '../../party/blackjack/blackjack.types';
 
 const Home = () => {
   const isMounted = useMounted();
@@ -30,7 +30,7 @@ const Home = () => {
   const [huddleSpeaker] = useAtom(huddleSpeakerAtom);
   const { joinRoom, state } = useRoom({
     onJoin: () => {
-      console.log("Joined room");
+      console.log('Joined room');
     },
   });
 
@@ -51,7 +51,6 @@ const Home = () => {
       });
     };
     fetchToken();
-
   }, []);
 
   if (!isMounted) {
@@ -65,7 +64,7 @@ const Home = () => {
   return (
     <div className="relative flex h-screen bg-zinc-0 overflow-hidden">
       <Image
-        src={"/bg.png"}
+        src={'/bg.png'}
         alt=""
         layout="fill"
         objectFit="cover"
@@ -92,25 +91,22 @@ const Home = () => {
 
 export default Home;
 
-
-
-
 const HowToBox = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
   const { mySeat } = useBlackjack();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isClosed = localStorage.getItem("howToBoxClosed") === "true";
-      console.log("isClosed:", isClosed);
+    if (typeof window !== 'undefined') {
+      const isClosed = localStorage.getItem('howToBoxClosed') === 'true';
+      console.log('isClosed:', isClosed);
       setIsVisible(!isClosed);
     }
   }, []);
 
   const handleClose = () => {
     setIsVisible(false);
-    localStorage.setItem("howToBoxClosed", "true");
+    localStorage.setItem('howToBoxClosed', 'true');
   };
 
   const shouldVisible = isVisible && mySeat === -1;
@@ -120,7 +116,7 @@ const HowToBox = () => {
   return (
     <div
       className={cn(
-        "absolute flex flex-col p-3 z-10 top-4 right-4 w-64 bg-zinc-950/40 backdrop-blur-xl rounded-xl border border-zinc-800"
+        'absolute flex flex-col p-3 z-10 top-4 right-4 w-64 bg-zinc-950/40 backdrop-blur-xl rounded-xl border border-zinc-800',
       )}
     >
       <div className="flex justify-end">
@@ -132,7 +128,7 @@ const HowToBox = () => {
           Click on the Character to reserve a position.
         </div>
         <div className="text-sm text-center">
-          Also checkout the{" "}
+          Also checkout the{' '}
           <span
             onClick={() => !isOpen && setIsOpen(true)}
             onKeyDown={() => !isOpen && setIsOpen(true)}
@@ -150,7 +146,7 @@ const HowToBox = () => {
 const Tekken = () => {
   const { startedAt: startTime, state, userId } = useAtomValue(timeStateAtom);
   const bettingDuration = BETTING_PERIOD;
-  const isBet = state === "betTimerStart";
+  const isBet = state === 'betTimerStart';
   const [countdown, setCountdown] = useState(Math.ceil(bettingDuration / 1000));
 
   useEffect(() => {
@@ -160,7 +156,7 @@ const Tekken = () => {
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(
         0,
-        Math.ceil((bettingDuration - elapsed) / 1000)
+        Math.ceil((bettingDuration - elapsed) / 1000),
       );
       setCountdown(remaining);
       playSound(ESoundType.DING, { volume: 0.1 });

@@ -7,7 +7,8 @@ import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
 // import { LG_VIEWPORT, XL_VIEWPORT } from "@/lib/constants";
 import { cn, truncateAddress } from '@/lib/utils';
-import { useLocalAudio, useLocalPeer, useRemoteAudio } from '@huddle01/react';
+import { useLocalPeer } from '@huddle01/react';
+import { useLocalAudio, useRemoteAudio } from '@huddle01/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { DoorOpen, MicIcon, MicOffIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -22,7 +23,6 @@ import {
 } from '../../../../party/blackjack/blackjack.types';
 import { ESoundType, playSound } from '../Utils/sound';
 import PlayerDeck from './PlayerDeck';
-import { useLocalAudio, useRemoteAudio } from '@huddle01/react';
 // import { useRemoteAudio } from "@huddle01/react";
 
 const GodsMap = [
@@ -62,7 +62,7 @@ const Table = memo(() => {
   const length = 5;
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { width, height } = useWindowSize();
+  const { width } = useWindowSize();
   const { mySeat, gameState } = useBlackjack();
   const { state, userId } = useAtomValue(timeStateAtom);
 
@@ -393,7 +393,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const { blackjackSend } = useBlackjack();
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
   const { peerId } = useLocalPeer();
-  const { width,q } = useWindowSize();
+  const { width, q } = useWindowSize();
 
   const joinGame = () => {
     console.log('joining game');
@@ -562,8 +562,8 @@ const InGame: FC<TInGameProps> = memo(
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         className={cn(
-          "w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden",
-          GodsMap[index]?.bg
+          'w-full h-full rounded-full space-y-2 flex flex-col items-center justify-center overflow-hidden',
+          GodsMap[index]?.bg,
         )}
       >
         <div className="flex">
@@ -581,17 +581,17 @@ const InGame: FC<TInGameProps> = memo(
                   opacity: isMe ? 0 : 1,
                 }}
                 className={cn(
-                  "rounded-full lg:size-24 xl:size-32",
-                  !player && "lg:size-48 xl:size-64 -mb-2"
+                  'rounded-full lg:size-24 xl:size-32',
+                  !player && 'lg:size-48 xl:size-64 -mb-2',
                 )}
               >
                 {!(player && cards && cards.length > 0) && (
                   <Image
-                    src={GodsMap[index]?.src || ""}
+                    src={GodsMap[index]?.src || ''}
                     alt=""
                     height={500}
                     width={500}
-                    className={cn("size-full rounded-full")}
+                    className={cn('size-full rounded-full')}
                   />
                 )}
               </motion.div>
@@ -599,7 +599,7 @@ const InGame: FC<TInGameProps> = memo(
             {isHovering && isMe && !(player && cards && cards.length > 0) && (
               <motion.div
                 layout
-                key={"join"}
+                key={'join'}
                 initial={{
                   x: 30,
                 }}
@@ -613,7 +613,7 @@ const InGame: FC<TInGameProps> = memo(
                 onClick={handleExit}
                 className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
               >
-                <DoorOpen className={cn("lg:size-14 xl:size-20 text-white")} />
+                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
                 <div className="whitespace-nowrap text-center text-sm">
                   Leave
                 </div>
@@ -625,7 +625,7 @@ const InGame: FC<TInGameProps> = memo(
         {player && cards?.length === 0 && (
           <div className="flex space-x-2">
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
-              {isMe ? "You" : truncateAddress(player.userId)}
+              {isMe ? 'You' : truncateAddress(player.userId)}
             </div>
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? (

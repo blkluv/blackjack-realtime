@@ -31,8 +31,6 @@ const BottomBar = () => {
     }
   };
 
-
-
   return (
     <form
       onSubmit={(e) => {
