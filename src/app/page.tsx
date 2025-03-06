@@ -33,12 +33,15 @@ const Home = () => {
       console.log("Joined room");
     },
   });
+
   const { user } = useUser();
   const roomId = env.NEXT_PUBLIC_HUDDLE01_ROOM_ID;
   useEffect(() => {
     const fetchToken = async () => {
+      if (state === 'connecting' || state === 'connected') return;
+
       const res = await fetch(`/api/token?roomId=${roomId}`, {
-        method: "GET",
+        method: 'GET',
       });
       const { token } = (await res.json()) as { token: string };
 
@@ -48,6 +51,7 @@ const Home = () => {
       });
     };
     fetchToken();
+
   }, []);
 
   if (!isMounted) {
@@ -87,6 +91,9 @@ const Home = () => {
 };
 
 export default Home;
+
+
+
 
 const HowToBox = () => {
   const [isVisible, setIsVisible] = useState(false);

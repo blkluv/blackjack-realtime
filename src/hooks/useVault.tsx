@@ -2,8 +2,7 @@ import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
 import { userAtom } from '@/atoms/user.atom';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { formatUnits, parseUnits } from 'viem';
-import { huddle01Testnet } from 'viem/chains';
+import { formatUnits, parseGwei, parseUnits } from 'viem';
 import {
   useReadContract,
   useWaitForTransactionReceipt,
@@ -94,8 +93,6 @@ export function useVault(): UseVaultReturn {
       const fmtTokenBalance = formatUnits(tokenBalance, decimals);
       const fmtVaultBalance = formatUnits(vaultBalance, decimals);
 
-      console.log('refreshing balances', fmtTokenBalance, fmtVaultBalance);
-
       setBalances({
         tokenBalance: fmtTokenBalance,
         vaultBalance: fmtVaultBalance,
@@ -107,14 +104,12 @@ export function useVault(): UseVaultReturn {
 
   // Fetch balances when address changes or refresh is triggered
   useEffect(() => {
-    console.log('Fetching balances...');
     refreshBalances();
   }, [waddress, triggerBalanceRefresh]);
 
   // Consolidated refresh balances function
   const refreshBalances = useCallback(async (): Promise<void> => {
     if (!waddress) {
-      console.error('address is undefined');
       return;
     }
 
@@ -186,7 +181,7 @@ export function useVault(): UseVaultReturn {
           abi: TOKEN_ABI,
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          chainId: huddle01Testnet.id,
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({
@@ -251,7 +246,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'deposit',
           args: [amountInTokenUnits],
-          chainId: huddle01Testnet.id,
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({
@@ -320,7 +315,7 @@ export function useVault(): UseVaultReturn {
           abi: VAULT_ABI,
           functionName: 'withdraw',
           args: [amountInTokenUnits],
-          chainId: huddle01Testnet.id,
+          maxFeePerGas: parseGwei('20'),
         });
 
         setTransaction({

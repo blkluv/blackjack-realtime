@@ -230,6 +230,11 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     unknownData: unknown,
   ): Promise<void> {
     const { type, data } = BlackjackMessageSchema.parse(unknownData);
+
+    if (type === 'playerJoin') {
+      console.log('playerJoin', type, data);
+      console.log('state', connection.state);
+    }
     const userId = connection.state?.userId;
     if (!userId) {
       throw new Error('User ID not found');
@@ -244,7 +249,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
 
     switch (type) {
       case 'playerJoin': {
-        this.playerJoin(connection.id, userId, { seat: data.seat });
+        this.playerJoin(connection.id, userId, data);
         break;
       }
       case 'placeBet': {
@@ -267,6 +272,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
         this.playerLeave(userId);
         break;
       }
+
       default:
         console.warn(`Unknown message type: ${type}`);
     }
@@ -321,7 +327,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
     if (Object.keys(this.state.players).length >= this.maxPlayers) {
       throw new Error('Table is full');
     }
-    const { seat } = data;
+    const { seat, huddle01PeerId } = data;
 
     //check if player is already connected
     if (Object.values(this.state.players).some((p) => p.userId === userId)) {
@@ -337,6 +343,7 @@ export class BlackjackRoom extends EnhancedEventEmitter<BlackjackRoomEvents> {
       connectionId,
       userId,
       seat,
+      huddle01PeerId,
       bet: 0,
       hand: [],
       online: true,

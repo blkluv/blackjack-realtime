@@ -18,6 +18,7 @@ type Card = string;
 
 type PlayerJoinData = {
   seat: number;
+  huddle01PeerId: string;
 };
 
 type Timers = {
@@ -39,6 +40,7 @@ type PlayerState = {
   connectionId: string;
   // this is the wallet address of the player
   userId: `0x${string}`;
+  huddle01PeerId: string;
   seat: number; // Seat number from 1 to 5.
   bet: number;
   hand: Card[];
@@ -80,6 +82,7 @@ const PlayerJoinSchema = z.object({
   type: z.literal('playerJoin'),
   data: z.object({
     seat: z.number().int().min(1).max(5),
+    huddle01PeerId: z.string(),
   }),
 });
 

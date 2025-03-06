@@ -247,14 +247,6 @@ export default class Server implements Party.Server {
       if (!blackjackRoom || !chatRoom) {
         throw new Error('Room not found');
       }
-      const userId = conn.state?.userId;
-      if (!userId) {
-        throw new Error('No player address found');
-      }
-
-      if (userId === 'guest') {
-        return;
-      }
 
       // Route game messages to blackjack room
       if (message.room === 'blackjack') {

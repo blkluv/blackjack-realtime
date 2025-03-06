@@ -9,8 +9,6 @@ export async function GET(request: Request) {
 
   const roomId = searchParams.get('roomId');
 
-  const walletAddress = searchParams.get('walletAddress');
-
   if (!roomId) {
     return new Response('Missing roomId', { status: 400 });
   }
@@ -32,14 +30,7 @@ export async function GET(request: Request) {
       canSendData: true,
       canUpdateMetadata: true,
     },
-    options: {
-      metadata: {
-        walletAddress,
-      },
-    },
   });
-
-  //   console.log(accessToken);
 
   const token = await accessToken.toJwt();
 
