@@ -9,7 +9,7 @@ const HuddleSpeaker = () => {
   return (
     <>
       {peerIds.map((peerId) => (
-        <RemotePeer peerId={peerId} />
+        <RemotePeer key={`peer-${peerId}`} peerId={peerId} />
       ))}
     </>
   );
