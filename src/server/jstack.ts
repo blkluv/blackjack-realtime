@@ -16,6 +16,8 @@ interface Env {
     NEXT_PUBLIC_WRANGLER_URL: string;
     JWT_SECRET: string;
     FAUCET_PRIVATE_KEY: string;
+    HUDDLE01_API_KEY: string;
+    NEXT_PUBLIC_HUDDLE01_ROOM_ID: string;
   };
 }
 

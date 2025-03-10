@@ -27,7 +27,7 @@ const Rules = () => {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <div className="cursor-pointer flex items-center space-x-2">
+        <div className="cursor-pointer flex items-center space-x-2 mt-4">
           <HelpCircle size={20} />
           <div className="text-sm">How to play</div>
         </div>

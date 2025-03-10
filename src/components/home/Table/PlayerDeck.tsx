@@ -30,7 +30,6 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
   }) => {
     const { width } = useWindowSize();
     const size: TPlayingCardSize = width < 1280 ? 'sm' : 'md';
-
     const calculate = (): {
       bottom: string;
       left: string;

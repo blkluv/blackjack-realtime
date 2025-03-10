@@ -1,5 +1,8 @@
 'use client';
-import { setTriggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
+import {
+  betStateAtom,
+  setTriggerBalanceRefreshAtom,
+} from '@/atoms/blackjack.atom';
 import {
   Popover,
   PopoverContent,
@@ -15,10 +18,10 @@ import {
   useAppKitAccount,
   useDisconnect,
 } from '@reown/appkit/react';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleUserRound, Coins, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 // import { Button } from "../ui/button";
 import CustomButton from '../ui/CustomButton';
@@ -171,33 +174,69 @@ const Faucet = () => {
 const GTAEarnings = () => {
   const { user } = useUser();
   const { getPlayer } = useBlackjack();
+  const betState = useAtomValue(betStateAtom);
+  const [showBetPlaced, setShowBetPlaced] = useState(true);
+
+  useEffect(() => {
+    if (betState === 'bet-placed') {
+      setShowBetPlaced(true);
+
+      const timer = setTimeout(() => {
+        setShowBetPlaced(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [betState]);
+
   if (!user.walletAddress) return null;
-  const player = getPlayer(user.walletAddress);
+  const player = getPlayer(user?.walletAddress);
   if (!player) return null;
-  const playerBet = player.roundResult?.bet;
+  const betAmount = player.bet;
   const result = player.roundResult?.state;
-  if (!result || !playerBet) return null;
-  const value =
-    result === 'win'
-      ? `+${playerBet}`
-      : result === 'blackjack'
-        ? `+${playerBet * 1.5}`
-        : // : "+0";
-          `-${playerBet}`; // commented out to hide losses
+
+  if (!betAmount) return null;
+
+  if (
+    betState === 'bet-placed' &&
+    !showBetPlaced &&
+    result !== 'win' &&
+    result !== 'blackjack'
+  )
+    return null;
+
+  if (
+    betState !== 'bet-placed' &&
+    (!result || (result !== 'win' && result !== 'blackjack'))
+  )
+    return null;
+
+  let value: string;
+  if (betState === 'bet-placed' && showBetPlaced) {
+    value = `-${betAmount}`;
+  } else if (result === 'win') {
+    value = `+${betAmount}`;
+  } else if (result === 'blackjack') {
+    value = `+${(betAmount ?? 0) * 1.5}`;
+  } else {
+    return null;
+  }
 
   const getColor = () => {
-    if (!result) return '';
-    switch (result) {
-      case 'win':
-        return 'text-green-400';
-      case 'loss':
-        return 'text-red-400';
-      case 'blackjack':
-        return 'text-yellow-400';
-      default:
-        return '';
+    if (betState === 'bet-placed' && showBetPlaced) {
+      return 'text-red-400';
     }
+
+    if (result === 'win') {
+      return 'text-green-400';
+    }
+    if (result === 'blackjack') {
+      return 'text-yellow-400';
+    }
+
+    return '';
   };
+
   return (
     <div className="absolute top-10 right-0 ">
       <div className={cn('text-3xl font-black font-serif', getColor())}>

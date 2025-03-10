@@ -100,12 +100,12 @@ const PlayingCard: FC<TPlayingCardProps> = ({
   return (
     <div
       className={cn(
-        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded h-32',
+        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded h-[8dvw]',
         state,
         className,
       )}
       style={{
-        scale: cardSize,
+        // scale: cardSize,
         ...style,
       }}
     >
@@ -120,11 +120,11 @@ const PlayingCard: FC<TPlayingCardProps> = ({
       ) : (
         <div className="flex flex-col pt-2 space-y-1.5">
           <div
-            className={cn('w-12 text-center font-bold text-2xl', colorClass)}
+            className={cn('font-bold text-[1.5dvw] pl-[0.5dvw]', colorClass)}
           >
             {displayRank}
           </div>
-          <div className={cn('w-12 px-2', colorClass)}>{displaySuit}</div>
+          <div className={cn('w-[3dvw] px-2', colorClass)}>{displaySuit}</div>
         </div>
       )}
     </div>

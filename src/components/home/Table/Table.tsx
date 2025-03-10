@@ -473,6 +473,8 @@ type TInGameProps = {
 
 const InGame: FC<TInGameProps> = memo(
   ({ index, player, cards, isMe, state, isCurrentTurn }) => {
+    // const cards = ["Th", "3d", "3c", "3s", "3h"];
+
     const [isHovering, setIsHovering] = useState(false);
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);

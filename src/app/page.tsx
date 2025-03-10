@@ -7,15 +7,15 @@ import Rules from '@/components/home/Rules';
 import HuddleSpeaker from '@/components/home/Sidebar/BottomBar/HuddleSpeaker';
 import Logo from '@/components/home/Sidebar/Logo';
 import Navbar from '@/components/home/Sidebar/Navbar';
-// import Logo from "@/components/home/Sidebar/Logo";
 import Sidebar from '@/components/home/Sidebar/Sidebar';
+import Status from '@/components/home/Table/Status';
 import Table from '@/components/home/Table/Table';
 import { ESoundType, playSound } from '@/components/home/Utils/sound';
 import { env } from '@/env.mjs';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import useMounted from '@/hooks/useMounted';
 import { usePartyKit } from '@/hooks/usePartyKit';
-import { useUser } from '@/hooks/useUser';
+import { client } from '@/lib/client';
 import { cn, truncateAddress } from '@/lib/utils';
 import { useRoom } from '@huddle01/react';
 import { useAtom, useAtomValue } from 'jotai';
@@ -34,19 +34,12 @@ const Home = () => {
     },
   });
 
-  const { user } = useUser();
-  const roomId = env.NEXT_PUBLIC_HUDDLE01_ROOM_ID;
   useEffect(() => {
     const fetchToken = async () => {
-      if (state === 'connecting' || state === 'connected') return;
-
-      const res = await fetch(`/api/token?roomId=${roomId}`, {
-        method: 'GET',
-      });
-      const { token } = (await res.json()) as { token: string };
-
+      const res = await client.token.getHuddleToken.$get();
+      const { token } = await res.json();
       joinRoom({
-        roomId,
+        roomId: env.NEXT_PUBLIC_HUDDLE01_ROOM_ID,
         token,
       });
     };
@@ -74,8 +67,9 @@ const Home = () => {
       <div className="flex flex-col overflow-hidden w-full z-10">
         <Navbar forMobile />
         <div className="relative w-full h-full p-8">
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-0 left-4 flex flex-col h-full justify-between">
             <Rules />
+            <Status huddleStatus={state} partyStatus={readyState} />
           </div>
           <HowToBox />
           <Table />

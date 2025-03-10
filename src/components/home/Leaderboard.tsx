@@ -44,7 +44,6 @@ const Leaderboard = () => {
       try {
         const response = await client.leaderboard.getLeaderboardData.$get();
         const data = await response.json();
-        console.log({ data });
         if (data) {
           if (Array.isArray(data)) {
             setLeaderboardData(data);
