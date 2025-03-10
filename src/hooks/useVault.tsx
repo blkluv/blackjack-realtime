@@ -1,19 +1,19 @@
-import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
-import { userAtom } from '@/atoms/user.atom';
-import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useState } from 'react';
-import { formatUnits, parseGwei, parseUnits } from 'viem';
+import { triggerBalanceRefreshAtom } from "@/atoms/blackjack.atom";
+import { userAtom } from "@/atoms/user.atom";
+import { useAtomValue } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { formatUnits, parseGwei, parseUnits } from "viem";
 import {
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
-} from 'wagmi';
+} from "wagmi";
 import {
   TOKEN_ABI,
   TOKEN_ADDRESS,
   VAULT_ABI,
   VAULT_ADDRESS,
-} from '../web3/constants';
+} from "../web3/constants";
 
 // Types
 interface VaultBalances {
@@ -46,8 +46,8 @@ export function useVault(): UseVaultReturn {
   const { walletAddress: waddress } = useAtomValue(userAtom);
   const triggerBalanceRefresh = useAtomValue(triggerBalanceRefreshAtom);
   const [balances, setBalances] = useState<VaultBalances>({
-    tokenBalance: '0',
-    vaultBalance: '0',
+    tokenBalance: "0",
+    vaultBalance: "0",
     rawTokenBalance: BigInt(0),
     rawVaultBalance: BigInt(0),
   });
@@ -58,24 +58,26 @@ export function useVault(): UseVaultReturn {
     hash: null,
   });
 
+  const MAX_GAS_FEES = parseGwei("10");
+
   // useReadContract hooks for fetching data
   const { data: tokenDecimals } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'decimals',
+    functionName: "decimals",
   });
 
   const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: waddress ? [waddress] : undefined,
   });
 
   const { data: vaultBalance, refetch: refetchVaultBalance } = useReadContract({
     address: VAULT_ADDRESS,
     abi: VAULT_ABI,
-    functionName: 'getBalance',
+    functionName: "getBalance",
     args: waddress ? [waddress] : undefined,
   });
 
@@ -116,7 +118,7 @@ export function useVault(): UseVaultReturn {
     try {
       await Promise.all([refetchTokenBalance(), refetchVaultBalance()]);
     } catch (error) {
-      console.error('Error fetching balances:', error);
+      console.error("Error fetching balances:", error);
     }
   }, [waddress, refetchTokenBalance, refetchVaultBalance]);
 
@@ -179,9 +181,9 @@ export function useVault(): UseVaultReturn {
         const hash = await writeContractAsync({
           address: TOKEN_ADDRESS,
           abi: TOKEN_ABI,
-          functionName: 'approve',
+          functionName: "approve",
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          maxFeePerGas: parseGwei('20'),
+          maxFeePerGas: MAX_GAS_FEES,
         });
 
         setTransaction({
@@ -193,18 +195,18 @@ export function useVault(): UseVaultReturn {
 
         return true;
       } catch (error) {
-        console.error('Error approving tokens:', error);
+        console.error("Error approving tokens:", error);
         setTransaction({
           isLoading: false,
           error:
-            error instanceof Error ? error.message : 'Failed to approve tokens',
+            error instanceof Error ? error.message : "Failed to approve tokens",
           success: false,
           hash: null,
         });
         return false;
       }
     },
-    [waddress, tokenDecimals, tokenBalance, balances, writeContractAsync],
+    [waddress, tokenDecimals, tokenBalance, balances, writeContractAsync]
   );
 
   // Deposit tokens
@@ -213,7 +215,7 @@ export function useVault(): UseVaultReturn {
       if (!waddress || !tokenDecimals) {
         setTransaction({
           isLoading: false,
-          error: 'Wallet not connected or token decimals not available',
+          error: "Wallet not connected or token decimals not available",
           success: false,
           hash: null,
         });
@@ -221,7 +223,7 @@ export function useVault(): UseVaultReturn {
       }
 
       if (Number(amount) % 1 !== 0) {
-        console.error('Amount must be a whole number');
+        console.error("Amount must be a whole number");
         return;
       }
 
@@ -244,9 +246,9 @@ export function useVault(): UseVaultReturn {
         const hash = await writeContractAsync({
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
-          functionName: 'deposit',
+          functionName: "deposit",
           args: [amountInTokenUnits],
-          maxFeePerGas: parseGwei('20'),
+          maxFeePerGas: MAX_GAS_FEES,
         });
 
         setTransaction({
@@ -256,17 +258,17 @@ export function useVault(): UseVaultReturn {
           hash,
         });
       } catch (error) {
-        console.error('Error depositing tokens:', error);
+        console.error("Error depositing tokens:", error);
         setTransaction({
           isLoading: false,
           error:
-            error instanceof Error ? error.message : 'Failed to deposit tokens',
+            error instanceof Error ? error.message : "Failed to deposit tokens",
           success: false,
           hash: null,
         });
       }
     },
-    [waddress, tokenDecimals, approveTokens, writeContractAsync],
+    [waddress, tokenDecimals, approveTokens, writeContractAsync]
   );
 
   // Withdraw tokens
@@ -275,7 +277,7 @@ export function useVault(): UseVaultReturn {
       if (!waddress || !tokenDecimals) {
         setTransaction({
           isLoading: false,
-          error: 'Wallet not connected or token decimals not available',
+          error: "Wallet not connected or token decimals not available",
           success: false,
           hash: null,
         });
@@ -283,7 +285,7 @@ export function useVault(): UseVaultReturn {
       }
 
       if (Number(amount) % 1 !== 0) {
-        console.error('Amount must be a whole number');
+        console.error("Amount must be a whole number");
         return;
       }
 
@@ -313,9 +315,9 @@ export function useVault(): UseVaultReturn {
         const hash = await writeContractAsync({
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
-          functionName: 'withdraw',
+          functionName: "withdraw",
           args: [amountInTokenUnits],
-          maxFeePerGas: parseGwei('20'),
+          maxFeePerGas: MAX_GAS_FEES,
         });
 
         setTransaction({
@@ -325,19 +327,19 @@ export function useVault(): UseVaultReturn {
           hash,
         });
       } catch (error) {
-        console.error('Error withdrawing tokens:', error);
+        console.error("Error withdrawing tokens:", error);
         setTransaction({
           isLoading: false,
           error:
             error instanceof Error
               ? error.message
-              : 'Failed to withdraw tokens',
+              : "Failed to withdraw tokens",
           success: false,
           hash: null,
         });
       }
     },
-    [waddress, tokenDecimals, balances, vaultBalance, writeContractAsync],
+    [waddress, tokenDecimals, balances, vaultBalance, writeContractAsync]
   );
 
   return {
