@@ -8,6 +8,7 @@ type TCustomButtonProps = {
   onClick?: () => void;
   disabled?: boolean;
   dark?: boolean;
+  type?: 'button' | 'submit' | 'reset';
   bgColor?: string;
 };
 
@@ -17,10 +18,12 @@ const CustomButton: FC<TCustomButtonProps> = ({
   onClick,
   disabled,
   dark,
+  type,
   bgColor,
 }) => {
   return (
     <Button
+      type={type}
       onClick={onClick}
       className={cn(
         'relative inline-block px-4 py-2 font-medium group',

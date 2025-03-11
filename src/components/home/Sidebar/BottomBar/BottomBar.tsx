@@ -34,11 +34,6 @@ const BottomBar = () => {
     }
   };
 
-  const onEmojiClick = (event: React.KeyboardEvent<HTMLInputElement>, emojiObject: any) => {
-    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
-    setShowPicker(false); // Optionally close the picker after emoji selection
-  };
-
   const togglePicker = () => {
     setShowPicker((prevShowPicker) => !prevShowPicker);
   };
@@ -52,33 +47,44 @@ const BottomBar = () => {
       className="flex p-4 space-x-4 border-t border-zinc-900 items-center relative" // relative for picker positioning
     >
       <BottomBarControls />
-      <div className="relative flex-1"> {/* Container for Input and Emoji Picker Toggle */}
+      <div className="relative flex-1">
         <Input
-          placeholder="Type your message"
-          className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700 pr-10" // pr-10 to give space for emoji button
+          placeholder="Message here..."
+          className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
           value={message}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
         />
+        {showPicker && (
+          <div className="absolute bottom-14 -right-16 z-10">
+            <Picker
+              reactionsDefaultOpen
+              onEmojiClick={(emoji) => {
+                console.log(emoji.unified);
+                setMessage((prevMessage) => prevMessage + emoji.emoji);
+                setShowPicker(false);
+              }}
+              reactions={['1f4b0', '1f4b2', '1f4b3', '1f4b5', '1f4b8', '1f911']}
+            />
+          </div>
+        )}
+      </div>
+      <div className="flex space-x-4">
         <CustomButton
           onClick={togglePicker}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer rounded-lg text-zinc-100 hover:bg-zinc-800 active:bg-zinc-700"
+          className=""
+          type="button"
           aria-label="Toggle emoji picker"
         >
           <Smile className="size-5" />
         </CustomButton>
-        {showPicker && (
-          <div className="absolute bottom-14 right-0 z-10"> {/* Adjust bottom value as needed */}
-            <Picker />
-          </div>
-        )}
+        <CustomButton
+          className="cursor-pointer rounded-lg bg-zinc-100 text-zinc-900"
+          aria-label="Send message" // Accessibility label
+        >
+          <Send size={18} />
+        </CustomButton>
       </div>
-      <CustomButton
-        className="cursor-pointer rounded-lg bg-zinc-100 text-zinc-900"
-        aria-label="Send message" // Accessibility label
-      >
-        <Send size={18} />
-      </CustomButton>
     </form>
   );
 };
