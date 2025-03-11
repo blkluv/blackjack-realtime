@@ -1,3 +1,9 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { RoomStates } from '@huddle01/web-core/types';
 import { Headset, Network } from 'lucide-react';
@@ -40,10 +46,52 @@ const Status: FC<TStatusProps> = ({ huddleStatus, partyStatus }) => {
     return colorMap[partyStatus] || 'text-gray-500';
   };
 
+  const getHuddleTooltip = () => {
+    const tooltipMap: { [key in RoomStates]: string } = {
+      connected: 'Voice chat connected',
+      connecting: 'Connecting voice chat',
+      idle: 'Idle',
+      closed: 'Closed',
+      failed: 'Failed',
+      left: 'Left',
+    };
+
+    return tooltipMap[huddleStatus];
+  };
+
+  const getPartyTooltip = () => {
+    const tooltipMap: { [key in EPartyKitStatus]: string } = {
+      [EPartyKitStatus.CONNECTING]: 'Connecting to game server',
+      [EPartyKitStatus.OPEN]: 'Game server connected',
+      [EPartyKitStatus.CLOSING]: 'Closing party',
+      [EPartyKitStatus.CLOSED]: 'Party closed',
+    };
+
+    return tooltipMap[partyStatus];
+  };
+
   return (
     <div className="flex space-x-3 mb-4">
-      <Headset size={18} className={cn(getHuddleColor())} />
-      <Network size={18} className={cn(getPartyColor())} />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Headset size={18} className={cn(getHuddleColor())} />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{getHuddleTooltip()}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Network size={18} className={cn(getPartyColor())} />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{getPartyTooltip()}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };

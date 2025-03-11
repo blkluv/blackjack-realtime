@@ -66,14 +66,14 @@ const ControlCentre = () => {
             className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
           />
           <CustomButton dark onClick={() => setBetAmount('10')} className="w-8">
-            <div className="text-zinc-100 text-xs">10</div>
+            <div className="text-zinc-100 text-xs">+10</div>
           </CustomButton>
           <CustomButton
             dark
             onClick={() => setBetAmount('100')}
             className="w-10"
           >
-            <div className="text-zinc-100 text-xs">100</div>
+            <div className="text-zinc-100 text-xs">+100</div>
           </CustomButton>
           <CustomButton
             dark
