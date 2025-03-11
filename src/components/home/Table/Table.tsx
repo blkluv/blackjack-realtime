@@ -2,6 +2,7 @@ import { dealerCardsAtom, playerCardsAtom } from '@/atoms/cards.atom';
 import { deckPositionAtom } from '@/atoms/deck.atom';
 import { rulesAtom } from '@/atoms/rules.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
+import { userAtom } from '@/atoms/user.atom';
 import PlayingCard, { EPlayingCardState } from '@/components/home/PlayingCard';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useWindowSize } from '@/hooks/useWindowSize';
@@ -394,13 +395,20 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
   const { peerId } = useLocalPeer();
   const { width, q } = useWindowSize();
+  const user = useAtomValue(userAtom);
 
   const joinGame = () => {
-    console.log('joining game');
-    if (!peerId) {
-      toast.error('Connection to VoiceChat failed! , Please Reload the page');
+    if (user.walletAddress === undefined || user.isAuthenticated === false) {
+      toast.error('Please connect your wallet & login to join the game');
       return;
     }
+    if (!peerId) {
+      toast.error(
+        'Connection to VoiceChat failed! , Please wait for a moment for the Game to connect to the VoiceChat Room',
+      );
+      return;
+    }
+    console.log('joining game');
     blackjackSend({
       type: 'playerJoin',
       data: {
