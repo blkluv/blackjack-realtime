@@ -2,30 +2,43 @@ import { chatLogsAtom } from '@/atoms/chat.atom';
 import { useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
 
-// Define a color palette for usernames - Brighter colors added
+// Define a more vibrant and diverse color palette for usernames
 const usernameColors = [
-  'text-blue-500',
-  'text-yellow-500',
-  'text-purple-500',
-  'text-pink-500',
-  'text-lime-500',
-  'text-red-500',
-  'text-orange-500',
-  'text-cyan-500',
-  'text-green-500',
-  'text-rose-500',
-  'text-teal-500',
-  'text-amber-500',
+  'text-blue-400', // Brighter blues
+  'text-yellow-400', // Brighter yellows
+  'text-purple-400', // Brighter purples
+  'text-pink-400', // Brighter pinks
+  'text-lime-400', // Brighter limes
+  'text-red-400', // Brighter reds
+  'text-orange-400', // Brighter oranges
+  'text-cyan-400', // Brighter cyans
+  'text-green-400', // Brighter greens
+  'text-rose-400', // Brighter roses
+  'text-teal-400', // Brighter teals
+  'text-amber-400', // Brighter ambers
+  'text-indigo-400', // Indigo
+  'text-violet-400', // Violet
 ];
 
 const getUsernameColor = (userId: string): string => {
-  let hash = 7;
-  for (let i = 0; i < userId.length; i++) {
-    hash = hash * 31 + userId.charCodeAt(i);
+  // Remove '0x' prefix if present and handle potential errors gracefully
+  const normalizedUserId = userId.startsWith('0x')
+    ? userId.substring(2)
+    : userId;
+  let hash = 0;
+
+  for (let i = 0; i < normalizedUserId.length; i += 2) {
+    const chunk = normalizedUserId.substring(i, i + 2);
+    if (chunk.length === 2) {
+      const decimalValue = Number.parseInt(chunk, 16); // Parse hexadecimal chunk
+      if (!Number.isNaN(decimalValue)) {
+        hash = (hash + decimalValue) % usernameColors.length; // Sum and modulo
+      }
+    }
   }
+
   const index = Math.abs(hash % usernameColors.length);
-  const result = usernameColors[index] ?? 'text-gray-400';
-  return result;
+  return usernameColors[index] ?? 'text-gray-400'; // Fallback to default color
 };
 
 const GameLog = () => {
