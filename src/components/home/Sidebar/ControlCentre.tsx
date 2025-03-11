@@ -15,7 +15,7 @@ import { ESoundType, playSound } from '../Utils/sound';
 const ControlCentre = () => {
   const user = useAtomValue(userAtom);
   const { blackjackSend, gameState } = useBlackjack();
-  const [betAmount, setBetAmount] = useState('');
+  const [betAmount, setBetAmount] = useState(0);
   const [player, setPlayer] = useState<PlayerState | undefined>(undefined);
   const { state, userId } = useAtomValue(timeStateAtom);
   const { balances } = useVault();
@@ -60,17 +60,21 @@ const ControlCentre = () => {
                 Number(e.target.value) % 1 !== 0
               )
                 return;
-              setBetAmount(e.target.value);
+              setBetAmount(Number(e.target.value) ?? 0);
             }}
             placeholder="Place your bet"
             className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
           />
-          <CustomButton dark onClick={() => setBetAmount('10')} className="w-8">
+          <CustomButton
+            dark
+            onClick={() => setBetAmount(betAmount + 10)}
+            className="w-8"
+          >
             <div className="text-zinc-100 text-xs">+10</div>
           </CustomButton>
           <CustomButton
             dark
-            onClick={() => setBetAmount('100')}
+            onClick={() => setBetAmount(betAmount + 100)}
             className="w-10"
           >
             <div className="text-zinc-100 text-xs">+100</div>
@@ -78,7 +82,7 @@ const ControlCentre = () => {
           <CustomButton
             dark
             onClick={() => {
-              setBetAmount(balances.vaultBalance);
+              setBetAmount(Number(balances.vaultBalance));
             }}
           >
             All In
@@ -124,7 +128,8 @@ const ControlCentre = () => {
           disabled={
             !(isBet && (betState === null || betState === 'bet-placed')) ||
             !(Number(betAmount) > 0) ||
-            player?.bet !== 0
+            player?.bet !== 0 ||
+            betAmount > Number(balances.vaultBalance)
           }
           animate={false}
           className="text-zinc-900 h-12 bg-zinc-200"

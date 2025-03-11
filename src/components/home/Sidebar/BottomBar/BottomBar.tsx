@@ -34,7 +34,10 @@ const BottomBar = () => {
     }
   };
 
-  const onEmojiClick = (event: React.KeyboardEvent<HTMLInputElement>, emojiObject: any) => {
+  const onEmojiClick = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    emojiObject: any,
+  ) => {
     setMessage((prevMessage) => prevMessage + emojiObject.emoji);
     setShowPicker(false); // Optionally close the picker after emoji selection
   };
@@ -52,7 +55,9 @@ const BottomBar = () => {
       className="flex p-4 space-x-4 border-t border-zinc-900 items-center relative" // relative for picker positioning
     >
       <BottomBarControls />
-      <div className="relative flex-1"> {/* Container for Input and Emoji Picker Toggle */}
+      <div className="relative flex-1">
+        {' '}
+        {/* Container for Input and Emoji Picker Toggle */}
         <Input
           placeholder="Type your message"
           className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700 pr-10" // pr-10 to give space for emoji button
@@ -68,7 +73,9 @@ const BottomBar = () => {
           <Smile className="size-5" />
         </CustomButton>
         {showPicker && (
-          <div className="absolute bottom-14 right-0 z-10"> {/* Adjust bottom value as needed */}
+          <div className="absolute bottom-14 right-0 z-10">
+            {' '}
+            {/* Adjust bottom value as needed */}
             <Picker />
           </div>
         )}
