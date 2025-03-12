@@ -2,7 +2,12 @@ import { betStateAtom } from '@/atoms/blackjack.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { userAtom } from '@/atoms/user.atom';
 import CustomButton from '@/components/ui/CustomButton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useVault } from '@/hooks/useVault';
 import { useAtomValue } from 'jotai';
@@ -48,52 +53,52 @@ const ControlCentre = () => {
   }, [gameState, betAmount, user]);
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col space-y-4 py-4 border-b border-zinc-900">
-        <div className="flex flex-col space-y-2 px-4">
-          <div className="text-zinc-400 text-sm">Bet Amount</div>
-          <div className="flex space-x-4">
-            <Input
-              value={betAmount}
-              onChange={(e) => {
-                if (
-                  Number.isNaN(Number(e.target.value)) ||
-                  Number(e.target.value) < 0 ||
-                  Number(e.target.value) % 1 !== 0
-                )
-                  return;
-                setBetAmount(Number(e.target.value) ?? 0);
-              }}
-              placeholder="Place your bet"
-              className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
-            />
-            <CustomButton
-              dark
-              onClick={() => setBetAmount(betAmount + 10)}
-              className="w-8"
-            >
-              <div className="text-zinc-100 text-xs">+10</div>
-            </CustomButton>
-            <CustomButton
-              dark
-              onClick={() => setBetAmount(betAmount + 100)}
-              className="w-10"
-            >
-              <div className="text-zinc-100 text-xs">+100</div>
-            </CustomButton>
-            <CustomButton
-              dark
-              onClick={() => {
-                setBetAmount(Number(balances.vaultBalance));
-              }}
-            >
-              All In
-            </CustomButton>
-          </div>
+    <div className="flex flex-col space-y-4 py-4 border-b border-zinc-900">
+      <div className="flex flex-col space-y-2 px-4">
+        <div className="text-zinc-400 text-sm">Bet Amount</div>
+        <div className="flex space-x-4">
+          <Input
+            value={betAmount}
+            onChange={(e) => {
+              if (
+                Number.isNaN(Number(e.target.value)) ||
+                Number(e.target.value) < 0 ||
+                Number(e.target.value) % 1 !== 0
+              )
+                return;
+              setBetAmount(Number(e.target.value) ?? 0);
+            }}
+            placeholder="Place your bet"
+            className="border-zinc-800 bg-zinc-900 rounded-lg focus-visible:ring-zinc-700"
+          />
+          <CustomButton
+            dark
+            onClick={() => setBetAmount(betAmount + 10)}
+            className="w-8"
+          >
+            <div className="text-zinc-100 text-xs">+10</div>
+          </CustomButton>
+          <CustomButton
+            dark
+            onClick={() => setBetAmount(betAmount + 100)}
+            className="w-10"
+          >
+            <div className="text-zinc-100 text-xs">+100</div>
+          </CustomButton>
+          <CustomButton
+            dark
+            onClick={() => {
+              setBetAmount(Number(balances.vaultBalance));
+            }}
+          >
+            All In
+          </CustomButton>
         </div>
-        <div className="flex px-4 space-x-4">
+      </div>
+      <div className="flex px-4 space-x-4">
+        <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="w-full">
               <BatteryButton
                 animate={false}
                 disabled={!isHitOrStand}
@@ -112,11 +117,16 @@ const ControlCentre = () => {
               </BatteryButton>
             </TooltipTrigger>
             <TooltipContent>
-              <p>To Pick a Card from the Deck</p>
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Take another card from the dealer. You can hit as many times as
+                you like, but if you go over 21, you bust!
+              </p>
             </TooltipContent>
           </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="w-full">
               <BatteryButton
                 disabled={!isHitOrStand}
                 animate={isHitOrStand}
@@ -135,16 +145,24 @@ const ControlCentre = () => {
               </BatteryButton>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Choose "Stand" when you're satisfied with your cards or fear that drawing another card might cause you to bust </p>
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Keep your hand as is. The dealer will then reveal their hidden
+                card and draw cards until they have 17 or higher.
+              </p>
             </TooltipContent>
           </Tooltip>
-        </div>
-        <div className="px-4">
+        </TooltipProvider>
+      </div>
+      <div className="px-4">
+        <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="w-full">
               <BatteryButton
                 disabled={
-                  !(isBet && (betState === null || betState === 'bet-placed')) ||
+                  !(
+                    isBet &&
+                    (betState === null || betState === 'bet-placed')
+                  ) ||
                   !(Number(betAmount) > 0) ||
                   player?.bet !== 0 ||
                   betAmount > Number(balances.vaultBalance)
@@ -168,23 +186,23 @@ const ControlCentre = () => {
                 }}
               >
                 <div className="flex justify-center w-full space-x-1  items-center">
-                  <div className="w-fit">{betState === null ? 'Bet' : betState}</div>
+                  <div className="w-fit">
+                    {betState === null ? 'Bet' : betState}
+                  </div>
                   <HandCoins size={18} />
                 </div>
               </BatteryButton>
             </TooltipTrigger>
             <TooltipContent>
-              {
-                player ?
-                  <p> To Place a Bet </p>
-                  :
-                  <p> Select a Seat to Bet </p>
-              }
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Place your bet before the game starts. You can't change your bet
+                once the game has started.
+              </p>
             </TooltipContent>
           </Tooltip>
-        </div>
+        </TooltipProvider>
       </div>
-    </TooltipProvider >
+    </div>
   );
 };
 
