@@ -2,6 +2,12 @@ import { betStateAtom } from '@/atoms/blackjack.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { userAtom } from '@/atoms/user.atom';
 import CustomButton from '@/components/ui/CustomButton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useBlackjack } from '@/hooks/useBlackjack';
 import { useVault } from '@/hooks/useVault';
 import { useAtomValue } from 'jotai';
@@ -90,70 +96,111 @@ const ControlCentre = () => {
         </div>
       </div>
       <div className="flex px-4 space-x-4">
-        <BatteryButton
-          animate={false}
-          disabled={!isHitOrStand}
-          className="text-zinc-100 bg-green-600"
-          onClick={() => {
-            blackjackSend({
-              type: 'hit',
-              data: {},
-            });
-          }}
-        >
-          <div className="flex justify-center w-full space-x-1">
-            <div className="w-fit">Hit</div>
-            <HandHelping />
-          </div>
-        </BatteryButton>
-        <BatteryButton
-          disabled={!isHitOrStand}
-          animate={isHitOrStand}
-          className="text-zinc-100 h-12 bg-red-600"
-          onClick={() => {
-            blackjackSend({
-              type: 'stand',
-              data: {},
-            });
-          }}
-        >
-          <div className="flex justify-center w-full space-x-1  items-center">
-            <div className="w-fit">Stand</div>
-            <Hand size={18} />
-          </div>
-        </BatteryButton>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="w-full">
+              <BatteryButton
+                animate={false}
+                disabled={!isHitOrStand}
+                className="text-zinc-100 bg-green-600"
+                onClick={() => {
+                  blackjackSend({
+                    type: 'hit',
+                    data: {},
+                  });
+                }}
+              >
+                <div className="flex justify-center w-full space-x-1">
+                  <div className="w-fit">Hit</div>
+                  <HandHelping />
+                </div>
+              </BatteryButton>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Take another card from the dealer. You can hit as many times as
+                you like, but if you go over 21, you bust!
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="w-full">
+              <BatteryButton
+                disabled={!isHitOrStand}
+                animate={isHitOrStand}
+                className="text-zinc-100 h-12 bg-red-600"
+                onClick={() => {
+                  blackjackSend({
+                    type: 'stand',
+                    data: {},
+                  });
+                }}
+              >
+                <div className="flex justify-center w-full space-x-1  items-center">
+                  <div className="w-fit">Stand</div>
+                  <Hand size={18} />
+                </div>
+              </BatteryButton>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Keep your hand as is. The dealer will then reveal their hidden
+                card and draw cards until they have 17 or higher.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="px-4">
-        <BatteryButton
-          disabled={
-            !(isBet && (betState === null || betState === 'bet-placed')) ||
-            !(Number(betAmount) > 0) ||
-            player?.bet !== 0 ||
-            betAmount > Number(balances.vaultBalance)
-          }
-          animate={false}
-          className="text-zinc-900 h-12 bg-zinc-200"
-          isBet
-          onClick={() => {
-            if (!player || player.bet !== 0) return;
-            if (Number(betAmount) > 0) {
-              playSound(ESoundType.BET);
-              blackjackSend({
-                type: 'placeBet',
-                data: {
-                  bet: Number(betAmount),
-                },
-              });
-            } else {
-              console.log('Enter amount > 0');
-            }
-          }}
-        >
-          <div className="flex justify-center w-full space-x-1  items-center">
-            <div className="w-fit">{betState === null ? 'Bet' : betState}</div>
-            <HandCoins size={18} />
-          </div>
-        </BatteryButton>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="w-full">
+              <BatteryButton
+                disabled={
+                  !(
+                    isBet &&
+                    (betState === null || betState === 'bet-placed')
+                  ) ||
+                  !(Number(betAmount) > 0) ||
+                  player?.bet !== 0 ||
+                  betAmount > Number(balances.vaultBalance)
+                }
+                animate={false}
+                className="text-zinc-900 h-12 bg-zinc-200"
+                isBet
+                onClick={() => {
+                  if (!player || player.bet !== 0) return;
+                  if (Number(betAmount) > 0) {
+                    playSound(ESoundType.BET);
+                    blackjackSend({
+                      type: 'placeBet',
+                      data: {
+                        bet: Number(betAmount),
+                      },
+                    });
+                  } else {
+                    console.log('Enter amount > 0');
+                  }
+                }}
+              >
+                <div className="flex justify-center w-full space-x-1  items-center">
+                  <div className="w-fit">
+                    {betState === null ? 'Bet' : betState}
+                  </div>
+                  <HandCoins size={18} />
+                </div>
+              </BatteryButton>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="bg-zinc-950 text-zinc-300 p-2 w-64 rounded-xl border border-zinc-900">
+                Place your bet before the game starts. You can't change your bet
+                once the game has started.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
