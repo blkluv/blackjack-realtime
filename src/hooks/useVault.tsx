@@ -58,7 +58,7 @@ export function useVault(): UseVaultReturn {
     hash: null,
   });
 
-  const MAX_GAS_FEES = parseGwei('5');
+  const MAX_GAS_FEES = parseGwei('1');
 
   // const MAX_GAS_FEES = parseUnits("1000", 18);
 
