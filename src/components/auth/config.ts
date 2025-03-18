@@ -7,7 +7,7 @@ import type {
   SIWEVerifyMessageArgs,
 } from '@reown/appkit-siwe';
 import { huddle01Testnet } from '@reown/appkit/networks';
-import { cookieStorage, createStorage } from '@wagmi/core';
+import { http, cookieStorage, createStorage } from '@wagmi/core';
 import { getCsrfToken, getSession, signIn, signOut } from 'next-auth/react';
 
 // Get projectId from https://cloud.reown.com
@@ -22,6 +22,9 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId,
   networks,
+  transports: {
+    [huddle01Testnet.id]: http('https://huddle-testnet.rpc.caldera.xyz/http'),
+  },
 });
 
 export const config = wagmiAdapter.wagmiConfig;
