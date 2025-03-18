@@ -1,10 +1,10 @@
 import { triggerBalanceRefreshAtom } from '@/atoms/blackjack.atom';
 import { userAtom } from '@/atoms/user.atom';
 import { config } from '@/components/auth/config';
-import { simulateContract } from '@wagmi/core';
+import { simulateContract, writeContract } from '@wagmi/core';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { formatUnits, parseGwei, parseUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import {
   useReadContract,
   useWaitForTransactionReceipt,
@@ -59,10 +59,6 @@ export function useVault(): UseVaultReturn {
     success: false,
     hash: null,
   });
-
-  const MAX_GAS_FEES = parseGwei('1');
-
-  // const MAX_GAS_FEES = parseUnits("1000", 18);
 
   // useReadContract hooks for fetching data
   const { data: tokenDecimals } = useReadContract({
@@ -182,24 +178,14 @@ export function useVault(): UseVaultReturn {
         }
 
         // Approve spending
-
-        const simulate = await simulateContract(config, {
+        const { request } = await simulateContract(config, {
           address: TOKEN_ADDRESS,
           abi: TOKEN_ABI,
           functionName: 'approve',
           args: [VAULT_ADDRESS, amountInTokenUnits],
-          maxFeePerGas: MAX_GAS_FEES,
         });
 
-        console.log('gas', simulate.request.gas);
-
-        const hash = await writeContractAsync({
-          address: TOKEN_ADDRESS,
-          abi: TOKEN_ABI,
-          functionName: 'approve',
-          args: [VAULT_ADDRESS, amountInTokenUnits],
-          gas: simulate.request.gas,
-        });
+        const hash = await writeContract(config, request);
 
         setTransaction({
           isLoading: true,
@@ -256,25 +242,19 @@ export function useVault(): UseVaultReturn {
       try {
         const decimals = Number(tokenDecimals || 18);
         const amountInTokenUnits = parseUnits(amount, decimals);
-        //simulate
-        const simulate = await simulateContract(config, {
+
+        // Simulate transaction
+        const { request } = await simulateContract(config, {
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
           functionName: 'deposit',
           args: [amountInTokenUnits],
-          maxFeePerGas: MAX_GAS_FEES,
         });
 
-        console.log(simulate.request.gas);
+        console.log(request.gas);
 
         // Deposit tokens
-        const hash = await writeContractAsync({
-          address: VAULT_ADDRESS,
-          abi: VAULT_ABI,
-          functionName: 'deposit',
-          args: [amountInTokenUnits],
-          gas: simulate.request.gas,
-        });
+        const hash = await writeContract(config, request);
 
         setTransaction({
           isLoading: true,
@@ -337,24 +317,17 @@ export function useVault(): UseVaultReturn {
         }
 
         // Simulate transaction
-        const simulate = await simulateContract(config, {
+        const { request } = await simulateContract(config, {
           address: VAULT_ADDRESS,
           abi: VAULT_ABI,
           functionName: 'withdraw',
           args: [amountInTokenUnits],
-          maxFeePerGas: MAX_GAS_FEES,
         });
 
-        console.log(simulate.request.gas);
+        console.log(request.gas);
 
         // Withdraw tokens
-        const hash = await writeContractAsync({
-          address: VAULT_ADDRESS,
-          abi: VAULT_ABI,
-          functionName: 'withdraw',
-          args: [amountInTokenUnits],
-          gas: simulate.request.gas,
-        });
+        const hash = await writeContract(config, request);
 
         setTransaction({
           isLoading: true,

@@ -9,7 +9,7 @@ import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
 import { huddle01Testnet } from 'viem/chains';
 import { type Config, WagmiProvider, cookieToInitialState } from 'wagmi';
-import { siweConfig, wagmiAdapter } from './auth/config';
+import { config, siweConfig, wagmiAdapter } from './auth/config';
 import { Toaster } from './ui/sonner';
 // Set up metadata
 const metadata = {
@@ -67,10 +67,7 @@ export const Providers = ({ children, cookies }: Props) => {
 
   return (
     <SessionProvider>
-      <WagmiProvider
-        config={wagmiAdapter.wagmiConfig}
-        initialState={initialState}
-      >
+      <WagmiProvider config={config} initialState={initialState}>
         <QueryClientProvider client={queryClient}>
           <HuddleProvider client={huddleClient}>
             {children}
