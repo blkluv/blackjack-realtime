@@ -193,7 +193,7 @@ const Table = memo(() => {
                     className={cn(
                       'relative size-[14dvw] border-2 border-zinc-400 rounded-full aspect-square',
                       player &&
-                        'border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300',
+                        'lg:border-6 border-zinc-300 border-dashed lg:outline-3 outline-zinc-300',
                       isCurrentTurn && 'border-none outline-none',
                       getResultColor(),
                     )}
@@ -395,6 +395,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
   const { peerId } = useLocalPeer();
   const { width, q } = useWindowSize();
+  const isMobile = width < 1024;
   const user = useAtomValue(userAtom);
 
   const joinGame = () => {
@@ -432,8 +433,8 @@ const JoinGame = memo(({ index }: { index: number }) => {
     >
       <motion.div
         animate={{
-          width: isHovering ? q / 20 : '100%',
-          height: isHovering ? q / 20 : '100%',
+          width: isMobile && isHovering ? 0 : isHovering ? q / 20 : '100%',
+          height: isMobile && isHovering ? 0 : isHovering ? q / 20 : '100%',
         }}
         className="rounded-full"
       >
@@ -460,9 +461,9 @@ const JoinGame = memo(({ index }: { index: number }) => {
               y: 30,
               opacity: 0,
             }}
-            className="origin-left text-[1dvw] whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
+            className="origin-left text-[2dvw] lg:text-[1dvw] lg:whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
           >
-            Join game
+            {isMobile ? 'Join' : 'Join Game'}
           </motion.div>
         )}
       </AnimatePresence>
@@ -482,7 +483,8 @@ type TInGameProps = {
 const InGame: FC<TInGameProps> = memo(
   ({ index, player, cards, isMe, state, isCurrentTurn }) => {
     // const cards = ["Th", "3d", "3c", "3s", "3h"];
-
+    const { width } = useWindowSize();
+    const isMobile = width < 1024;
     const [isHovering, setIsHovering] = useState(false);
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
@@ -578,7 +580,7 @@ const InGame: FC<TInGameProps> = memo(
       >
         <div className="flex">
           <AnimatePresence mode="popLayout">
-            {(!isHovering || !isMe) && (
+            {(!isHovering || !isMe) && (!isMobile || !isMe) && (
               <motion.div
                 initial={{
                   x: 0,
@@ -601,12 +603,15 @@ const InGame: FC<TInGameProps> = memo(
                     alt=""
                     height={500}
                     width={500}
-                    className={cn('size-full rounded-full')}
+                    className={cn('size-full rounded-full', {
+                      // hidden: isMobile,
+                    })}
                   />
                 )}
               </motion.div>
             )}
-            {isHovering && isMe && !(player && cards && cards.length > 0) && (
+            {((isHovering && isMe && !(player && cards && cards.length > 0)) ||
+              (isMobile && isMe)) && (
               <motion.div
                 layout
                 key={'join'}
@@ -623,8 +628,11 @@ const InGame: FC<TInGameProps> = memo(
                 onClick={handleExit}
                 className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
               >
-                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
-                <div className="whitespace-nowrap text-center text-sm">
+                <DoorOpen
+                  className={cn('lg:size-14 xl:size-20 text-white')}
+                  size={isMobile ? 16 : 20}
+                />
+                <div className="whitespace-nowrap text-center text-xs lg:text-sm">
                   Leave
                 </div>
               </motion.div>
@@ -633,7 +641,7 @@ const InGame: FC<TInGameProps> = memo(
         </div>
 
         {player && cards?.length === 0 && (
-          <div className="flex space-x-2">
+          <div className="space-x-2 hidden lg:flex">
             <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? 'You' : truncateAddress(player.userId)}
             </div>
