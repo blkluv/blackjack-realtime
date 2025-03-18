@@ -1,6 +1,7 @@
 'use client';
 
 import { deckPositionAtom } from '@/atoms/deck.atom';
+import { useWindowSize } from '@/hooks/useWindowSize';
 // import { soundAtom } from "@/atoms/sound.atom";
 import { useAtomValue } from 'jotai';
 import { motion } from 'motion/react';
@@ -43,6 +44,8 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
   const [cardPositions, setCardPositions] = useState<
     Array<{ x: number; y: number }>
   >(cards.map(() => ({ x: 0, y: 0 })));
+  const { width } = useWindowSize();
+  const isMobile = width < 1024;
 
   const cardSize = cardSizeMap[size];
   const deckPosition = useAtomValue(deckPositionAtom);
@@ -71,15 +74,8 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
 
       return {
         x:
-          emptyDeckCenterX -
-          containerRect.left -
-          40 * cardSize * index +
-          leftOffset,
-        y:
-          emptyDeckCenterY -
-          containerRect.top -
-          12 * cardSize * index +
-          topOffset,
+          emptyDeckCenterX - containerRect.left - cardSize * index + leftOffset,
+        y: emptyDeckCenterY - containerRect.top - cardSize * index + topOffset,
       };
     });
 
@@ -90,7 +86,18 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
     <div
       className="flex relative"
       style={{
-        right: cards.length * (16 * cardSize),
+        right: (width * cards.length) / 90,
+        bottom: isMobile
+          ? cards.length === 2
+            ? -(cards.length * width) / 100
+            : cards.length === 3
+              ? -(cards.length * width) / 200
+              : cards.length === 4
+                ? -(cards.length * width) / 300
+                : cards.length > 4
+                  ? 0
+                  : -(cards.length * 8)
+          : cards.length * cardSize * 6,
       }}
       ref={containerRef}
     >
@@ -119,13 +126,6 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
             initial={initial}
             animate={{ x: 0, y: 0, rotate: 0 }}
             layout
-            // initial={{ y: 100 }}
-            // animate={{ y: 0 }}
-            // transition={
-            //   shouldAnimate
-            //     ? { delay: extraDelay + i * 0.6, duration: 0.6 }
-            //     : {}
-            // }
             onAnimationComplete={() => {
               if (shouldAnimate) {
                 playSound(ESoundType.FLIP);
@@ -137,8 +137,8 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
             }}
             style={{
               position: i > 0 ? 'absolute' : 'relative',
-              left: `${i * 40 * cardSize}px`,
-              top: `${i * 12 * cardSize}px`,
+              left: `${i * (width / 45)}px`,
+              top: `${i * (width / 100)}px`,
             }}
           >
             <PlayingCard card={card} state={state} size={size} />
@@ -148,10 +148,8 @@ const DeckOfCards4: FC<TDeckOfCardsProps> = ({
       <div
         className="absolute text-[10px] bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-200"
         style={{
-          left: `${
-            cards.length * (48 * cardSize - cards.length) - (extra ? 14 : 0)
-          }px`,
-          top: `${size === 'sm' ? 10 : size === 'md' ? -16 : -20}px`,
+          left: `${(width * cards.length) / 36.5}px`,
+          top: `${-((width * cards.length) / 440)}px`,
         }}
       >
         <div className="whitespace-nowrap">{`${value}${

@@ -481,8 +481,8 @@ type TInGameProps = {
 };
 
 const InGame: FC<TInGameProps> = memo(
-  ({ index, player, cards, isMe, state, isCurrentTurn }) => {
-    // const cards = ["Th", "3d", "3c", "3s", "3h"];
+  ({ index, player, isMe, state, isCurrentTurn }) => {
+    const cards = ['Th', '3d', '3c', '3s', '3h'];
     const { width } = useWindowSize();
     const isMobile = width < 1024;
     const [isHovering, setIsHovering] = useState(false);
@@ -519,16 +519,6 @@ const InGame: FC<TInGameProps> = memo(
       setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
     }, [cards, player, setPlayerCardStates]);
 
-    // useEffect(() => {
-    //   if (cardsToAnimate.size > 0) {
-    //     const timer = setTimeout(() => {
-    //       setCardsToAnimate(new Set());
-    //     }, 3000);
-
-    //     return () => clearTimeout(timer);
-    //   }
-    // }, [cardsToAnimate]);
-
     const handleExit = () => {
       blackjackSend({ type: 'leave', data: {} });
       console.log('closing');
@@ -552,8 +542,6 @@ const InGame: FC<TInGameProps> = memo(
 
     const memoizedPlayerDeck = useMemo(() => {
       if (!player) return null;
-      // console.log("old: ", cards);
-      // console.log("new ", cardsToAnimate);
       return (
         cards &&
         cards.length > 0 && (
@@ -580,7 +568,7 @@ const InGame: FC<TInGameProps> = memo(
       >
         <div className="flex">
           <AnimatePresence mode="popLayout">
-            {(!isHovering || !isMe) && (!isMobile || !isMe) && (
+            {(!isHovering || !isMe) && (
               <motion.div
                 initial={{
                   x: 0,
@@ -595,6 +583,9 @@ const InGame: FC<TInGameProps> = memo(
                 className={cn(
                   'rounded-full lg:size-24 xl:size-32',
                   !player && 'lg:size-48 xl:size-64 -mb-2',
+                  {
+                    hidden: isMobile && player,
+                  },
                 )}
               >
                 {!(player && cards && cards.length > 0) && (
@@ -626,13 +617,15 @@ const InGame: FC<TInGameProps> = memo(
                   opacity: 0,
                 }}
                 onClick={handleExit}
-                className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
+                className="flex flex-col cursor-pointer justify-center w-full mt-2 lg:mt-0 lg:my-3 xl:my-4 items-center"
               >
                 <DoorOpen
-                  className={cn('lg:size-14 xl:size-20 text-white')}
+                  className={cn(
+                    'lg:size-14 xl:size-20 text-white lg:block hidden',
+                  )}
                   size={isMobile ? 16 : 20}
                 />
-                <div className="whitespace-nowrap text-center text-xs lg:text-sm">
+                <div className="whitespace-nowrap text-center text-[1.4dvw] lg:text-sm">
                   Leave
                 </div>
               </motion.div>
@@ -641,11 +634,11 @@ const InGame: FC<TInGameProps> = memo(
         </div>
 
         {player && cards?.length === 0 && (
-          <div className="space-x-2 hidden lg:flex">
-            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+          <div className="gap-2 flex">
+            <div className="lg:text-xs text-[1.2dvw] w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? 'You' : truncateAddress(player.userId)}
             </div>
-            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+            <div className="text-xs hidden lg:block w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? (
                 isLocalAudioOn ? (
                   <MicIcon size={14} />
