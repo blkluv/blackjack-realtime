@@ -59,7 +59,7 @@ const GameLog = () => {
   }, [chatLogs]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden min-h-64">
       <div className="flex justify-between items-center p-3 bg-zinc-900">
         <div className="text-zinc-400 text-sm font-bold">Game Logs</div>
         <div className="text-zinc-400 text-sm">

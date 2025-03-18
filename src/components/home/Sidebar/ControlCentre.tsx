@@ -98,7 +98,7 @@ const ControlCentre = () => {
       <div className="flex px-4 space-x-4">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="w-full">
+            <TooltipTrigger className="w-full" asChild>
               <BatteryButton
                 animate={false}
                 disabled={!isHitOrStand}
@@ -126,7 +126,7 @@ const ControlCentre = () => {
         </TooltipProvider>
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="w-full">
+            <TooltipTrigger className="w-full" asChild>
               <BatteryButton
                 disabled={!isHitOrStand}
                 animate={isHitOrStand}
@@ -156,7 +156,7 @@ const ControlCentre = () => {
       <div className="px-4">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="w-full">
+            <TooltipTrigger className="w-full" asChild>
               <BatteryButton
                 disabled={
                   !(
