@@ -1,4 +1,4 @@
-import { betStateAtom } from '@/atoms/blackjack.atom';
+import { betStateAtom, betStatusLabels } from '@/atoms/blackjack.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
 import { userAtom } from '@/atoms/user.atom';
 import CustomButton from '@/components/ui/CustomButton';
@@ -26,6 +26,11 @@ const ControlCentre = () => {
   const { state, userId } = useAtomValue(timeStateAtom);
   const { balances } = useVault();
   const betState = useAtomValue(betStateAtom);
+
+  const displayLabel =
+    betState !== null && betStatusLabels[betState]
+      ? betStatusLabels[betState]
+      : 'Bet';
 
   const isCurrentTurn =
     state === 'playerTimerStart' && !!player && userId === player.userId;
@@ -186,9 +191,7 @@ const ControlCentre = () => {
                 }}
               >
                 <div className="flex justify-center w-full space-x-1  items-center">
-                  <div className="w-fit">
-                    {betState === null ? 'Bet' : betState}
-                  </div>
+                  <div className="w-fit">{displayLabel}</div>
                   <HandCoins size={18} />
                 </div>
               </BatteryButton>
