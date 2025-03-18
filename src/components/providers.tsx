@@ -68,7 +68,7 @@ export const Providers = ({ children, cookies }: Props) => {
   return (
     <SessionProvider>
       <WagmiProvider
-        config={wagmiAdapter.wagmiConfig as Config}
+        config={wagmiAdapter.wagmiConfig}
         initialState={initialState}
       >
         <QueryClientProvider client={queryClient}>
