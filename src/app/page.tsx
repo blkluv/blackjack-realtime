@@ -173,7 +173,7 @@ const Tekken = () => {
   if (!isBet) return null;
 
   return (
-    <div className="absolute z-20 flex-col space-y-4 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
+    <div className="absolute z-50 flex-col space-y-4 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
       <div className="text-5xl text-yellow-400 font-serif">
         Place your bets in
       </div>

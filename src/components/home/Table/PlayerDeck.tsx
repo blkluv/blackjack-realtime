@@ -41,7 +41,7 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
     };
     return (
       <div className="w-full flex justify-center items-center">
-        <div className="flex flex-col items-center relative lg:bottom-[-14px] xl:bottom-[-48px] left-2">
+        <div className="flex flex-col items-center relative bottom-[-14px] lg:bottom-[-14px] xl:bottom-[-48px] left-2">
           <DeckOfCards4
             cards={cards}
             state={state}
@@ -51,7 +51,7 @@ const PlayerDeck: FC<TPlayingCardProps> = memo(
             animateCards={animateCards}
           />
           <div
-            className="lg:flex hidden xl:space-x-2 xl:flex-row absolute bottom-0 flex-col space-y-2 xl:space-y-0 items-center"
+            className="lg:flex hidden xl:space-x-2 absolute bottom-0 items-center"
             style={{
               bottom: calculate().bottom,
               left: calculate().left,

@@ -312,7 +312,7 @@ const EmtpyDeck = () => {
   }, [setPosition]);
 
   return (
-    <div ref={divRef} className="z-20 rotate-90">
+    <div ref={divRef} className="z-20 rotate-90 ">
       <PlayingCard card="**" size={width > 1280 ? 'md' : 'sm'} />
     </div>
   );
@@ -321,13 +321,16 @@ const EmtpyDeck = () => {
 const Dealer = memo(() => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
+  // const cards = ['Td', '3c'];
   const [dealerPrevCards, setDealerPrevCards] = useAtom(dealerCardsAtom);
   const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!cards || cards.length === 0) {
-      setDealerPrevCards([]);
-      setCardsToAnimate(new Set());
+      if (dealerPrevCards.length !== 0) {
+        setDealerPrevCards([]);
+        setCardsToAnimate(new Set());
+      }
       return;
     }
 
@@ -344,8 +347,13 @@ const Dealer = memo(() => {
       setCardsToAnimate(new Set());
     }
 
-    setDealerPrevCards([...cards]);
-  }, [cards, setDealerPrevCards]);
+    if (
+      dealerPrevCards.length !== cards.length ||
+      !dealerPrevCards.every((card, i) => card === cards[i])
+    ) {
+      setDealerPrevCards([...cards]);
+    }
+  }, [cards, dealerPrevCards]);
 
   const calculateDealerDelay = () => {
     const playerCount = gameState.playerOrder.length;
@@ -368,13 +376,13 @@ const Dealer = memo(() => {
 
       return () => clearTimeout(timer);
     }
-  }, [cardsToAnimate]);
+  }, []);
 
   return (
-    <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
+    <div className="relative top-[2dvh] lg:top-[-8dvh] flex flex-col">
       <EmtpyDeck />
       {cards.length > 0 && gameState.playerOrder.length > 0 && (
-        <div className="relative left-1 xl:left-5 bottom-[4dvh] xl:top-[dvh]">
+        <div className="relative z-30 left-1 lg:left-5 bottom-[2dvh] lg:bottom-[4dvh] lg:top-[dvh]">
           <PlayerDeck
             cards={cards}
             walletAddress="0xDealer"
@@ -481,8 +489,7 @@ type TInGameProps = {
 };
 
 const InGame: FC<TInGameProps> = memo(
-  ({ index, player, isMe, state, isCurrentTurn }) => {
-    const cards = ['Th', '3d', '3c', '3s', '3h'];
+  ({ index, player, isMe, cards, state, isCurrentTurn }) => {
     const { width } = useWindowSize();
     const isMobile = width < 1024;
     const [isHovering, setIsHovering] = useState(false);
@@ -498,13 +505,15 @@ const InGame: FC<TInGameProps> = memo(
 
     useEffect(() => {
       if (!player) return;
-
       const userId = player.userId;
       const prevCards = playerCardStates[userId] || [];
 
       if (!cards || cards.length === 0) {
-        setPlayerCardStates((prev) => ({ ...prev, [userId]: [] }));
-        setCardsToAnimate(new Set());
+        // Only update if necessary
+        if (prevCards.length !== 0) {
+          setPlayerCardStates((prev) => ({ ...prev, [userId]: [] }));
+          setCardsToAnimate(new Set());
+        }
         return;
       }
 
@@ -516,8 +525,14 @@ const InGame: FC<TInGameProps> = memo(
         setCardsToAnimate(new Set());
       }
 
-      setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
-    }, [cards, player, setPlayerCardStates]);
+      const arraysEqual =
+        prevCards.length === cards.length &&
+        prevCards.every((card, i) => card === cards[i]);
+
+      if (!arraysEqual) {
+        setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
+      }
+    }, [cards, player, playerCardStates]);
 
     const handleExit = () => {
       blackjackSend({ type: 'leave', data: {} });
