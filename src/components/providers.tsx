@@ -1,13 +1,13 @@
 'use client';
 import { env } from '@/env.mjs';
 import { HuddleClient, HuddleProvider } from '@huddle01/react';
+import { huddle01Testnet } from '@reown/appkit/networks';
 import { createAppKit } from '@reown/appkit/react';
 import { QueryCache } from '@tanstack/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HTTPException } from 'hono/http-exception';
 import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
-import { huddle01Testnet } from 'viem/chains';
 import { type Config, WagmiProvider, cookieToInitialState } from 'wagmi';
 import { config, siweConfig, wagmiAdapter } from './auth/config';
 import { Toaster } from './ui/sonner';

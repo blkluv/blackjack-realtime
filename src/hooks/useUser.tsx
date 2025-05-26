@@ -3,9 +3,9 @@ import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { useAtomValue, useSetAtom } from 'jotai';
 
 import { setUserAtom, userAtom } from '@/atoms/user.atom';
+import { huddle01Testnet } from '@reown/appkit/networks';
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
-import { huddle01Testnet } from 'viem/chains';
 
 export const useUser = () => {
   const { status, address } = useAppKitAccount();
