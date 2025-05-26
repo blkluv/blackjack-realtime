@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const BETTING_PERIOD = 12000;
+const BETTING_PERIOD = 5000;
 const PLAYER_TURN_PERIOD = 10000;
 const ROUND_END_PERIOD = 10000;
 const DEALER_TURN_PERIOD = 2000;
