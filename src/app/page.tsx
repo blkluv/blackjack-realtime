@@ -3,6 +3,8 @@
 import { huddleSpeakerAtom } from '@/atoms/huddle.atom';
 import { rulesAtom } from '@/atoms/rules.atom';
 import { timeStateAtom } from '@/atoms/time.atom';
+import MobileControlCentre from '@/components/home/MobileControlCentre';
+import MobileDrawer from '@/components/home/MobileDrawer';
 import Rules from '@/components/home/Rules';
 import HuddleSpeaker from '@/components/home/Sidebar/BottomBar/HuddleSpeaker';
 import Logo from '@/components/home/Sidebar/Logo';
@@ -67,15 +69,20 @@ const Home = () => {
       <div className="flex flex-col overflow-hidden w-full z-10">
         <Navbar forMobile />
         <div className="relative w-full h-full p-8">
-          <div className="absolute top-0 left-4 flex flex-col h-full justify-between">
+          <div className="absolute top-0 left-0 flex flex-col h-full justify-between w-full px-4">
             <Rules />
-            <Status huddleStatus={state} partyStatus={readyState} />
+            <div className="flex justify-between">
+              <Status huddleStatus={state} partyStatus={readyState} />
+              <div className="flex space-x-1 items-center">
+                <MobileDrawer />
+              </div>
+            </div>
           </div>
           <HowToBox />
           <Table />
           <Tekken />
         </div>
-        <div className="flex flex-col">{/* <MobileControlCentre /> */}</div>
+        <MobileControlCentre />
       </div>
       <Sidebar />
       {huddleSpeaker.isSpeakerOn && <HuddleSpeaker />}
@@ -166,7 +173,7 @@ const Tekken = () => {
   if (!isBet) return null;
 
   return (
-    <div className="absolute z-20 flex-col space-y-4 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
+    <div className="absolute z-50 flex-col space-y-4 top-0 left-0 w-full h-full backdrop-blur-xs bg-gradient-to-b from-transparent to-transparent via-zinc-950/80 flex items-center justify-center">
       <div className="text-5xl text-yellow-400 font-serif">
         Place your bets in
       </div>

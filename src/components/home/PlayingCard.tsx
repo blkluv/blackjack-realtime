@@ -71,11 +71,11 @@ type TPlayingCardProps = {
 export type TPlayingCardSize = 'sm' | 'md' | 'lg';
 
 export enum EPlayingCardState {
-  winner = 'border-green-500 border-4',
-  loser = 'border-red-500 border-4',
-  default = 'border-zinc-800 border-4',
-  blackjack = 'border-yellow-500 border-4',
-  focus = 'border-sky-500 border-4',
+  winner = 'border-green-500 border-2 lg:border-4',
+  loser = 'border-red-500 border-2 lg:border-4',
+  default = 'border-zinc-800 border-2 lg:border-4',
+  blackjack = 'border-yellow-500 border-2 lg:border-4',
+  focus = 'border-sky-500 border-2 lg:border-4',
 }
 
 const PlayingCard: FC<TPlayingCardProps> = ({
@@ -100,7 +100,7 @@ const PlayingCard: FC<TPlayingCardProps> = ({
   return (
     <div
       className={cn(
-        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded h-[8dvw]',
+        'bg-zinc-900 aspect-[2/3] flex flex-col border rounded h-[8dvw] min-h-12',
         state,
         className,
       )}
@@ -110,7 +110,7 @@ const PlayingCard: FC<TPlayingCardProps> = ({
       }}
     >
       {flipped ? (
-        <div className="w-full h-full p-2">
+        <div className="w-full h-full p-1 lg:p-2">
           <div className="bg-zinc-800 h-full w-full rounded flex items-center justify-center">
             <div className="text-[0.8dvw] -rotate-45 text-zinc-500 uppercase font-serif">
               DASH
@@ -118,13 +118,15 @@ const PlayingCard: FC<TPlayingCardProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col pt-2 space-y-1.5">
+        <div className="flex flex-col pt-[0.2dvw] space-y-[0.4dvw]">
           <div
             className={cn('font-bold text-[1.5dvw] pl-[0.5dvw]', colorClass)}
           >
             {displayRank}
           </div>
-          <div className={cn('w-[3dvw] px-2', colorClass)}>{displaySuit}</div>
+          <div className={cn('w-[2.4dvw] px-[0.2dvw]', colorClass)}>
+            {displaySuit}
+          </div>
         </div>
       )}
     </div>

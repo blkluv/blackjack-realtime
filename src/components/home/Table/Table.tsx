@@ -193,7 +193,7 @@ const Table = memo(() => {
                     className={cn(
                       'relative size-[14dvw] border-2 border-zinc-400 rounded-full aspect-square',
                       player &&
-                        'border-6 border-zinc-300 border-dashed outline-3 outline-zinc-300',
+                        'lg:border-6 border-zinc-300 border-dashed lg:outline-3 outline-zinc-300',
                       isCurrentTurn && 'border-none outline-none',
                       getResultColor(),
                     )}
@@ -312,7 +312,7 @@ const EmtpyDeck = () => {
   }, [setPosition]);
 
   return (
-    <div ref={divRef} className="z-20 rotate-90">
+    <div ref={divRef} className="z-20 rotate-90 ">
       <PlayingCard card="**" size={width > 1280 ? 'md' : 'sm'} />
     </div>
   );
@@ -321,13 +321,16 @@ const EmtpyDeck = () => {
 const Dealer = memo(() => {
   const { gameState } = useBlackjack();
   const cards = gameState.dealerHand;
+  // const cards = ['Td', '3c'];
   const [dealerPrevCards, setDealerPrevCards] = useAtom(dealerCardsAtom);
   const [cardsToAnimate, setCardsToAnimate] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!cards || cards.length === 0) {
-      setDealerPrevCards([]);
-      setCardsToAnimate(new Set());
+      if (dealerPrevCards.length !== 0) {
+        setDealerPrevCards([]);
+        setCardsToAnimate(new Set());
+      }
       return;
     }
 
@@ -344,8 +347,13 @@ const Dealer = memo(() => {
       setCardsToAnimate(new Set());
     }
 
-    setDealerPrevCards([...cards]);
-  }, [cards, setDealerPrevCards]);
+    if (
+      dealerPrevCards.length !== cards.length ||
+      !dealerPrevCards.every((card, i) => card === cards[i])
+    ) {
+      setDealerPrevCards([...cards]);
+    }
+  }, [cards, dealerPrevCards]);
 
   const calculateDealerDelay = () => {
     const playerCount = gameState.playerOrder.length;
@@ -368,13 +376,13 @@ const Dealer = memo(() => {
 
       return () => clearTimeout(timer);
     }
-  }, [cardsToAnimate]);
+  }, []);
 
   return (
-    <div className="relative top-[2dvh] xl:top-[-8dvh] flex flex-col">
+    <div className="relative top-[2dvh] lg:top-[-8dvh] flex flex-col">
       <EmtpyDeck />
       {cards.length > 0 && gameState.playerOrder.length > 0 && (
-        <div className="relative left-1 xl:left-5 bottom-[4dvh] xl:top-[dvh]">
+        <div className="relative z-30 left-1 lg:left-5 bottom-[2dvh] lg:bottom-[4dvh] lg:top-[dvh]">
           <PlayerDeck
             cards={cards}
             walletAddress="0xDealer"
@@ -395,6 +403,7 @@ const JoinGame = memo(({ index }: { index: number }) => {
   const [isOpen, setIsOpen] = useAtom(rulesAtom);
   const { peerId } = useLocalPeer();
   const { width, q } = useWindowSize();
+  const isMobile = width < 1024;
   const user = useAtomValue(userAtom);
 
   const joinGame = () => {
@@ -432,8 +441,8 @@ const JoinGame = memo(({ index }: { index: number }) => {
     >
       <motion.div
         animate={{
-          width: isHovering ? q / 20 : '100%',
-          height: isHovering ? q / 20 : '100%',
+          width: isMobile && isHovering ? 0 : isHovering ? q / 20 : '100%',
+          height: isMobile && isHovering ? 0 : isHovering ? q / 20 : '100%',
         }}
         className="rounded-full"
       >
@@ -460,9 +469,9 @@ const JoinGame = memo(({ index }: { index: number }) => {
               y: 30,
               opacity: 0,
             }}
-            className="origin-left text-[1dvw] whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
+            className="origin-left text-[2dvw] lg:text-[1dvw] lg:whitespace-nowrap text-zinc-200 uppercase font-semibold font-serif"
           >
-            Join game
+            {isMobile ? 'Join' : 'Join Game'}
           </motion.div>
         )}
       </AnimatePresence>
@@ -480,9 +489,9 @@ type TInGameProps = {
 };
 
 const InGame: FC<TInGameProps> = memo(
-  ({ index, player, cards, isMe, state, isCurrentTurn }) => {
-    // const cards = ["Th", "3d", "3c", "3s", "3h"];
-
+  ({ index, player, isMe, cards, state, isCurrentTurn }) => {
+    const { width } = useWindowSize();
+    const isMobile = width < 1024;
     const [isHovering, setIsHovering] = useState(false);
     const { blackjackSend, gameState } = useBlackjack();
     const [playerCardStates, setPlayerCardStates] = useAtom(playerCardsAtom);
@@ -496,13 +505,15 @@ const InGame: FC<TInGameProps> = memo(
 
     useEffect(() => {
       if (!player) return;
-
       const userId = player.userId;
       const prevCards = playerCardStates[userId] || [];
 
       if (!cards || cards.length === 0) {
-        setPlayerCardStates((prev) => ({ ...prev, [userId]: [] }));
-        setCardsToAnimate(new Set());
+        // Only update if necessary
+        if (prevCards.length !== 0) {
+          setPlayerCardStates((prev) => ({ ...prev, [userId]: [] }));
+          setCardsToAnimate(new Set());
+        }
         return;
       }
 
@@ -514,18 +525,14 @@ const InGame: FC<TInGameProps> = memo(
         setCardsToAnimate(new Set());
       }
 
-      setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
-    }, [cards, player, setPlayerCardStates]);
+      const arraysEqual =
+        prevCards.length === cards.length &&
+        prevCards.every((card, i) => card === cards[i]);
 
-    // useEffect(() => {
-    //   if (cardsToAnimate.size > 0) {
-    //     const timer = setTimeout(() => {
-    //       setCardsToAnimate(new Set());
-    //     }, 3000);
-
-    //     return () => clearTimeout(timer);
-    //   }
-    // }, [cardsToAnimate]);
+      if (!arraysEqual) {
+        setPlayerCardStates((prev) => ({ ...prev, [userId]: [...cards] }));
+      }
+    }, [cards, player, playerCardStates]);
 
     const handleExit = () => {
       blackjackSend({ type: 'leave', data: {} });
@@ -550,8 +557,6 @@ const InGame: FC<TInGameProps> = memo(
 
     const memoizedPlayerDeck = useMemo(() => {
       if (!player) return null;
-      // console.log("old: ", cards);
-      // console.log("new ", cardsToAnimate);
       return (
         cards &&
         cards.length > 0 && (
@@ -593,6 +598,9 @@ const InGame: FC<TInGameProps> = memo(
                 className={cn(
                   'rounded-full lg:size-24 xl:size-32',
                   !player && 'lg:size-48 xl:size-64 -mb-2',
+                  {
+                    hidden: isMobile && player,
+                  },
                 )}
               >
                 {!(player && cards && cards.length > 0) && (
@@ -601,12 +609,15 @@ const InGame: FC<TInGameProps> = memo(
                     alt=""
                     height={500}
                     width={500}
-                    className={cn('size-full rounded-full')}
+                    className={cn('size-full rounded-full', {
+                      // hidden: isMobile,
+                    })}
                   />
                 )}
               </motion.div>
             )}
-            {isHovering && isMe && !(player && cards && cards.length > 0) && (
+            {((isHovering && isMe && !(player && cards && cards.length > 0)) ||
+              (isMobile && isMe)) && (
               <motion.div
                 layout
                 key={'join'}
@@ -621,10 +632,15 @@ const InGame: FC<TInGameProps> = memo(
                   opacity: 0,
                 }}
                 onClick={handleExit}
-                className="flex flex-col cursor-pointer justify-center w-full lg:my-3 xl:my-4 items-center"
+                className="flex flex-col cursor-pointer justify-center w-full mt-2 lg:mt-0 lg:my-3 xl:my-4 items-center"
               >
-                <DoorOpen className={cn('lg:size-14 xl:size-20 text-white')} />
-                <div className="whitespace-nowrap text-center text-sm">
+                <DoorOpen
+                  className={cn(
+                    'lg:size-14 xl:size-20 text-white lg:block hidden',
+                  )}
+                  size={isMobile ? 16 : 20}
+                />
+                <div className="whitespace-nowrap text-center text-[1.4dvw] lg:text-sm">
                   Leave
                 </div>
               </motion.div>
@@ -633,11 +649,11 @@ const InGame: FC<TInGameProps> = memo(
         </div>
 
         {player && cards?.length === 0 && (
-          <div className="flex space-x-2">
-            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+          <div className="gap-2 flex">
+            <div className="lg:text-xs text-[1.2dvw] w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? 'You' : truncateAddress(player.userId)}
             </div>
-            <div className="text-xs w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
+            <div className="text-xs hidden lg:block w-fit px-2 self-center bg-zinc-950/30 rounded-full py-0.5 font-mono text-center text-zinc-200">
               {isMe ? (
                 isLocalAudioOn ? (
                   <MicIcon size={14} />
