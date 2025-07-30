@@ -7,14 +7,14 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://deckdash.arcy.in'),
+  metadataBase: new URL('https://blkjack.atl5d.com'),
   title: 'Deckdash',
   description:
-    'Play blackjack with your friends, family, or strangers. Powered by Huddle01.',
+    'Play blackjack with your friends, family, or strangers.',
   twitter: {
     card: 'summary_large_image',
-    site: '@huddle01com',
-    creator: '@huddle01com',
+    site: '@atl5d',
+    creator: '@atl5d',
   },
 };
 

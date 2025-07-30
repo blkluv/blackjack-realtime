@@ -20,7 +20,7 @@ const Logo: FC<TLogoProps> = ({ isLoading }) => {
         <div
           className={cn('font-bold text-xl font-mono', isLoading && 'text-3xl')}
         >
-          Deckdash
+          BLKJACK
         </div>
       </div>
     </Link>

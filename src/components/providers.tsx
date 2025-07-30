@@ -17,7 +17,7 @@ const metadata = {
   description: 'A on-chain blackjack game, earn $ETH by playing!',
   url:
     env.NODE_ENV === 'production'
-      ? 'https://deckdash.arcy.in'
+      ? 'https://blkjack.atl5d.com'
       : 'http://localhost:3000',
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
